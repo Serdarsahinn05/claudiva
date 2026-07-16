@@ -6,14 +6,15 @@ import { AgentForm } from './components/AgentForm';
 import { Terminal } from './components/Terminal';
 import { TaskBoard } from './components/TaskBoard';
 import { PromptLibrary } from './components/PromptLibrary';
+import { Office } from './components/Office';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
-type Tab = 'dashboard' | 'terminal' | 'tasks' | 'prompts';
+type Tab = 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts';
 
 export default function App() {
   const store = useStore();
-  const [tab, setTab] = useState<Tab>('dashboard');
+  const [tab, setTab] = useState<Tab>('office');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
 
@@ -51,6 +52,9 @@ export default function App() {
       <header>
         <h1>🏢 Claude Manager</h1>
         <nav>
+          <button className={tab === 'office' ? 'active' : ''} onClick={() => setTab('office')}>
+            🐈 Ofis
+          </button>
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
             Panel
           </button>
@@ -97,6 +101,8 @@ export default function App() {
         </aside>
 
         <main>
+          {tab === 'office' && <Office agents={store.agents} onOpen={openAgent} />}
+
           {tab === 'dashboard' && (
             <div className="card-grid">
               {store.agents.map((a) => (

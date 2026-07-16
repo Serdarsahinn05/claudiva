@@ -1,0 +1,10 @@
+{
+  "id": "boss",
+  "name": "Boss",
+  "role": "boss",
+  "model": "sonnet",
+  "memoryMode": "both",
+  "autoApprove": false,
+  "description": "Yönetici",
+  "createdAt": "2026-07-16T12:20:08.155Z"
+}

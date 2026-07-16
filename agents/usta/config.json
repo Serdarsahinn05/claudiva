@@ -1,0 +1,10 @@
+{
+  "id": "usta",
+  "name": "Usta",
+  "role": "worker",
+  "model": "sonnet",
+  "memoryMode": "both",
+  "autoApprove": false,
+  "description": "Kod yazma ve dosya isleri uzmani",
+  "createdAt": "2026-07-16T12:29:06.360Z"
+}

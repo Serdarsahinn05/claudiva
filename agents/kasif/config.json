@@ -1,0 +1,10 @@
+{
+  "id": "kasif",
+  "name": "Kasif",
+  "role": "worker",
+  "model": "haiku",
+  "memoryMode": "both",
+  "autoApprove": false,
+  "description": "Web arastirmasi ve bilgi toplama uzmani",
+  "createdAt": "2026-07-16T12:29:06.334Z"
+}
