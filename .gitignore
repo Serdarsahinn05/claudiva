@@ -1,0 +1,9 @@
+node_modules/
+dist/
+# runtime-generated
+workspaces/
+data/
+memory/
+graphify-out/
+*.log
+.env
