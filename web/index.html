@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Claude Manager</title>
+    <!--
+      Temayı ilk boyamadan ÖNCE uygula. React'e bırakılırsa sayfa bir kare
+      boyunca varsayılan temayla çizilir ve tema sıçraması görünür.
+      Bilinmeyen/bozuk değerler CSS tarafında sessizce varsayılana düşer.
+    -->
+    <script>
+      try {
+        var t = localStorage.getItem('claude-manager.theme');
+        document.documentElement.dataset.theme = t || 'spaceship';
+      } catch (e) {
+        document.documentElement.dataset.theme = 'spaceship';
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -26,6 +26,7 @@ import {
   WALL_PIECE_W,
 } from './constants';
 import { getCatalogEntry } from './furnitureCatalog';
+import { officeThemeColors, type OfficeThemeColors } from './themeColors';
 import { renderMatrixEffect } from './matrixEffect';
 import type { OfficeState } from './officeState';
 import type { Character } from './types';
@@ -119,12 +120,15 @@ function getBubbleCanvas(kind: 'permission' | 'waiting' | 'task', zoom: number):
   return canvas;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  working: '#5db8ea',
-  waiting: '#d29922',
-  idle: '#3fb950',
-  offline: '#7d8698',
-};
+/** Durum etiketinin rengi — tema paletinden. */
+function statusColor(theme: OfficeThemeColors, status: string): string {
+  switch (status) {
+    case 'working': return theme.working;
+    case 'waiting': return theme.waiting;
+    case 'idle': return theme.idle;
+    default: return theme.offline;
+  }
+}
 
 interface ZDrawable {
   zY: number;
@@ -143,7 +147,7 @@ export function renderOffice(
   ctx.imageSmoothingEnabled = false;
 
   // ── Zemin ──
-  ctx.fillStyle = VOID_COLOR;
+  ctx.fillStyle = officeThemeColors().void;
   ctx.fillRect(0, 0, layout.cols * TILE_SIZE * zoom, layout.rows * TILE_SIZE * zoom);
   for (let r = 0; r < layout.rows; r++) {
     for (let c = 0; c < layout.cols; c++) {
@@ -306,13 +310,14 @@ function drawOverlays(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `bold ${3.6 * zoom}px 'Segoe UI', sans-serif`;
-  ctx.fillStyle = ch.offline ? '#7d8698' : '#e6eaf2';
-  ctx.strokeStyle = 'rgba(15,17,22,0.85)';
+  const theme = officeThemeColors();
+  ctx.fillStyle = ch.offline ? theme.offline : theme.name;
+  ctx.strokeStyle = theme.nameOutline;
   ctx.lineWidth = zoom;
   ctx.strokeText(ch.name.slice(0, 16), ch.x * zoom, labelY);
   ctx.fillText(ch.name.slice(0, 16), ch.x * zoom, labelY);
   ctx.font = `${3 * zoom}px 'Segoe UI', sans-serif`;
-  ctx.fillStyle = STATUS_COLORS[status] ?? '#7d8698';
+  ctx.fillStyle = statusColor(theme, status);
   const statusText = statusLabels[status] ?? status;
   ctx.strokeText(statusText, ch.x * zoom, labelY + 4.4 * zoom);
   ctx.fillText(statusText, ch.x * zoom, labelY + 4.4 * zoom);

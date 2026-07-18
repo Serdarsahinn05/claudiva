@@ -53,4 +53,6 @@ export const ICONS = {
   terminal: svg(<><rect x="3" y="4" width="18" height="16" rx="1.5" /><path d="M7 9l3 3-3 3M13 15h4" /></>),
   tasks: svg(<><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1.2 1.2L7.5 4.8M4 12l1.2 1.2L7.5 10.8M4 18l1.2 1.2L7.5 16.8" /></>),
   prompts: svg(<><path d="M4 5h16v11H8l-4 4V5Z" /><path d="M8 9h8M8 12.5h5" /></>),
+  /* boya paleti — rayda değil, komuta çubuğundaki tema düğmesinde kullanılır */
+  theme: svg(<><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.3-9-7.3Z" /><circle cx="7.5" cy="11.5" r="1.1" /><circle cx="11" cy="7.5" r="1.1" /><circle cx="15.5" cy="9.5" r="1.1" /></>),
 };

@@ -9,6 +9,7 @@ import { Rail, ICONS } from './components/Rail';
 import { TaskBoard } from './components/TaskBoard';
 import { PromptLibrary } from './components/PromptLibrary';
 import { Office } from './components/Office';
+import { ThemePicker } from './components/ThemePicker';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
@@ -33,6 +34,7 @@ export default function App() {
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const selected = store.agents.find((a) => a.config.id === selectedId) ?? null;
 
@@ -111,6 +113,9 @@ export default function App() {
           <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
           {store.connected ? 'bağlantı aktif' : 'bağlantı yok'}
         </span>
+        <button className="icon-btn" onClick={() => setThemeOpen(true)} title="Tema seç" aria-label="Tema seç">
+          {ICONS.theme}
+        </button>
         <button className="primary" onClick={() => setFormAgent('new')}>
           + Ajan
         </button>
@@ -256,6 +261,8 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {themeOpen && <ThemePicker onClose={() => setThemeOpen(false)} />}
 
       {formAgent !== null && (
         <AgentForm
