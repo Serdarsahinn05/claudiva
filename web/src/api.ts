@@ -28,6 +28,8 @@ export const api = {
   usage: () => req<UsageSummary>('GET', '/api/usage'),
   usageDetail: () => req<{ tracked: UsageSummary; plan: unknown }>('GET', '/api/usage/detail'),
   clearTranscript: (id: string) => req('POST', `/api/agents/${id}/clear`),
+  pushLocal: (id: string, kind: 'user' | 'local' | 'error', text: string) =>
+    req('POST', `/api/agents/${id}/local`, { kind, text }),
   listPrompts: () => req<PromptTemplate[]>('GET', '/api/prompts'),
   createPrompt: (input: unknown) => req<PromptTemplate>('POST', '/api/prompts', input),
   updatePrompt: (id: string, patch: unknown) => req<PromptTemplate>('PUT', `/api/prompts/${id}`, patch),

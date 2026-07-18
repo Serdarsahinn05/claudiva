@@ -126,7 +126,6 @@ function EventLine({ ev }: { ev: TranscriptEvent }) {
 
 export function Terminal({ agent, events, projectDir, agentCount, onCleared }: Props) {
   const [input, setInput] = useState('');
-  const [localEvents, setLocalEvents] = useState<TranscriptEvent[]>([]);
   const [showThinking, setShowThinking] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -162,11 +161,6 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
     setSelected(0);
   }, [prefix]);
 
-  // Panel çıktıları ajana özeldir; başka ajana geçince taşınmamalı.
-  useEffect(() => {
-    setLocalEvents([]);
-  }, [id]);
-
   // Seçili satırı görünür tut (uzun komut listelerinde ok tuşuyla gezerken).
   useEffect(() => {
     menuRef.current?.querySelector('.cmd-row.sel')?.scrollIntoView({ block: 'nearest' });
@@ -186,12 +180,12 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
     inputRef.current?.focus();
   }
 
-  /** Terminale panelin kendi ürettiği bir satır ekler (ajana gitmez). */
-  function pushLocal(kind: TranscriptEvent['kind'], text: string) {
-    setLocalEvents((prev) => [
-      ...prev,
-      { id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), kind, text },
-    ]);
+  /**
+   * Panelin kendi ürettiği satırı sunucudaki döküme yazar (ajana gitmez).
+   * Bileşen state'inde tutulsaydı başka ajana geçince kaybolurdu.
+   */
+  async function pushLocal(kind: 'user' | 'local' | 'error', text: string) {
+    await api.pushLocal(id, kind, text).catch(() => {});
   }
 
   async function send() {
@@ -204,20 +198,19 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
     // ajana gönderilirse "ben bunu çalıştıramam" cevabı gelir.
     const local = matchLocal(text);
     if (local) {
-      pushLocal('user', text);
+      await pushLocal('user', text);
       try {
         const out = await local.cmd.run({
           agent,
           args: local.args,
           clearTranscript: async () => {
             await api.clearTranscript(id);
-            setLocalEvents([]);
-            await onCleared();
+            onCleared();
           },
         });
-        if (out) pushLocal('local', out);
+        if (out) await pushLocal('local', out);
       } catch (e) {
-        pushLocal('error', (e as Error).message);
+        await pushLocal('error', (e as Error).message);
       }
       return;
     }
@@ -225,12 +218,7 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
     await api.sendMessage(id, text).catch((e) => alert((e as Error).message));
   }
 
-  // Panel çıktıları ajan olaylarıyla zaman sırasına göre harmanlanır.
-  const merged = useMemo(
-    () => [...events, ...localEvents].sort((a, b) => a.ts - b.ts),
-    [events, localEvents],
-  );
-  const visible = showThinking ? merged : merged.filter((e) => e.kind !== 'thinking');
+  const visible = showThinking ? events : events.filter((e) => e.kind !== 'thinking');
 
   return (
     <div className="terminal">

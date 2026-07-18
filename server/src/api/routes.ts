@@ -61,6 +61,18 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
     await s.interrupt();
   }));
 
+  /**
+   * Panelin istemci tarafı komut çıktısını döküme yazar (ajana gönderilmez).
+   * Ajan kapalıyken de çalışır — döküm oturumdan bağımsız tutulur.
+   */
+  r.post('/agents/:id/local', handle((req) => {
+    const s = manager.get(req.params.id);
+    if (!s) throw new Error('Ajan bulunamadı.');
+    const { kind, text } = req.body ?? {};
+    const k = kind === 'user' || kind === 'error' ? kind : 'local';
+    s.pushLocal(k, String(text ?? ''));
+  }));
+
   /** Panelin "/clear" komutu: yalnızca görünen dökümü siler, ajanın bağlamı durur. */
   r.post('/agents/:id/clear', handle((req) => {
     const s = manager.get(req.params.id);

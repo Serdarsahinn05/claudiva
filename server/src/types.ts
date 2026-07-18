@@ -61,7 +61,11 @@ export type TranscriptKind =
   | 'tool_result'
   | 'result'
   | 'error'
-  | 'system';
+  | 'system'
+  /** Panelin kendi ürettiği çıktı (ör. /usage). Modele hiç gitmez, yalnızca
+   *  dökümde görünür; ajan değişince veya sayfa yenilenince kaybolmasın diye
+   *  diğer olaylarla aynı yerde saklanır. */
+  | 'local';
 
 export interface TranscriptEvent {
   id: string;

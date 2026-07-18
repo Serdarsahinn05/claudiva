@@ -355,6 +355,15 @@ export class AgentSession extends EventEmitter {
   }
 
   /**
+   * Panelin istemci tarafı komutlarının çıktısını (ör. /usage) döküme yazar.
+   * Modele gönderilmez; sadece diğer olaylarla aynı akışta saklanıp yayınlanır
+   * ki ajanlar arasında gezerken veya sayfa yenilenince kaybolmasın.
+   */
+  pushLocal(kind: 'user' | 'local' | 'error', text: string): void {
+    this.pushEvent({ kind, text });
+  }
+
+  /**
    * `/usage`ın arkasındaki plan kotası verisi (5 saatlik / 7 günlük pencereler).
    *
    * SDK bu metodu deneysel işaretliyor ve habersiz kaldırabileceğini söylüyor,
