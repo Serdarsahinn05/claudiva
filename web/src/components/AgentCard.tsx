@@ -10,14 +10,21 @@ interface Props {
 }
 
 export function AgentCard({ agent, onOpen, onEdit, onDelete, onToggle }: Props) {
-  const { config, status, usage, currentActivity, pendingPermissions } = agent;
+  const { config, status, usage, currentActivity, pendingPermissions, currentModel } = agent;
+  // Otomatik model seçimi temel modelden saptıysa geçişi göster (örn. haiku→opus)
+  const modelSwitched = currentModel && currentModel !== config.model && status !== 'offline';
   return (
     <div className={`card status-border-${status}`} onClick={onOpen}>
       <div className="card-head">
         <span className={`dot dot-${status}`} title={STATUS_LABEL[status]} />
         <strong>{config.name}</strong>
         <span className="badge role">{ROLE_LABEL[config.role] ?? config.role}</span>
-        <span className="badge model">{config.model}</span>
+        <span
+          className="badge model"
+          title={modelSwitched ? `temel model: ${config.model} · aktif: ${currentModel}` : undefined}
+        >
+          {modelSwitched ? `${config.model}→${currentModel}` : config.model}
+        </span>
       </div>
       {config.description && <div className="card-desc">{config.description}</div>}
       <div className="card-status">

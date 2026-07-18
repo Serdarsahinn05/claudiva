@@ -101,7 +101,7 @@ export default function App() {
         </aside>
 
         <main>
-          {tab === 'office' && <Office agents={store.agents} onOpen={openAgent} />}
+          {tab === 'office' && <Office agents={store.agents} tasks={store.tasks} onOpen={openAgent} />}
 
           {tab === 'dashboard' && (
             <div className="card-grid">

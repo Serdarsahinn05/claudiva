@@ -14,6 +14,7 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
   const [model, setModel] = useState(existing?.config.model ?? 'sonnet');
   const [memoryMode, setMemoryMode] = useState(existing?.config.memoryMode ?? 'both');
   const [autoApprove, setAutoApprove] = useState(existing?.config.autoApprove ?? false);
+  const [autoModel, setAutoModel] = useState(existing?.config.autoModel ?? true);
   const [description, setDescription] = useState(existing?.config.description ?? '');
   const [personality, setPersonality] = useState('');
   const [mcpJson, setMcpJson] = useState(
@@ -34,11 +35,11 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
         mcpServers = JSON.parse(mcpJson);
       }
       if (existing) {
-        const patch: Record<string, unknown> = { name, role, model, memoryMode, autoApprove, description, mcpServers };
+        const patch: Record<string, unknown> = { name, role, model, memoryMode, autoApprove, autoModel, description, mcpServers };
         if (personality.trim() || personalityLoaded) patch.personality = personality;
         await api.updateAgent(existing.config.id, patch);
       } else {
-        await api.createAgent({ name, role, model, memoryMode, autoApprove, description, personality, mcpServers });
+        await api.createAgent({ name, role, model, memoryMode, autoApprove, autoModel, description, personality, mcpServers });
       }
       onSaved();
       onClose();
@@ -117,6 +118,10 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
             onChange={(e) => setMcpJson(e.target.value)}
             placeholder={'{\n  "ornekServer": { "type": "stdio", "command": "npx", "args": ["-y", "paket-adi"] }\n}'}
           />
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={autoModel} onChange={(e) => setAutoModel(e.target.checked)} />
+          Otomatik model seçimi (ajan göreve bakıp haiku/sonnet/opus arasında kendisi geçer; seçilen model temel olur)
         </label>
         <label className="check">
           <input type="checkbox" checked={autoApprove} onChange={(e) => setAutoApprove(e.target.checked)} />
