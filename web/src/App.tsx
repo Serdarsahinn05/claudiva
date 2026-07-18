@@ -130,7 +130,12 @@ export default function App() {
 
           {tab === 'terminal' &&
             (selected ? (
-              <Terminal agent={selected} events={store.transcripts[selected.config.id] ?? []} />
+              <Terminal
+                agent={selected}
+                events={store.transcripts[selected.config.id] ?? []}
+                projectDir={store.projectDir}
+                agentCount={store.agents.length}
+              />
             ) : (
               <div className="muted center">Soldan bir ajan seç.</div>
             ))}

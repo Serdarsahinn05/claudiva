@@ -30,5 +30,5 @@ export const api = {
   createPrompt: (input: unknown) => req<PromptTemplate>('POST', '/api/prompts', input),
   updatePrompt: (id: string, patch: unknown) => req<PromptTemplate>('PUT', `/api/prompts/${id}`, patch),
   deletePrompt: (id: string) => req('DELETE', `/api/prompts/${id}`),
-  info: () => req<{ memoryDir: string }>('GET', '/api/info'),
+  info: () => req<{ memoryDir: string; projectDir: string }>('GET', '/api/info'),
 };

@@ -3,6 +3,18 @@ import type { AgentSnapshot, SlashCommand, TranscriptEvent } from '../types';
 import { api } from '../api';
 import { STATUS_LABEL } from '../format';
 
+const ROLE_LABEL: Record<string, string> = {
+  boss: 'patron',
+  manager: 'yönetici',
+  worker: 'çalışan',
+};
+
+/** CLI'ın karşılama maskotunun piksel-art karşılığı. */
+const CAT_LOGO = ` ▄▄▄▄▄▄▄
+█ ▀▀ ▀▀ █
+█  ▀▀▀  █
+ ▀█▀ ▀█▀ `;
+
 /** Girdi bir slash komutu yazılıyorsa henüz tamamlanmamış komut adını verir. */
 function slashPrefix(input: string): string | null {
   const m = /^\/([^\s]*)$/.exec(input);
@@ -24,6 +36,8 @@ function matchCommands(commands: SlashCommand[], prefix: string): SlashCommand[]
 interface Props {
   agent: AgentSnapshot;
   events: TranscriptEvent[];
+  projectDir: string;
+  agentCount: number;
 }
 
 /**
@@ -99,7 +113,7 @@ function EventLine({ ev }: { ev: TranscriptEvent }) {
   }
 }
 
-export function Terminal({ agent, events }: Props) {
+export function Terminal({ agent, events, projectDir, agentCount }: Props) {
   const [input, setInput] = useState('');
   const [showThinking, setShowThinking] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -173,14 +187,30 @@ export function Terminal({ agent, events }: Props) {
 
       <div className="terminal-body" ref={scrollRef}>
         {visible.length === 0 && (
-          <div className="cli-banner">
-            <div className="cli-banner-box">
-              <div className="cli-banner-title">✻ {agent.config.name}</div>
-              <div className="cli-banner-line">{agent.currentModel ?? agent.config.model} · {agent.config.role}</div>
-              <div className="cli-banner-line dim">workspaces/{id}</div>
-            </div>
-            <div className="cli-banner-tip">
-              <kbd>/</kbd> ile komutları listele · aşağıdan görev ver
+          <div className="cli-welcome">
+            <span className="cli-welcome-title">Claude Manager</span>
+            <div className="cli-welcome-cols">
+              <div className="cli-welcome-left">
+                <div className="cli-hello">Merhaba, {agent.config.name}!</div>
+                <pre className="cli-logo">{CAT_LOGO}</pre>
+                <div className="cli-meta">
+                  {agent.currentModel ?? agent.config.model} · {ROLE_LABEL[agent.config.role] ?? agent.config.role}
+                </div>
+                <div className="cli-meta dim">{projectDir || '…'}</div>
+              </div>
+              <div className="cli-welcome-right">
+                <div className="cli-sec-title">Başlarken</div>
+                <div className="cli-sec-line">
+                  <kbd>/</kbd> yazıp komutları gör{cmdCount > 0 ? ` (${cmdCount} tane)` : ''}
+                </div>
+                <div className="cli-sec-line">Aşağıya doğrudan görev yazabilirsin</div>
+
+                <div className="cli-sec-title">Ekip</div>
+                <div className="cli-sec-line">{agentCount} ajan tanımlı</div>
+                <div className="cli-sec-line dim">
+                  {agent.status === 'offline' ? 'Bu ajan kapalı — başlatınca çalışır' : 'Bu ajan hazır'}
+                </div>
+              </div>
             </div>
           </div>
         )}

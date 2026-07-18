@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import type { AgentManager } from '../agents/manager.js';
 import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
-import { MEMORY_DIR } from '../paths.js';
+import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
 
 function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>) {
   return async (req: Request, res: Response) => {
@@ -95,7 +95,7 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
   }));
 
   // --------------------------------------------------------------- misc
-  r.get('/info', handle(() => ({ memoryDir: MEMORY_DIR })));
+  r.get('/info', handle(() => ({ memoryDir: MEMORY_DIR, projectDir: PROJECT_DIR })));
 
   return r;
 }

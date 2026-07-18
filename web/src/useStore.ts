@@ -20,6 +20,8 @@ export interface Store {
   transcripts: Record<string, TranscriptEvent[]>;
   permissions: PermissionRequestInfo[];
   connected: boolean;
+  /** Ajanların üzerinde çalıştığı proje kökü (terminal karşılama kutusunda gösterilir). */
+  projectDir: string;
   refreshAgents: () => Promise<void>;
   refreshTasks: () => Promise<void>;
   refreshPrompts: () => Promise<void>;
@@ -34,6 +36,7 @@ export function useStore(): Store {
   const [transcripts, setTranscripts] = useState<Record<string, TranscriptEvent[]>>({});
   const [permissions, setPermissions] = useState<PermissionRequestInfo[]>([]);
   const [connected, setConnected] = useState(false);
+  const [projectDir, setProjectDir] = useState('');
   const wsRef = useRef<WebSocket | null>(null);
 
   const refreshAgents = useCallback(async () => {
@@ -62,6 +65,7 @@ export function useStore(): Store {
           refreshTasks(),
           refreshPrompts(),
           api.usage().then(setUsage),
+          api.info().then((i) => setProjectDir(i.projectDir)),
         ]);
       } catch {
         if (cancelled) return;
@@ -177,6 +181,7 @@ export function useStore(): Store {
     transcripts,
     permissions,
     connected,
+    projectDir,
     refreshAgents,
     refreshTasks,
     refreshPrompts,
