@@ -61,6 +61,13 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
     await s.interrupt();
   }));
 
+  /** Panelin "/clear" komutu: yalnızca görünen dökümü siler, ajanın bağlamı durur. */
+  r.post('/agents/:id/clear', handle((req) => {
+    const s = manager.get(req.params.id);
+    if (!s) throw new Error('Ajan bulunamadı.');
+    s.transcript.length = 0;
+  }));
+
   r.post('/agents/:id/permission', handle((req) => {
     const s = manager.get(req.params.id);
     if (!s) throw new Error('Ajan bulunamadı.');
@@ -85,6 +92,16 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
 
   // -------------------------------------------------------------- usage
   r.get('/usage', handle(() => manager.usageSummary()));
+
+  /**
+   * Panelin "/usage" komutunun verisi: kendi token sayımımız + (varsa) hesabın
+   * claude.ai plan kotası. Plan kotası deneysel bir SDK metodundan geldiği ve
+   * açık oturum gerektirdiği için null olabilir; panel buna göre davranır.
+   */
+  r.get('/usage/detail', handle(async () => ({
+    tracked: manager.usageSummary(),
+    plan: await manager.planUsage(),
+  })));
 
   // ------------------------------------------------------------ prompts
   r.get('/prompts', handle(() => prompts.list()));

@@ -31,6 +31,38 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
         },
       ),
       tool(
+        'get_usage',
+        'Ekibin token/maliyet sayımını ve hesabın plan kotasını (5 saatlik / 7 günlük pencere doluluğu) döndürür. Kota kritikse pahalı model yerine ucuzunu seçmek ya da işi bölmek için görev dağıtmadan önce bakabilirsin.',
+        {},
+        async () => {
+          const { total, perAgent } = manager.usageSummary();
+          const lines = [
+            `Toplam: ${total.inputTokens + total.outputTokens} token · $${total.costUSD.toFixed(4)} · ${total.requests} istek`,
+          ];
+          for (const [id, u] of Object.entries(perAgent)) {
+            if (!u.requests) continue;
+            lines.push(`- ${id}: ${u.inputTokens + u.outputTokens} token · $${u.costUSD.toFixed(4)}`);
+          }
+
+          const plan = (await manager.planUsage()) as {
+            rate_limits_available?: boolean;
+            rate_limits?: Record<string, { utilization?: number; resets_at?: string } | null>;
+          } | null;
+          const rl = plan?.rate_limits;
+          if (plan?.rate_limits_available && rl) {
+            lines.push('', 'Plan kotası:');
+            for (const [key, win] of Object.entries(rl)) {
+              if (!win || typeof win.utilization !== 'number') continue;
+              const resets = win.resets_at ? ` (sıfırlanma: ${win.resets_at})` : '';
+              lines.push(`- ${key}: %${win.utilization} dolu${resets}`);
+            }
+          } else {
+            lines.push('', 'Plan kotası bu oturumda okunamadı (API anahtarı veya kapalı oturum).');
+          }
+          return text(lines.join('\n'));
+        },
+      ),
+      tool(
         'delegate_task',
         'Bir görevi ekipteki bir ajana atar. wait=true (varsayılan) ise görev bitene kadar bekler ve sonucu döndürür; wait=false ise görev id döndürür, sonucu check_task ile alırsın. Basit görevler için ajanın modeli zaten yapılandırılmıştır; görevi net ve bağımsız yürütülebilir şekilde yaz. Birden fazla bağımsız görevi AYNI anda (paralel tool çağrılarıyla) dağıtabilirsin.',
         {
@@ -95,6 +127,7 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
 export const TEAM_TOOL_RULES = [
   'mcp__team',
   'mcp__team__list_agents',
+  'mcp__team__get_usage',
   'mcp__team__delegate_task',
   'mcp__team__check_task',
   'mcp__team__list_tasks',

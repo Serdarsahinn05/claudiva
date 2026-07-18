@@ -41,7 +41,9 @@ export type TranscriptKind =
   | 'tool_result'
   | 'result'
   | 'error'
-  | 'system';
+  | 'system'
+  /** Yalnızca panelde üretilir (ör. /usage çıktısı); sunucudan hiç gelmez. */
+  | 'local';
 
 export interface TranscriptEvent {
   id: string;

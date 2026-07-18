@@ -354,6 +354,24 @@ export class AgentSession extends EventEmitter {
     }
   }
 
+  /**
+   * `/usage`ın arkasındaki plan kotası verisi (5 saatlik / 7 günlük pencereler).
+   *
+   * SDK bu metodu deneysel işaretliyor ve habersiz kaldırabileceğini söylüyor,
+   * bu yüzden çağrı yutulur: veri gelmezse panel kendi token sayımıyla devam
+   * eder, hata vermez.
+   */
+  async planUsage(): Promise<unknown | null> {
+    try {
+      const q = this.q as unknown as {
+        usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?: () => Promise<unknown>;
+      } | null;
+      return (await q?.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET?.()) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   private setCommands(commands: SlashCommand[]): void {
     this.commands = commands.map((c) => ({
       name: c.name,

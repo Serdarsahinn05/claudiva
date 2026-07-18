@@ -135,6 +135,7 @@ export default function App() {
                 events={store.transcripts[selected.config.id] ?? []}
                 projectDir={store.projectDir}
                 agentCount={store.agents.length}
+                onCleared={() => void store.loadTranscript(selected.config.id)}
               />
             ) : (
               <div className="muted center">Soldan bir ajan seç.</div>

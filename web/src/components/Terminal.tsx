@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AgentSnapshot, SlashCommand, TranscriptEvent } from '../types';
 import { api } from '../api';
 import { STATUS_LABEL } from '../format';
+import { isLocal, localAsSlashCommands, matchLocal } from '../localCommands';
 
 const ROLE_LABEL: Record<string, string> = {
   boss: 'patron',
@@ -38,6 +39,8 @@ interface Props {
   events: TranscriptEvent[];
   projectDir: string;
   agentCount: number;
+  /** /clear sonrası dökümü sunucudan yeniden yüklemek için. */
+  onCleared: () => void;
 }
 
 /**
@@ -103,6 +106,14 @@ function EventLine({ ev }: { ev: TranscriptEvent }) {
           <span className="ev-content">{ev.text}</span>
         </div>
       );
+    case 'local':
+      // Panelin kendi çıktısı (/usage gibi) — hizalama korunsun diye <pre>.
+      return (
+        <div className="ev ev-local" title={time}>
+          <span className="ev-mark">⎿</span>
+          <pre className="ev-content">{ev.text}</pre>
+        </div>
+      );
     default:
       return (
         <div className="ev ev-system" title={time}>
@@ -113,8 +124,9 @@ function EventLine({ ev }: { ev: TranscriptEvent }) {
   }
 }
 
-export function Terminal({ agent, events, projectDir, agentCount }: Props) {
+export function Terminal({ agent, events, projectDir, agentCount, onCleared }: Props) {
   const [input, setInput] = useState('');
+  const [localEvents, setLocalEvents] = useState<TranscriptEvent[]>([]);
   const [showThinking, setShowThinking] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState(0);
@@ -123,11 +135,18 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
   const id = agent.config.id;
 
-  const cmdCount = agent.commands?.length ?? 0;
+  // Panelin kendi komutları listenin başında durur; ajanınkilerle isim
+  // çakışırsa (ör. /clear) panel sürümü kazanır, çünkü yerel işlenir.
+  const allCommands = useMemo(() => {
+    const agentCmds = (agent.commands ?? []).filter((c) => !isLocal(c.name));
+    return [...localAsSlashCommands(), ...agentCmds];
+  }, [agent.commands]);
+
+  const cmdCount = allCommands.length;
   const prefix = slashPrefix(input);
   const matches = useMemo(
-    () => (prefix === null ? [] : matchCommands(agent.commands ?? [], prefix)),
-    [prefix, agent.commands],
+    () => (prefix === null ? [] : matchCommands(allCommands, prefix)),
+    [prefix, allCommands],
   );
   // Menü yalnızca komut yazılırken ve eşleşme varken görünür; Esc ile kapatılınca
   // kullanıcı yazmaya devam edip yeniden açabilsin diye prefix değişiminde sıfırlanır.
@@ -142,6 +161,11 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
     setMenuOpen(prefix !== null);
     setSelected(0);
   }, [prefix]);
+
+  // Panel çıktıları ajana özeldir; başka ajana geçince taşınmamalı.
+  useEffect(() => {
+    setLocalEvents([]);
+  }, [id]);
 
   // Seçili satırı görünür tut (uzun komut listelerinde ok tuşuyla gezerken).
   useEffect(() => {
@@ -162,15 +186,51 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
     inputRef.current?.focus();
   }
 
+  /** Terminale panelin kendi ürettiği bir satır ekler (ajana gitmez). */
+  function pushLocal(kind: TranscriptEvent['kind'], text: string) {
+    setLocalEvents((prev) => [
+      ...prev,
+      { id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), kind, text },
+    ]);
+  }
+
   async function send() {
     const text = input.trim();
     if (!text) return;
     setInput('');
     setMenuOpen(false);
+
+    // /usage, /clear, /help gibi komutlar CLI'da da istemci tarafında işlenir;
+    // ajana gönderilirse "ben bunu çalıştıramam" cevabı gelir.
+    const local = matchLocal(text);
+    if (local) {
+      pushLocal('user', text);
+      try {
+        const out = await local.cmd.run({
+          agent,
+          args: local.args,
+          clearTranscript: async () => {
+            await api.clearTranscript(id);
+            setLocalEvents([]);
+            await onCleared();
+          },
+        });
+        if (out) pushLocal('local', out);
+      } catch (e) {
+        pushLocal('error', (e as Error).message);
+      }
+      return;
+    }
+
     await api.sendMessage(id, text).catch((e) => alert((e as Error).message));
   }
 
-  const visible = showThinking ? events : events.filter((e) => e.kind !== 'thinking');
+  // Panel çıktıları ajan olaylarıyla zaman sırasına göre harmanlanır.
+  const merged = useMemo(
+    () => [...events, ...localEvents].sort((a, b) => a.ts - b.ts),
+    [events, localEvents],
+  );
+  const visible = showThinking ? merged : merged.filter((e) => e.kind !== 'thinking');
 
   return (
     <div className="terminal">

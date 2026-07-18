@@ -173,6 +173,19 @@ export class AgentManager extends EventEmitter {
     };
   }
 
+  /**
+   * Plan kotası tek bir hesaba ait, oturumdan bağımsız. Açık olan herhangi bir
+   * oturumdan okunur; hiç ajan çalışmıyorsa null döner.
+   */
+  async planUsage(): Promise<unknown | null> {
+    for (const s of this.sessions.values()) {
+      if (s.status === 'offline') continue;
+      const u = await s.planUsage();
+      if (u) return u;
+    }
+    return null;
+  }
+
   usageSummary(): { total: TokenUsage; perAgent: Record<string, TokenUsage> } {
     return this.usage;
   }

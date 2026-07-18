@@ -241,6 +241,13 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .ev-error { color: var(--red); }
 .ev-error .ev-mark { color: var(--red); }
 .ev-system { color: var(--muted); }
+/* panelin kendi çıktısı (/usage, /help) — hizalanmış, vurgu turkuaz */
+.ev-local { color: var(--fg); margin: 4px 0; }
+.ev-local .ev-mark { color: var(--cli); }
+.ev-local pre {
+  margin: 0; font-family: inherit; font-size: 12.5px; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-word;
+}
 
 .permission-banner {
   display: flex; align-items: center; gap: 12px; justify-content: space-between;
