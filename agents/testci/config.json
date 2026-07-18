@@ -1,0 +1,11 @@
+{
+  "id": "testci",
+  "name": "Testci",
+  "role": "worker",
+  "model": "haiku",
+  "memoryMode": "both",
+  "autoApprove": false,
+  "autoModel": true,
+  "description": "Test uzmanı: birim/entegrasyon testleri yazar, mevcut testleri çalıştırır, hataları yeniden üretip net raporlar. Kırılgan test yazmaz; davranışı test eder, implementasyonu değil.",
+  "createdAt": "2026-07-17T15:00:00.000Z"
+}

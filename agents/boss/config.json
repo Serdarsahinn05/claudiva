@@ -1,10 +1,11 @@
 {
   "id": "boss",
   "name": "Boss",
-  "role": "boss",
+  "role": "manager",
   "model": "sonnet",
   "memoryMode": "both",
   "autoApprove": false,
-  "description": "Yönetici",
-  "createdAt": "2026-07-16T12:20:08.155Z"
+  "autoModel": true,
+  "description": "Teknik yönetici: Patron'dan veya kullanıcıdan gelen çok parçalı teknik işleri uzmanlara dağıtır, ara çıktıları kalite kontrolünden geçirir, birleştirip teslim eder. Gerekirse küçük düzeltmeleri kendisi yapar.",
+  "createdAt": "2026-07-17T15:00:00.000Z"
 }
