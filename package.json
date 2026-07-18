@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "description": "Multi-agent Claude management system and panel",
+  "type": "module",
+  "bin": {
+    "claude-manager": "bin/claude-manager.js"
+  },
+  "files": [
+    "bin",
+    "agents",
+    "server/dist",
+    "web/dist"
+  ],
   "workspaces": [
     "server",
     "web"

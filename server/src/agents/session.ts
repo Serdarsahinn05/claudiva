@@ -18,6 +18,7 @@ import {
   type AgentConfig,
   type AgentStatus,
   type PermissionRequestInfo,
+  type SlashCommand,
   type TokenUsage,
   type TranscriptEvent,
   type TranscriptKind,
@@ -41,6 +42,10 @@ export interface SessionEvents {
   usage: (usage: TokenUsage) => void;
   /** A turn finished (result message received). Carries the final result text. */
   turn_complete: (resultText: string, isError: boolean) => void;
+  /** Model switched (auto-model self-assessment or panel edit). */
+  model_changed: (model: string) => void;
+  /** Kullanılabilir slash komutları değişti (oturum açılışı veya orta-oturum keşif). */
+  commands_changed: (commands: SlashCommand[]) => void;
 }
 
 interface PendingPermission {
@@ -60,6 +65,13 @@ export class AgentSession extends EventEmitter {
   transcript: TranscriptEvent[] = [];
   sessionId?: string;
   currentActivity?: string;
+  /** Son turdaki bağlam doluluğu (input + cache token) — panel yakıt göstergesi */
+  contextTokens = 0;
+  /** Oturumun şu an kullandığı model (haiku/sonnet/opus). Otomatik model
+   *  seçimi config.model'i (temel modeli) değiştirmeden bunu oynatır. */
+  currentModel: string;
+  /** Bu oturumda "/" ile çağrılabilen komutlar; panelin otomatik tamamlaması bunu kullanır. */
+  commands: SlashCommand[] = [];
 
   private queue: AsyncQueue<SDKUserMessage> | null = null;
   private q: Query | null = null;
@@ -71,6 +83,7 @@ export class AgentSession extends EventEmitter {
   constructor(config: AgentConfig, private personality: string) {
     super();
     this.config = config;
+    this.currentModel = config.model;
   }
 
   get pendingPermissions(): PermissionRequestInfo[] {
@@ -85,6 +98,7 @@ export class AgentSession extends EventEmitter {
     const ws = agentWorkspaceDir(this.config.id);
     fs.mkdirSync(ws, { recursive: true });
 
+    this.currentModel = this.config.model;
     this.q = query({
       prompt: this.queue,
       options: this.buildOptions(ws),
@@ -93,6 +107,7 @@ export class AgentSession extends EventEmitter {
     this.setStatus('idle');
     this.pushEvent({ kind: 'system', text: `Oturum başlatıldı (model: ${this.resolveModel()})` });
     void this.loop();
+    void this.refreshCommands();
   }
 
   async stop(): Promise<void> {
@@ -113,9 +128,16 @@ export class AgentSession extends EventEmitter {
     this.pushEvent({ kind: 'user', text });
     this.turnDepth += 1;
     this.setStatus('working');
+    // Otomatik model seçimi: sistem prompt'unun dibindeki talimat (özellikle
+    // haiku'da) gözden kaçıyor; her mesajın başına kısa bir hatırlatma koy.
+    // Transcript'e orijinal metin yazılır, hatırlatma yalnız modele gider.
+    const wrapped =
+      this.config.autoModel !== false
+        ? `[Hatırlatma: yanıtlamadan önce görevin zorluğunu değerlendir; mevcut model (${this.currentModel}) uygun değilse önce mcp__self__set_model ile değiştir: basit→haiku, orta→sonnet, zor→opus.]\n\n${text}`
+        : text;
     this.queue!.push({
       type: 'user',
-      message: { role: 'user', content: [{ type: 'text', text }] },
+      message: { role: 'user', content: [{ type: 'text', text: wrapped }] },
       parent_tool_use_id: null,
     });
   }
@@ -131,11 +153,34 @@ export class AgentSession extends EventEmitter {
 
   async setModel(model: string): Promise<void> {
     this.config.model = model;
+    this.currentModel = model;
     try {
       await this.q?.setModel(MODEL_ALIASES[model] ?? model);
     } catch {
       // applied on next start if session not in streaming state
     }
+    this.emit('model_changed', model);
+  }
+
+  /**
+   * Oturum-içi model geçişi (otomatik model seçimi): temel modeli
+   * (config.model) DEĞİŞTİRMEZ; bir sonraki oturum başlangıcında temele dönülür.
+   */
+  async switchModel(model: string, reason?: string): Promise<void> {
+    if (model === this.currentModel) return;
+    const prev = this.currentModel;
+    this.currentModel = model;
+    try {
+      await this.q?.setModel(MODEL_ALIASES[model] ?? model);
+    } catch {
+      this.currentModel = prev;
+      throw new Error('Model değiştirilemedi (oturum akış durumunda değil).');
+    }
+    this.pushEvent({
+      kind: 'system',
+      text: `Model geçişi: ${prev} → ${model}${reason ? ` — ${reason}` : ''}`,
+    });
+    this.emit('model_changed', model);
   }
 
   resolvePermission(requestId: string, allow: boolean, message?: string): boolean {
@@ -177,8 +222,29 @@ export class AgentSession extends EventEmitter {
         `Zaten kayıtlı bilgiyi tekrar yazma, güncelle.`
       : '';
 
-    const skillsDir = path.join(agentDir(this.config.id), 'skills');
-    const hasSkills = fs.existsSync(skillsDir) && fs.readdirSync(skillsDir).length > 0;
+    // Otomatik model seçimi: ajan her görevin zorluğunu kendisi değerlendirip
+    // mcp__self__set_model ile motoru değiştirir (varsayılan açık).
+    const autoModelInstructions =
+      this.config.autoModel !== false
+        ? `\n\n# Otomatik model seçimi\n` +
+          `Temel modelin: ${this.config.model}. Her yeni görev/mesaja başlarken önce işin zorluğunu ` +
+          `değerlendir; mevcut model uygun değilse İLK İŞ olarak mcp__self__set_model aracını çağır, ` +
+          `sonra göreve devam et:\n` +
+          `- haiku → basit işler: kısa cevap, özet, listeleme, tek dosya okuma, basit arama\n` +
+          `- sonnet → orta işler: kod yazma/düzenleme, çok adımlı görevler, araştırma + sentez\n` +
+          `- opus → zor işler: mimari kararlar, karmaşık hata ayıklama, geniş refactor, kritik kod\n` +
+          `Model zaten uygunsa aracı çağırma. Yükseltme görev-bazlıdır: tur bitince otomatik ` +
+          `olarak temel modele dönülür, her yeni görevde yeniden değerlendirirsin.`
+        : '';
+
+    // Ajanın kendi skill'leri agents/<id>/ altında bir yerel plugin olarak durur
+    // (agents/<id>/.claude-plugin/plugin.json + skills/<ad>/SKILL.md). Plugin yolu
+    // settingSources'tan bağımsız çalışır; böylece izolasyon bozulmadan ajan
+    // sohbette /<skill-adı> yazarak skill'i çağırabilir.
+    const dir = agentDir(this.config.id);
+    const hasSkills =
+      fs.existsSync(path.join(dir, '.claude-plugin', 'plugin.json')) &&
+      fs.existsSync(path.join(dir, 'skills'));
 
     const mcpServers: Record<string, McpServerConfig> = {};
     for (const [name, def] of Object.entries(this.config.mcpServers ?? {})) {
@@ -200,10 +266,14 @@ export class AgentSession extends EventEmitter {
         append:
           `# Kimlik\nSen "${this.config.name}" adlı bir ajansın. Rolün: ${this.config.role}.\n\n` +
           this.personality +
-          memoryInstructions,
+          memoryInstructions +
+          autoModelInstructions,
       },
-      settingSources: [],
-      additionalDirectories: [...memoryDirs, ...(hasSkills ? [skillsDir] : [])],
+      // Tam Claude Code CLI paritesi: kullanıcının kendi ~/.claude skill'leri,
+      // plugin'leri, komutları ve CLAUDE.md'si ajanlarda da geçerli olsun.
+      settingSources: ['user', 'project', 'local'],
+      plugins: hasSkills ? [{ type: 'local', path: dir, skipMcpDiscovery: true }] : undefined,
+      additionalDirectories: memoryDirs,
       mcpServers: Object.keys(mcpServers).length ? mcpServers : undefined,
       allowedTools: this.extraAllowedTools.length ? this.extraAllowedTools : undefined,
       permissionMode: 'default',
@@ -265,7 +335,33 @@ export class AgentSession extends EventEmitter {
     this.queue = null;
     this.turnDepth = 0;
     this.currentActivity = undefined;
+    this.contextTokens = 0;
     this.setStatus('offline');
+  }
+
+  /**
+   * Oturumun slash komut listesini SDK'dan çeker. supportedCommands() yalnızca
+   * açılışta yakalanan listeyi döndürür; orta-oturum değişiklikleri
+   * `system/commands_changed` mesajıyla gelir (bkz. handleMessage).
+   */
+  private async refreshCommands(): Promise<void> {
+    try {
+      const commands = await this.q?.supportedCommands();
+      if (commands) this.setCommands(commands);
+    } catch {
+      // Komut listesi alınamazsa panel yalnızca otomatik tamamlamayı kaybeder;
+      // oturumun kendisi çalışmaya devam eder.
+    }
+  }
+
+  private setCommands(commands: SlashCommand[]): void {
+    this.commands = commands.map((c) => ({
+      name: c.name,
+      description: c.description,
+      argumentHint: c.argumentHint || undefined,
+      aliases: c.aliases,
+    }));
+    this.emit('commands_changed', this.commands);
   }
 
   private handleMessage(msg: SDKMessage): void {
@@ -273,6 +369,8 @@ export class AgentSession extends EventEmitter {
       case 'system': {
         if (msg.subtype === 'init') {
           this.sessionId = msg.session_id;
+        } else if (msg.subtype === 'commands_changed') {
+          this.setCommands((msg as { commands?: SlashCommand[] }).commands ?? []);
         } else if (msg.subtype === 'session_state_changed') {
           const state = (msg as { state?: string }).state;
           if (state === 'running') this.setStatus('working');
@@ -332,6 +430,11 @@ export class AgentSession extends EventEmitter {
           costUSD: (msg as { total_cost_usd?: number }).total_cost_usd ?? 0,
           requests: 1,
         });
+        // Bağlam doluluğu ≈ son isteğin girdi tarafı (taze + cache'ten okunan)
+        this.contextTokens =
+          (usage?.input_tokens ?? 0) +
+          (usage?.cache_read_input_tokens ?? 0) +
+          (usage?.cache_creation_input_tokens ?? 0);
         this.emit('usage', this.usage);
 
         const isError = msg.subtype !== 'success';
@@ -344,6 +447,16 @@ export class AgentSession extends EventEmitter {
         this.turnDepth = Math.max(0, this.turnDepth - 1);
         this.currentActivity = undefined;
         if (this.turnDepth === 0) this.setStatus('idle');
+        // Otomatik model seçimi: yükseltme görev-bazlıdır — tur bitince temel
+        // modele dön (dinlenme hâli her zaman ucuz model; sonraki görev
+        // gerekirse yeniden yükseltir).
+        if (
+          this.turnDepth === 0 &&
+          this.config.autoModel !== false &&
+          this.currentModel !== this.config.model
+        ) {
+          void this.switchModel(this.config.model, 'tur bitti — temel modele dönüş').catch(() => {});
+        }
         this.emit('turn_complete', resultText, isError);
         break;
       }

@@ -1,6 +1,10 @@
 node_modules/
 dist/
+# kişisel izin ayarları (proje ayarları .claude/settings.json paylaşılır)
+.claude/settings.local.json
+
 # runtime-generated
+.claude-manager/
 workspaces/
 data/
 memory/

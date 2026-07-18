@@ -1,11 +1,14 @@
 import http from 'node:http';
+import path from 'node:path';
+import fs from 'node:fs';
 import express from 'express';
 import cors from 'cors';
-import { ensureDirs } from './paths.js';
+import { ensureDirs, INSTALL_ROOT, PROJECT_DIR, HOME_DIR } from './paths.js';
 import { AgentManager } from './agents/manager.js';
 import { TaskQueue } from './tasks/queue.js';
 import { PromptStore } from './prompts/store.js';
 import { createTeamServer, TEAM_TOOL_RULES } from './boss/tools.js';
+import { createSelfServer, SELF_TOOL_RULES } from './agents/selfTools.js';
 import { createRoutes } from './api/routes.js';
 import { WsHub } from './ws.js';
 
@@ -18,11 +21,20 @@ const tasks = new TaskQueue(manager);
 const prompts = new PromptStore();
 
 // Delegating roles get the in-process "team" MCP server (list/delegate/check).
+// Every agent gets the "self" server (set_model) unless autoModel is disabled.
 manager.sessionDecorator = (session) => {
-  if (session.config.role !== 'worker') {
-    session.extraMcpServers = { team: createTeamServer(manager, tasks, session.config.id) };
-    session.extraAllowedTools = TEAM_TOOL_RULES;
+  const mcpServers: typeof session.extraMcpServers = {};
+  const allowedTools: string[] = [];
+  if (session.config.autoModel !== false) {
+    mcpServers.self = createSelfServer(session);
+    allowedTools.push(...SELF_TOOL_RULES);
   }
+  if (session.config.role !== 'worker') {
+    mcpServers.team = createTeamServer(manager, tasks, session.config.id);
+    allowedTools.push(...TEAM_TOOL_RULES);
+  }
+  session.extraMcpServers = mcpServers;
+  session.extraAllowedTools = allowedTools;
 };
 
 manager.init();
@@ -33,6 +45,15 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', createRoutes(manager, tasks, prompts));
+
+// Derlenmiş panel varsa aynı porttan servis edilir; `claude-manager` komutu
+// böylece tek süreçle çalışır (vite dev sunucusu gerekmez).
+const webDist = path.join(INSTALL_ROOT, 'web', 'dist');
+if (fs.existsSync(path.join(webDist, 'index.html'))) {
+  app.use(express.static(webDist));
+  // SPA: /api ve /ws dışındaki her yol index.html'e düşer
+  app.get(/^\/(?!api|ws).*/, (_req, res) => res.sendFile(path.join(webDist, 'index.html')));
+}
 
 const server = http.createServer(app);
 const hub = new WsHub(server);
@@ -45,12 +66,30 @@ manager.on('permission_request', (request) => hub.broadcast({ type: 'permission_
 manager.on('permission_resolved', (agentId, requestId) =>
   hub.broadcast({ type: 'permission_resolved', agentId, requestId }),
 );
-manager.on('usage', (usage) => hub.broadcast({ type: 'usage', usage }));
+manager.on('usage', (usage) =>
+  hub.broadcast({ type: 'usage', usage, context: manager.contextSnapshot() }),
+);
 manager.on('agents_changed', () => hub.broadcast({ type: 'agents_changed' }));
+manager.on('commands_changed', (agentId, commands) =>
+  hub.broadcast({ type: 'commands_changed', agentId, commands })
+);
 tasks.on('task_update', (task) => hub.broadcast({ type: 'task_update', task }));
 
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(
+      `\n  Port ${PORT} kullanımda — muhtemelen kapanmamış bir claude-manager süreci var.\n` +
+        `  Başka port için: claude-manager --port 4700\n`
+    );
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, () => {
-  console.log(`claude-manager server: http://localhost:${PORT} (ws: /ws)`);
+  console.log(`\n  Claude Manager  →  http://localhost:${PORT}`);
+  console.log(`  Proje:  ${PROJECT_DIR}`);
+  console.log(`  Ekip:   ${path.join(HOME_DIR, 'agents')}\n`);
 });
 
 async function shutdown() {
