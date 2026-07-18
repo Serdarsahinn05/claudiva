@@ -148,6 +148,14 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
     menuRef.current?.querySelector('.cmd-row.sel')?.scrollIntoView({ block: 'nearest' });
   }, [selected, showMenu]);
 
+  // Boyutlandırma tutamağı yok; alan içeriğe göre büyür (CSS max-height'a kadar).
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   function complete(cmd: SlashCommand) {
     setInput(`/${cmd.name} `);
     setMenuOpen(false);
