@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AgentSnapshot } from '../types';
 import { api } from '../api';
+import { Modal } from './Modal';
 
 interface Props {
   existing?: AgentSnapshot;
@@ -102,8 +103,7 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose} wide>
         <div className="modal-head">
           <h2>{existing ? existing.config.name : 'Yeni Ajan'}</h2>
           <span className="modal-sub">{existing ? 'ajan yapılandırması' : 'mürettebata yeni üye'}</span>
@@ -251,7 +251,6 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
             {busy ? 'Kaydediliyor…' : existing ? 'Kaydet' : 'Oluştur'}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

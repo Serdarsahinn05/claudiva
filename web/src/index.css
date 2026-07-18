@@ -820,8 +820,10 @@ label.check.small { font-size: 12px; color: var(--muted); }
   position: relative;
   background: linear-gradient(160deg, var(--hull-2), var(--hull-1));
   border: 1px solid var(--edge-lit); border-radius: var(--radius);
-  padding: var(--s5); width: 620px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
-  display: flex; flex-direction: column; gap: var(--s3);
+  padding: var(--s5); width: 620px; max-width: 92vw; max-height: 88vh;
+  /* Başlık ve eylemler sabit kalır, yalnızca orta alan kayar — yoksa
+     autoFocus içeriği kaydırıp başlığı görüş dışına itiyor. */
+  display: flex; flex-direction: column; gap: var(--s3); overflow: hidden;
   clip-path: polygon(
     var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)),
     calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel)
@@ -837,7 +839,10 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .modal-sub { font-family: var(--font-mono); font-size: 10px; color: var(--dim); text-transform: uppercase; }
 
 /* Uzun form dört bölüme ayrılır: solda seçici, sağda içerik */
-.modal-body { display: grid; grid-template-columns: 170px 1fr; gap: var(--s4); min-height: 340px; }
+.modal-body {
+  display: grid; grid-template-columns: 170px 1fr; gap: var(--s4);
+  min-height: 340px; min-width: 0; flex: 1; overflow: hidden;
+}
 .modal-nav { display: flex; flex-direction: column; gap: 2px; border-right: 1px solid var(--edge); padding-right: var(--s3); }
 .modal-nav-btn {
   display: flex; flex-direction: column; gap: 1px; text-align: left;
@@ -850,7 +855,11 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .modal-nav-label { font-size: 12px; letter-spacing: 0.3px; }
 .modal-nav-hint { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
 
-.modal-pane { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.modal-pane {
+  display: flex; flex-direction: column; gap: var(--s4);
+  min-width: 0; min-height: 0; overflow-y: auto; padding-right: var(--s1);
+}
+.modal-head, .modal-actions { flex-shrink: 0; }
 .tb-field.grow { flex: 1; }
 .tb-field.grow textarea { flex: 1; min-height: 260px; }
 
@@ -1016,20 +1025,52 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .chip-done { background: rgba(63, 214, 127, 0.12); color: var(--nominal); border-color: rgba(63, 214, 127, 0.3); }
 .chip-failed { background: rgba(255, 92, 92, 0.12); color: var(--alarm); border-color: rgba(255, 92, 92, 0.35); }
 
-/* ---------- prompts ---------- */
-.prompt-library { display: flex; flex-direction: column; gap: 14px; }
-.prompt-item {
-  border: 1px solid var(--edge); border-radius: var(--radius);
-  background: var(--hull-1); padding: var(--s3);
-  display: flex; flex-direction: column; gap: var(--s2);
+/* ---------- promptlar ---------- */
+.prompt-library { display: flex; flex-direction: column; gap: var(--s4); }
+
+.pl-head {
+  display: flex; align-items: flex-start; gap: var(--s4);
+  padding-bottom: var(--s3); border-bottom: 1px solid var(--edge);
 }
-.prompt-head { line-height: 1.4; }
-.prompt-body {
+.pl-head > div { flex: 1; }
+.pl-head-desc { margin: 5px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Kartlar: her prompt kendi modülü */
+.pl-grid {
+  display: grid; gap: var(--s3);
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  align-content: start;
+}
+.pl-card {
+  display: flex; flex-direction: column; gap: var(--s2);
+  background: linear-gradient(160deg, var(--hull-2), var(--hull-1));
+  border: 1px solid var(--edge); border-radius: var(--radius);
+  padding: var(--s3) var(--s3) var(--s2);
+  clip-path: polygon(
+    var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)),
+    calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel)
+  );
+  transition: border-color var(--t-fast) var(--ease-out);
+}
+.pl-card:hover { border-color: var(--edge-lit); }
+.pl-card-head { display: flex; align-items: baseline; gap: var(--s2); }
+.pl-card-title { margin: 0; font-size: 13px; color: var(--fg); }
+.pl-card-lines {
+  margin-left: auto; font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
+}
+.pl-card-desc { margin: 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+.pl-card-body {
   white-space: pre-wrap; word-break: break-word;
   background: var(--void); border: 1px solid var(--edge);
   padding: var(--s2); border-radius: var(--radius);
-  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
-  max-height: 140px; overflow-y: auto; margin: 0;
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; color: var(--muted);
+  max-height: 150px; overflow-y: auto; margin: 0;
 }
-.prompt-item .row > select { max-width: 240px; }
-.prompt-item .row > button { flex: initial; }
+.pl-card-actions {
+  display: flex; align-items: center; gap: var(--s1);
+  padding-top: var(--s2); border-top: 1px solid var(--edge);
+}
+.pl-target { width: auto; max-width: 190px; font-size: 12px; padding: 5px var(--s2); }
+
+/* Editördeki satır sayacı */
+.pl-count { margin-left: auto; color: var(--dim); text-transform: none; letter-spacing: 0; }

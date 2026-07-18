@@ -6,30 +6,6 @@ import { PROMPTS_DIR } from '../paths.js';
 
 const FILE = path.join(PROMPTS_DIR, 'prompts.json');
 
-const DEFAULTS: PromptTemplate[] = [
-  {
-    id: 'ozet',
-    title: 'Durum özeti',
-    description: 'Ajandan mevcut işinin kısa durumunu ister',
-    template: 'Şu anda üzerinde çalıştığın işin durumunu 3-5 maddede özetle: ne bitti, ne kaldı, engel var mı?',
-    tags: ['genel'],
-  },
-  {
-    id: 'hafiza-yaz',
-    title: 'Hafızaya kaydet',
-    description: 'Bu oturumda öğrenilenleri kalıcı hafızaya yazdırır',
-    template: 'Bu konuşmada öğrendiğin kalıcı değerdeki bilgileri (kararlar, tercihler, proje bilgisi) hafıza klasörüne markdown dosyaları olarak kaydet. Var olan dosyaları güncelle, tekrar oluşturma.',
-    tags: ['hafıza'],
-  },
-  {
-    id: 'plan-yap',
-    title: 'Plan yap (boss)',
-    description: 'Boss için: işi analiz edip ekibe dağıtım planı yapar',
-    template: 'Şu isteği analiz et, alt görevlere böl, her görevi ekipteki en uygun ajana delegate_task ile ata (bağımsız görevleri paralel dağıt) ve sonuçları toplayıp bana tek bir özet rapor sun:\n\n<istek buraya>',
-    tags: ['boss'],
-  },
-];
-
 export class PromptStore {
   private prompts: PromptTemplate[] = [];
 
@@ -39,11 +15,12 @@ export class PromptStore {
         this.prompts = JSON.parse(fs.readFileSync(FILE, 'utf-8'));
         return;
       } catch {
-        // fall through to defaults
+        // bozuk dosya -> boş kütüphaneyle başla
       }
     }
-    this.prompts = DEFAULTS;
-    this.save();
+    // Varsayılan prompt yok: eskiden buradaki üç şablon artık skill
+    // (/durum-ozeti, /hafiza-yaz, /plan-yap) olarak geliyor.
+    this.prompts = [];
   }
 
   list(): PromptTemplate[] {
