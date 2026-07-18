@@ -16,7 +16,7 @@ export function AgentCard({ agent, onOpen, onEdit, onDelete, onToggle }: Props) 
   return (
     <div className={`card status-border-${status}`} onClick={onOpen}>
       <div className="card-head">
-        <span className={`dot dot-${status}`} title={STATUS_LABEL[status]} />
+        <span className={`led led-${status}`} title={STATUS_LABEL[status]} />
         <strong>{config.name}</strong>
         <span className="badge role">{ROLE_LABEL[config.role] ?? config.role}</span>
         <span
@@ -36,7 +36,7 @@ export function AgentCard({ agent, onOpen, onEdit, onDelete, onToggle }: Props) 
       </div>
       <div className="card-usage">
         <span title="giriş / çıkış token">
-          ⬇ {fmtNum(usage.inputTokens + usage.cacheReadTokens + usage.cacheCreationTokens)} · ⬆{' '}
+          IN {fmtNum(usage.inputTokens + usage.cacheReadTokens + usage.cacheCreationTokens)} · OUT{' '}
           {fmtNum(usage.outputTokens)}
         </span>
         <span title="tahmini maliyet">{fmtCost(usage.costUSD)}</span>

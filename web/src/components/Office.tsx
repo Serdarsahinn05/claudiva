@@ -200,13 +200,17 @@ export function Office({ agents, tasks, onOpen }: Props) {
 
   return (
     <div className="office-wrap">
-      <canvas
-        ref={canvasRef}
-        onClick={handleClick}
-        onMouseMove={handleMove}
-        style={{ imageRendering: 'pixelated', maxWidth: '100%' }}
-        title="Bir karaktere tıklayınca terminali açılır"
-      />
+      {/* Tuval köprü ekranı gibi sunulur: hafif renk uyumu + tarama çizgisi katmanı */}
+      <div className="viewscreen">
+        <span className="viewscreen-label">Mürettebat Kamerası</span>
+        <canvas
+          ref={canvasRef}
+          onClick={handleClick}
+          onMouseMove={handleMove}
+          style={{ imageRendering: 'pixelated', maxWidth: '100%' }}
+          title="Bir karaktere tıklayınca terminali açılır"
+        />
+      </div>
       <div className="office-legend muted">
         💻 çalışıyor · 📖 okuyor · <span style={{ color: 'var(--yellow)' }}>…</span> onay bekliyor ·
         ✓ tur bitti · gri = kapalı · karaktere tıkla → terminal

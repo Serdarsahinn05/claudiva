@@ -46,14 +46,15 @@ export default function App() {
   }
 
   const pendingCount = store.permissions.length;
+  const activeCount = store.agents.filter((a) => a.status !== 'offline').length;
 
   return (
     <div className="app">
       <header>
-        <h1>🏢 Claude Manager</h1>
+        <h1>CLAUDE MANAGER</h1>
         <nav>
           <button className={tab === 'office' ? 'active' : ''} onClick={() => setTab('office')}>
-            🐈 Ofis
+            Ofis
           </button>
           <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
             Panel
@@ -72,10 +73,19 @@ export default function App() {
         {pendingCount > 0 && <span className="badge warn">⚠ {pendingCount} izin bekliyor</span>}
         {store.usage && (
           <span className="totals" title="toplam token (tüm ajanlar)">
-            Σ {fmtNum(totalTokens(store.usage.total))} token · {fmtCost(store.usage.total.costUSD)}
+            <span className="readout-key">Σ</span> {fmtNum(totalTokens(store.usage.total))} tok ·{' '}
+            {fmtCost(store.usage.total.costUSD)}
           </span>
         )}
-        <span className={`conn ${store.connected ? 'on' : 'off'}`}>{store.connected ? '● bağlı' : '○ bağlantı yok'}</span>
+        {activeCount > 0 && (
+          <span className="totals" title="çalışan ajan sayısı">
+            <span className="readout-key">AKTİF</span> {activeCount}/{store.agents.length}
+          </span>
+        )}
+        <span className={`conn ${store.connected ? 'on' : 'off'}`}>
+          <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
+          {store.connected ? 'bağlantı aktif' : 'bağlantı yok'}
+        </span>
       </header>
 
       <div className="layout">
@@ -83,20 +93,29 @@ export default function App() {
           <button className="primary wide" onClick={() => setFormAgent('new')}>
             + Yeni Ajan
           </button>
+          <div className="roster-title">Mürettebat · {store.agents.length}</div>
           <div className="agent-list">
             {store.agents.map((a) => (
               <div
                 key={a.config.id}
                 className={`agent-row ${selectedId === a.config.id ? 'selected' : ''}`}
                 onClick={() => openAgent(a.config.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openAgent(a.config.id);
+                  }
+                }}
               >
-                <span className={`dot dot-${a.status}`} />
+                <span className={`led led-${a.status}`} />
                 <span className="agent-row-name">{a.config.name}</span>
                 {a.pendingPermissions.length > 0 && <span className="badge warn">!</span>}
-                <span className="muted small">{fmtNum(totalTokens(a.usage))}</span>
+                <span className="agent-row-tokens">{fmtNum(totalTokens(a.usage))}</span>
               </div>
             ))}
-            {store.agents.length === 0 && <div className="muted center">Henüz ajan yok.</div>}
+            {store.agents.length === 0 && <div className="muted center">Mürettebat boş.</div>}
           </div>
         </aside>
 

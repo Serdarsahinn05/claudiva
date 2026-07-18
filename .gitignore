@@ -3,6 +3,11 @@ dist/
 # kişisel izin ayarları (proje ayarları .claude/settings.json paylaşılır)
 .claude/settings.local.json
 
+# `npx skills add` ile kurulan üçüncü parti skill'ler — skills-lock.json
+# sürümlenir, içerik node_modules gibi yeniden kurulur
+.claude/skills/
+.agents/
+
 # runtime-generated
 .claude-manager/
 workspaces/

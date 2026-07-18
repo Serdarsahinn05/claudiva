@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "futuristic": {
+      "source": "bergside/awesome-design-skills",
+      "sourceType": "github",
+      "skillPath": "skills/futuristic/SKILL.md",
+      "computedHash": "4064447f43ea76bfeff89413fd240c3f4d62035d1fc9b4be56df2b3799d5857c"
+    }
+  }
+}

@@ -351,7 +351,7 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
       </div>
 
       <div className="terminal-hint">
-        <span className={`dot dot-${agent.status}`} />
+        <span className={`led led-${agent.status}`} />
         <span>{STATUS_LABEL[agent.status]}</span>
         <span className="hint-sep">·</span>
         <span>
