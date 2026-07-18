@@ -72,6 +72,13 @@ export class AgentManager extends EventEmitter {
         console.error(`Bozuk config atlandı: ${file}`, err);
       }
     }
+    // Panel sırası: order verilmişse ona, yoksa oluşturulma zamanına göre.
+    configs.sort((a, b) => {
+      const ao = a.order ?? Number.MAX_SAFE_INTEGER;
+      const bo = b.order ?? Number.MAX_SAFE_INTEGER;
+      if (ao !== bo) return ao - bo;
+      return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+    });
     return configs;
   }
 
@@ -150,7 +157,35 @@ export class AgentManager extends EventEmitter {
   // ---------------------------------------------------------- public API
 
   list(): AgentSnapshot[] {
-    return [...this.sessions.values()].map((s) => this.snapshot(s));
+    return [...this.sessions.values()]
+      .sort((a, b) => {
+        const ao = a.config.order ?? Number.MAX_SAFE_INTEGER;
+        const bo = b.config.order ?? Number.MAX_SAFE_INTEGER;
+        if (ao !== bo) return ao - bo;
+        return (a.config.createdAt ?? '').localeCompare(b.config.createdAt ?? '');
+      })
+      .map((s) => this.snapshot(s));
+  }
+
+  /**
+   * Panel sırasını kalıcılaştırır. Verilen id dizisi yeni sırayı belirler;
+   * listede olmayan ajanlar sona eklenir (yarış durumunda kaybolmasınlar).
+   */
+  reorder(ids: string[]): AgentSnapshot[] {
+    const rest = [...this.sessions.keys()].filter((id) => !ids.includes(id));
+    [...ids.filter((id) => this.sessions.has(id)), ...rest].forEach((id, i) => {
+      const s = this.sessions.get(id);
+      if (!s || s.config.order === i) return;
+      s.config.order = i;
+      const file = path.join(agentDir(id), 'config.json');
+      try {
+        fs.writeFileSync(file, JSON.stringify(s.config, null, 2), 'utf-8');
+      } catch (err) {
+        console.error(`Sıra yazılamadı: ${file}`, err);
+      }
+    });
+    this.emit('agents_changed');
+    return this.list();
   }
 
   get(id: string): AgentSession | undefined {

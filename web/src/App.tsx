@@ -4,17 +4,33 @@ import { api } from './api';
 import { AgentCard } from './components/AgentCard';
 import { AgentForm } from './components/AgentForm';
 import { Terminal } from './components/Terminal';
+import { Bridge } from './components/Bridge';
+import { Rail, ICONS } from './components/Rail';
 import { TaskBoard } from './components/TaskBoard';
 import { PromptLibrary } from './components/PromptLibrary';
 import { Office } from './components/Office';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
-type Tab = 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts';
+type Tab = 'bridge' | 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts';
+
+const TAB_TITLE: Record<Tab, string> = {
+  bridge: 'Köprü',
+  office: 'Ofis',
+  dashboard: 'Panel',
+  terminal: 'Terminal',
+  tasks: 'Görevler',
+  prompts: 'Promptlar',
+};
+
+/** Mürettebat listesinin görüneceği bölümler — diğerlerinde yer kaplamasın. */
+const ROSTER_TABS = new Set<Tab>(['dashboard', 'terminal']);
 
 export default function App() {
   const store = useStore();
-  const [tab, setTab] = useState<Tab>('office');
+  const [tab, setTab] = useState<Tab>('bridge');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
 
@@ -48,27 +64,36 @@ export default function App() {
   const pendingCount = store.permissions.length;
   const activeCount = store.agents.filter((a) => a.status !== 'offline').length;
 
+  /** Sürüklenen ajanı hedef sıraya taşıyıp sunucuya yazar. */
+  async function commitReorder(toIndex: number) {
+    const ids = store.agents.map((a) => a.config.id);
+    const from = ids.indexOf(dragId ?? '');
+    setDragId(null);
+    setDropIndex(null);
+    if (from === -1 || from === toIndex) return;
+    const next = [...ids];
+    next.splice(toIndex, 0, next.splice(from, 1)[0]);
+    await api.reorderAgents(next).catch(() => {});
+    await store.refreshAgents();
+  }
+
+  /** Klavyeyle bir adım yukarı/aşağı taşır. */
+  async function moveAgent(id: string, delta: number) {
+    const ids = store.agents.map((a) => a.config.id);
+    const from = ids.indexOf(id);
+    const to = from + delta;
+    if (from === -1 || to < 0 || to >= ids.length) return;
+    const next = [...ids];
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    await api.reorderAgents(next).catch(() => {});
+    await store.refreshAgents();
+  }
+
   return (
     <div className="app">
       <header>
         <h1>CLAUDE MANAGER</h1>
-        <nav>
-          <button className={tab === 'office' ? 'active' : ''} onClick={() => setTab('office')}>
-            Ofis
-          </button>
-          <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
-            Panel
-          </button>
-          <button className={tab === 'terminal' ? 'active' : ''} onClick={() => setTab('terminal')} disabled={!selected}>
-            Terminal{selected ? `: ${selected.config.name}` : ''}
-          </button>
-          <button className={tab === 'tasks' ? 'active' : ''} onClick={() => setTab('tasks')}>
-            Görevler
-          </button>
-          <button className={tab === 'prompts' ? 'active' : ''} onClick={() => setTab('prompts')}>
-            Promptlar
-          </button>
-        </nav>
+        <span className="header-sub">{TAB_TITLE[tab]}{tab === 'terminal' && selected ? ` · ${selected.config.name}` : ''}</span>
         <div className="spacer" />
         {pendingCount > 0 && <span className="badge warn">⚠ {pendingCount} izin bekliyor</span>}
         {store.usage && (
@@ -86,29 +111,76 @@ export default function App() {
           <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
           {store.connected ? 'bağlantı aktif' : 'bağlantı yok'}
         </span>
+        <button className="primary" onClick={() => setFormAgent('new')}>
+          + Ajan
+        </button>
       </header>
 
       <div className="layout">
+        <Rail
+          active={tab}
+          onSelect={(id) => setTab(id as Tab)}
+          items={[
+            { id: 'bridge', label: 'Köprü', icon: ICONS.bridge },
+            { id: 'office', label: 'Ofis', icon: ICONS.office },
+            { id: 'dashboard', label: 'Panel', icon: ICONS.panel },
+            { id: 'terminal', label: 'Terminal', icon: ICONS.terminal, disabled: !selected, badge: pendingCount || undefined },
+            { id: 'tasks', label: 'Görevler', icon: ICONS.tasks },
+            { id: 'prompts', label: 'Promptlar', icon: ICONS.prompts },
+          ]}
+        />
+
+        {/* Mürettebat listesi yalnızca ajan seçiminin anlamlı olduğu bölümlerde */}
+        {ROSTER_TABS.has(tab) && (
         <aside>
-          <button className="primary wide" onClick={() => setFormAgent('new')}>
-            + Yeni Ajan
-          </button>
-          <div className="roster-title">Mürettebat · {store.agents.length}</div>
+          <div className="roster-title">
+            Mürettebat · {store.agents.length}
+            <span className="roster-hint">sürükle → sırala</span>
+          </div>
           <div className="agent-list">
-            {store.agents.map((a) => (
+            {store.agents.map((a, i) => (
               <div
                 key={a.config.id}
-                className={`agent-row ${selectedId === a.config.id ? 'selected' : ''}`}
+                className={
+                  `agent-row ${selectedId === a.config.id ? 'selected' : ''}` +
+                  (dragId === a.config.id ? ' dragging' : '') +
+                  (dropIndex === i && dragId && dragId !== a.config.id ? ' drop-target' : '')
+                }
                 onClick={() => openAgent(a.config.id)}
                 role="button"
                 tabIndex={0}
+                draggable
+                onDragStart={(e) => {
+                  setDragId(a.config.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  setDropIndex(i);
+                }}
+                onDragEnd={() => {
+                  setDragId(null);
+                  setDropIndex(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  void commitReorder(i);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     openAgent(a.config.id);
+                    return;
+                  }
+                  // Klavyeyle sıralama: Alt + yukarı/aşağı
+                  if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                    e.preventDefault();
+                    void moveAgent(a.config.id, e.key === 'ArrowUp' ? -1 : 1);
                   }
                 }}
               >
+                <span className="agent-grip" aria-hidden="true">⋮⋮</span>
                 <span className={`led led-${a.status}`} />
                 <span className="agent-row-name">{a.config.name}</span>
                 {a.pendingPermissions.length > 0 && <span className="badge warn">!</span>}
@@ -118,8 +190,20 @@ export default function App() {
             {store.agents.length === 0 && <div className="muted center">Mürettebat boş.</div>}
           </div>
         </aside>
+        )}
 
         <main>
+          {tab === 'bridge' && (
+            <Bridge
+              agents={store.agents}
+              tasks={store.tasks}
+              usage={store.usage}
+              projectDir={store.projectDir}
+              onOpenOffice={() => setTab('office')}
+              onOpenAgent={openAgent}
+            />
+          )}
+
           {tab === 'office' && <Office agents={store.agents} tasks={store.tasks} onOpen={openAgent} />}
 
           {tab === 'dashboard' && (

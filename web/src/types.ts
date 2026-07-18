@@ -111,6 +111,35 @@ export interface AgentSnapshot {
   commands?: SlashCommand[];
 }
 
+/** Köprü ekranının gösterdiği sistem telemetrisi (GET /api/system). */
+export interface SystemInfo {
+  host: {
+    platform: string;
+    release: string;
+    arch: string;
+    cpuModel: string;
+    cpuCount: number;
+    loadAvg: number;
+    memTotal: number;
+    memFree: number;
+    uptimeSec: number;
+    nodeVersion: string;
+  };
+  project: {
+    dir: string;
+    name: string;
+    fileCount: number;
+    sizeBytes: number;
+    truncated: boolean;
+    gitBranch: string | null;
+  };
+  claude: {
+    sdkVersion: string;
+    teamDir: string;
+    installRoot: string;
+  };
+}
+
 export interface UsageSummary {
   total: TokenUsage;
   perAgent: Record<string, TokenUsage>;

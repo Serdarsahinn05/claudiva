@@ -19,6 +19,8 @@ interface Props {
   agents: AgentSnapshot[];
   tasks: Task[];
   onOpen: (agentId: string) => void;
+  /** Köprüdeki küçük önizleme: çerçeve etiketi, açıklama satırı ve tıklama kapalı. */
+  compact?: boolean;
 }
 
 /** Ajan anlık görüntülerini motor çağrılarına çevirir */
@@ -60,7 +62,7 @@ function syncAgents(state: OfficeState, agents: AgentSnapshot[], firstSync: bool
   }
 }
 
-export function Office({ agents, tasks, onOpen }: Props) {
+export function Office({ agents, tasks, onOpen, compact }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [assets, setAssets] = useState<OfficeAssets | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
@@ -180,20 +182,32 @@ export function Office({ agents, tasks, onOpen }: Props) {
     canvas.style.cursor = id ? 'pointer' : 'default';
   }
 
-  if (assetError) {
-    return (
+  // Köprüdeki küçük önizlemede tam sayfalık boş/hata durumları yerine tek satır.
+  if (assetError || agents.length === 0) {
+    if (compact) {
+      return <div className="bridge-cam-empty">{assetError ? 'Kamera yayını yok' : 'Ofis boş'}</div>;
+    }
+    return assetError ? (
       <div className="empty">
         <h2>Ofis yüklenemedi</h2>
         <p className="muted">{assetError}</p>
       </div>
-    );
-  }
-
-  if (agents.length === 0) {
-    return (
+    ) : (
       <div className="empty">
         <h2>Ofis boş 🏢</h2>
         <p>"+ Yeni Ajan" ile ilk çalışanı işe al — masasına oturup seni bekleyecek.</p>
+      </div>
+    );
+  }
+
+  // Köprüdeki önizlemede tuval yalnızca görüntüdür; tıklama dış modüle aittir.
+  if (compact) {
+    return (
+      <div className="viewscreen compact">
+        <canvas
+          ref={canvasRef}
+          style={{ imageRendering: 'pixelated', maxWidth: '100%', pointerEvents: 'none' }}
+        />
       </div>
     );
   }

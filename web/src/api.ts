@@ -1,4 +1,4 @@
-import type { AgentSnapshot, PromptTemplate, Task, TranscriptEvent, UsageSummary } from './types';
+import type { AgentSnapshot, PromptTemplate, SystemInfo, Task, TranscriptEvent, UsageSummary } from './types';
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -16,6 +16,7 @@ export const api = {
   createAgent: (input: unknown) => req<AgentSnapshot>('POST', '/api/agents', input),
   updateAgent: (id: string, patch: unknown) => req<AgentSnapshot>('PUT', `/api/agents/${id}`, patch),
   deleteAgent: (id: string) => req('DELETE', `/api/agents/${id}`),
+  reorderAgents: (ids: string[]) => req<AgentSnapshot[]>('PUT', '/api/agents/order', { ids }),
   transcript: (id: string) => req<TranscriptEvent[]>('GET', `/api/agents/${id}/transcript`),
   startAgent: (id: string) => req<AgentSnapshot>('POST', `/api/agents/${id}/start`),
   stopAgent: (id: string) => req<AgentSnapshot>('POST', `/api/agents/${id}/stop`),
@@ -35,4 +36,5 @@ export const api = {
   updatePrompt: (id: string, patch: unknown) => req<PromptTemplate>('PUT', `/api/prompts/${id}`, patch),
   deletePrompt: (id: string) => req('DELETE', `/api/prompts/${id}`),
   info: () => req<{ memoryDir: string; projectDir: string }>('GET', '/api/info'),
+  system: () => req<SystemInfo>('GET', '/api/system'),
 };

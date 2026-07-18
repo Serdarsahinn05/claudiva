@@ -52,6 +52,19 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
             + Yeni prompt
           </button>
         </div>
+        {prompts.length === 0 && (
+          <div className="empty">
+            <h2>Kütüphane boş</h2>
+            <p>
+              Eski hazır promptlar <strong>skill'e</strong> dönüştürüldü: artık terminalde <kbd>/</kbd> yazıp
+              <code> /durum-ozeti</code>, <code> /hata-avi</code> gibi komutlarla çağırılıyorlar.
+            </p>
+            <p className="muted small">
+              Buraya yalnızca sık tekrarladığın, ajana olduğu gibi göndermek istediğin uzun metinleri ekle.
+              Bir davranış kuralı yazacaksan skill daha uygun: <code>~/.claude-manager/agents/&lt;ajan&gt;/skills/</code>
+            </p>
+          </div>
+        )}
         {prompts.map((p) => (
           <div key={p.id} className="prompt-item">
             <div className="prompt-head">

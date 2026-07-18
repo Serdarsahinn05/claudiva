@@ -28,6 +28,8 @@ export interface AgentConfig {
   /** Göreve göre otomatik model seçimi (set_model aracı). Varsayılan: açık. */
   autoModel?: boolean;
   mcpServers?: Record<string, McpServerDef>;
+  /** Paneldeki sıra. Küçük olan üstte; tanımsızsa listenin sonuna düşer. */
+  order?: number;
   createdAt: string;
 }
 

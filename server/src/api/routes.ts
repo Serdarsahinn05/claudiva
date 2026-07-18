@@ -3,6 +3,7 @@ import type { AgentManager } from '../agents/manager.js';
 import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
 import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
+import { systemInfo } from './system.js';
 
 function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>) {
   return async (req: Request, res: Response) => {
@@ -22,6 +23,13 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
   r.get('/agents', handle(() => manager.list()));
 
   r.post('/agents', handle((req) => manager.create(req.body)));
+
+  /** Panel sırası — :id rotasından ÖNCE gelmeli, yoksa "order" id sanılır. */
+  r.put('/agents/order', handle((req) => {
+    const ids = req.body?.ids;
+    if (!Array.isArray(ids)) throw new Error('ids dizisi gerekli.');
+    return manager.reorder(ids.map(String));
+  }));
 
   r.put('/agents/:id', handle((req) => manager.update(req.params.id, req.body)));
 
@@ -125,6 +133,9 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
 
   // --------------------------------------------------------------- misc
   r.get('/info', handle(() => ({ memoryDir: MEMORY_DIR, projectDir: PROJECT_DIR })));
+
+  /** Köprü ekranının telemetrisi: host makine, proje ve Claude/SDK bilgileri. */
+  r.get('/system', handle(() => systemInfo()));
 
   return r;
 }
