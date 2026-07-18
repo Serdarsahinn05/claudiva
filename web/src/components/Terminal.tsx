@@ -166,57 +166,49 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
 
   return (
     <div className="terminal">
-      <div className="terminal-head">
-        <span className={`dot dot-${agent.status}`} />
-        <strong>{agent.config.name}</strong>
-        <span className="muted">
-          {STATUS_LABEL[agent.status]}
-          {agent.currentActivity ? ` · ${agent.currentActivity}` : ''}
-        </span>
-        <div className="spacer" />
-        <label className="check small">
-          <input type="checkbox" checked={showThinking} onChange={(e) => setShowThinking(e.target.checked)} />
-          düşünmeyi göster
-        </label>
-        {agent.status === 'working' && (
-          <button className="danger" onClick={() => api.interrupt(id)}>
-            ⏹ Durdur
-          </button>
-        )}
-      </div>
-
       <div className="terminal-body" ref={scrollRef}>
-        {visible.length === 0 && (
-          <div className="cli-welcome">
-            <span className="cli-welcome-title">Claude Manager</span>
-            <div className="cli-welcome-cols">
-              <div className="cli-welcome-left">
-                <div className="cli-hello">Merhaba, {agent.config.name}!</div>
-                <pre className="cli-logo">{CAT_LOGO}</pre>
-                <div className="cli-meta">
-                  {agent.currentModel ?? agent.config.model} · {ROLE_LABEL[agent.config.role] ?? agent.config.role}
-                </div>
-                <div className="cli-meta dim">{projectDir || '…'}</div>
+        {/* CLI'da olduğu gibi karşılama kutusu geçmişin en üstünde kalıcıdır;
+            oturum başlayınca kaybolmaz, yukarı kaydırınca hep orada durur. */}
+        <div className="cli-welcome">
+          <span className="cli-welcome-title">Claude Manager</span>
+          <div className="cli-welcome-cols">
+            <div className="cli-welcome-left">
+              <div className="cli-hello">Merhaba, {agent.config.name}!</div>
+              <pre className="cli-logo">{CAT_LOGO}</pre>
+              <div className="cli-meta">
+                {agent.currentModel ?? agent.config.model} · {ROLE_LABEL[agent.config.role] ?? agent.config.role}
               </div>
-              <div className="cli-welcome-right">
-                <div className="cli-sec-title">Başlarken</div>
-                <div className="cli-sec-line">
-                  <kbd>/</kbd> yazıp komutları gör{cmdCount > 0 ? ` (${cmdCount} tane)` : ''}
-                </div>
-                <div className="cli-sec-line">Aşağıya doğrudan görev yazabilirsin</div>
+              <div className="cli-meta dim">{projectDir || '…'}</div>
+            </div>
+            <div className="cli-welcome-right">
+              <div className="cli-sec-title">Başlarken</div>
+              <div className="cli-sec-line">
+                <kbd>/</kbd> yazıp komutları gör{cmdCount > 0 ? ` (${cmdCount} tane)` : ''}
+              </div>
+              <div className="cli-sec-line">Aşağıya doğrudan görev yazabilirsin</div>
 
-                <div className="cli-sec-title">Ekip</div>
-                <div className="cli-sec-line">{agentCount} ajan tanımlı</div>
-                <div className="cli-sec-line dim">
-                  {agent.status === 'offline' ? 'Bu ajan kapalı — başlatınca çalışır' : 'Bu ajan hazır'}
-                </div>
+              <div className="cli-sec-title">Ekip</div>
+              <div className="cli-sec-line">{agentCount} ajan tanımlı</div>
+              <div className="cli-sec-line dim">
+                {agent.status === 'offline' ? 'Bu ajan kapalı — başlatınca çalışır' : 'Bu ajan hazır'}
               </div>
             </div>
           </div>
-        )}
+        </div>
+
         {visible.map((ev) => (
           <EventLine key={ev.id} ev={ev} />
         ))}
+
+        {agent.status === 'working' && (
+          <div className="cli-busy">
+            <span className="cli-spinner">✻</span>
+            <span>{agent.currentActivity ? `${agent.currentActivity}…` : 'çalışıyor…'}</span>
+            <button className="cli-link danger" onClick={() => api.interrupt(id)}>
+              esc ile durdur
+            </button>
+          </div>
+        )}
       </div>
 
       {agent.pendingPermissions.map((p) => (
@@ -260,7 +252,7 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
         <span className="prompt-mark">&gt;</span>
         <textarea
           ref={inputRef}
-          rows={2}
+          rows={1}
           value={input}
           placeholder={`${agent.config.name} ajanına görev ver…`}
           onChange={(e) => setInput(e.target.value)}
@@ -288,27 +280,42 @@ export function Terminal({ agent, events, projectDir, agentCount }: Props) {
                 return;
               }
             }
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            // CLI'daki gibi: Enter gönderir, Shift+Enter satır atlar.
+            if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               void send();
+              return;
+            }
+            if (e.key === 'Escape' && agent.status === 'working') {
+              e.preventDefault();
+              void api.interrupt(id);
             }
           }}
         />
-        <button className="primary" onClick={send} disabled={!input.trim()}>
-          Gönder
-        </button>
       </div>
 
       <div className="terminal-hint">
+        <span className={`dot dot-${agent.status}`} />
+        <span>{STATUS_LABEL[agent.status]}</span>
+        <span className="hint-sep">·</span>
         <span>
           <kbd>/</kbd> komutlar{cmdCount > 0 ? ` (${cmdCount})` : ''}
         </span>
+        <span className="hint-sep">·</span>
         <span>
-          <kbd>Ctrl</kbd>+<kbd>Enter</kbd> gönder
+          <kbd>Enter</kbd> gönder
         </span>
-        {agent.status === 'offline' && <span className="hint-warn">ajan kapalı — başlatınca çalışır</span>}
+        <span className="hint-sep">·</span>
+        <span>
+          <kbd>Shift</kbd>+<kbd>Enter</kbd> satır
+        </span>
         <div className="spacer" />
-        <span>{agent.currentModel ?? agent.config.model}</span>
+        <label className="cli-toggle">
+          <input type="checkbox" checked={showThinking} onChange={(e) => setShowThinking(e.target.checked)} />
+          düşünme
+        </label>
+        <span className="hint-sep">·</span>
+        <span className="hint-model">{agent.currentModel ?? agent.config.model}</span>
       </div>
     </div>
   );
