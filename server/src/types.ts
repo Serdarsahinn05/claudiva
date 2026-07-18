@@ -25,6 +25,8 @@ export interface AgentConfig {
   autoApprove: boolean;
   /** Extra description shown on the dashboard card. */
   description?: string;
+  /** Göreve göre otomatik model seçimi (set_model aracı). Varsayılan: açık. */
+  autoModel?: boolean;
   mcpServers?: Record<string, McpServerDef>;
   createdAt: string;
 }
@@ -105,6 +107,14 @@ export interface PromptTemplate {
   tags?: string[];
 }
 
+/** Bir oturumda kullanılabilen slash komutu (skill, plugin komutu veya CLI yerleşiği). */
+export interface SlashCommand {
+  name: string;
+  description: string;
+  argumentHint?: string;
+  aliases?: string[];
+}
+
 /** Snapshot of an agent for the panel. */
 export interface AgentSnapshot {
   config: AgentConfig;
@@ -113,4 +123,10 @@ export interface AgentSnapshot {
   currentActivity?: string;
   pendingPermissions: PermissionRequestInfo[];
   sessionId?: string;
+  /** Son turdaki bağlam doluluğu (token) — panel yakıt göstergesi */
+  contextTokens?: number;
+  /** Oturumun şu an kullandığı model (otomatik geçişle temelden sapabilir) */
+  currentModel?: string;
+  /** Bu oturumda "/" ile çağrılabilen komutlar (panel otomatik tamamlaması) */
+  commands?: SlashCommand[];
 }

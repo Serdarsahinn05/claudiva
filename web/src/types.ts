@@ -17,6 +17,8 @@ export interface AgentConfig {
   model: string;
   memoryMode: MemoryMode;
   autoApprove: boolean;
+  /** Göreve göre otomatik model seçimi (set_model aracı). Varsayılan: açık. */
+  autoModel?: boolean;
   description?: string;
   mcpServers?: Record<string, McpServerDef>;
   createdAt: string;
@@ -84,6 +86,14 @@ export interface PromptTemplate {
   tags?: string[];
 }
 
+/** Terminalde "/" ile çağrılabilen komut (skill, plugin komutu veya CLI yerleşiği). */
+export interface SlashCommand {
+  name: string;
+  description: string;
+  argumentHint?: string;
+  aliases?: string[];
+}
+
 export interface AgentSnapshot {
   config: AgentConfig;
   status: AgentStatus;
@@ -91,6 +101,12 @@ export interface AgentSnapshot {
   currentActivity?: string;
   pendingPermissions: PermissionRequestInfo[];
   sessionId?: string;
+  /** Son turdaki bağlam doluluğu (token) — ofis yakıt göstergesi */
+  contextTokens?: number;
+  /** Oturumun şu an kullandığı model (otomatik geçişle temelden sapabilir) */
+  currentModel?: string;
+  /** Terminalde "/" yazınca listelenecek komutlar */
+  commands?: SlashCommand[];
 }
 
 export interface UsageSummary {
@@ -103,6 +119,7 @@ export type WsPayload =
   | { type: 'agent_event'; agentId: string; event: TranscriptEvent }
   | { type: 'permission_request'; request: PermissionRequestInfo }
   | { type: 'permission_resolved'; agentId: string; requestId: string }
-  | { type: 'usage'; usage: UsageSummary }
+  | { type: 'usage'; usage: UsageSummary; context?: Record<string, number> }
   | { type: 'agents_changed' }
+  | { type: 'commands_changed'; agentId: string; commands: SlashCommand[] }
   | { type: 'task_update'; task: Task };

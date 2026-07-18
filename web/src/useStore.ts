@@ -48,11 +48,32 @@ export function useStore(): Store {
     setTranscripts((t) => ({ ...t, [agentId]: events }));
   }, []);
 
+  // `npm run dev`de vite sunucudan önce hazır oluyor; ilk istekler 502 dönüyordu.
+  // Sunucu cevap verene kadar artan aralıklarla yeniden dener.
   useEffect(() => {
-    void refreshAgents();
-    void refreshTasks();
-    void refreshPrompts();
-    void api.usage().then(setUsage).catch(() => {});
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    async function load(attempt = 0) {
+      if (cancelled) return;
+      try {
+        await Promise.all([
+          refreshAgents(),
+          refreshTasks(),
+          refreshPrompts(),
+          api.usage().then(setUsage),
+        ]);
+      } catch {
+        if (cancelled) return;
+        timer = setTimeout(() => void load(attempt + 1), Math.min(500 * 2 ** attempt, 5000));
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [refreshAgents, refreshTasks, refreshPrompts]);
 
   useEffect(() => {
@@ -112,11 +133,20 @@ export function useStore(): Store {
           case 'usage':
             setUsage(msg.usage);
             setAgents((prev) =>
-              prev.map((a) => ({ ...a, usage: msg.usage.perAgent[a.config.id] ?? a.usage })),
+              prev.map((a) => ({
+                ...a,
+                usage: msg.usage.perAgent[a.config.id] ?? a.usage,
+                contextTokens: msg.context?.[a.config.id] ?? a.contextTokens,
+              })),
             );
             break;
           case 'agents_changed':
             void refreshAgents();
+            break;
+          case 'commands_changed':
+            setAgents((prev) =>
+              prev.map((a) => (a.config.id === msg.agentId ? { ...a, commands: msg.commands } : a)),
+            );
             break;
           case 'task_update':
             setTasks((prev) => {
