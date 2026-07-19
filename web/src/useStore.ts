@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import type {
   AgentSnapshot,
+  BudgetState,
   PermissionRequestInfo,
   PromptTemplate,
   Task,
@@ -17,11 +18,13 @@ export interface Store {
   tasks: Task[];
   prompts: PromptTemplate[];
   usage: UsageSummary | null;
+  budget: BudgetState | null;
   transcripts: Record<string, TranscriptEvent[]>;
   permissions: PermissionRequestInfo[];
   connected: boolean;
   /** Ajanların üzerinde çalıştığı proje kökü (terminal karşılama kutusunda gösterilir). */
   projectDir: string;
+  refreshBudget: () => Promise<void>;
   refreshAgents: () => Promise<void>;
   refreshTasks: () => Promise<void>;
   refreshPrompts: () => Promise<void>;
@@ -33,6 +36,7 @@ export function useStore(): Store {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [prompts, setPrompts] = useState<PromptTemplate[]>([]);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
+  const [budget, setBudget] = useState<BudgetState | null>(null);
   const [transcripts, setTranscripts] = useState<Record<string, TranscriptEvent[]>>({});
   const [permissions, setPermissions] = useState<PermissionRequestInfo[]>([]);
   const [connected, setConnected] = useState(false);
@@ -65,6 +69,7 @@ export function useStore(): Store {
           refreshTasks(),
           refreshPrompts(),
           api.usage().then(setUsage),
+          api.budget().then(setBudget),
           api.info().then((i) => setProjectDir(i.projectDir)),
         ]);
       } catch {
@@ -136,6 +141,8 @@ export function useStore(): Store {
             break;
           case 'usage':
             setUsage(msg.usage);
+            // Bütçe her tur sonunda kullanımla birlikte gelir; ayrı istek gerekmez.
+            if (msg.budget) setBudget(msg.budget);
             setAgents((prev) =>
               prev.map((a) => ({
                 ...a,
@@ -173,11 +180,16 @@ export function useStore(): Store {
     };
   }, [refreshAgents]);
 
+  const refreshBudget = useCallback(async () => {
+    setBudget(await api.budget());
+  }, []);
+
   return {
     agents,
     tasks,
     prompts,
     usage,
+    budget,
     transcripts,
     permissions,
     connected,
@@ -185,6 +197,7 @@ export function useStore(): Store {
     refreshAgents,
     refreshTasks,
     refreshPrompts,
+    refreshBudget,
     loadTranscript,
   };
 }

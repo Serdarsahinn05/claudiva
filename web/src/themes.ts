@@ -80,9 +80,22 @@ export function getTheme(): string {
   return DEFAULT_THEME;
 }
 
+/** index.css'teki --t-theme ile aynı olmalı. */
+const SHIFT_MS = 300;
+let shiftTimer: number | undefined;
+
 export function setTheme(id: string): void {
   const theme = isKnown(id) ? id : DEFAULT_THEME;
-  document.documentElement.dataset.theme = theme;
+  const root = document.documentElement;
+
+  // Renkler normalde anında sıçrar. `theme-shifting` geçici olarak her
+  // yüzeye bir renk geçişi verir, böylece tema yumuşak soluyarak değişir.
+  // Kalıcı bırakılamaz: o zaman her hover da gecikmeli hissedilirdi.
+  root.classList.add('theme-shifting');
+  window.clearTimeout(shiftTimer);
+  shiftTimer = window.setTimeout(() => root.classList.remove('theme-shifting'), SHIFT_MS);
+
+  root.dataset.theme = theme;
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {

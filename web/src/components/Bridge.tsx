@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AgentSnapshot, SystemInfo, Task, UsageSummary } from '../types';
+import type { AgentSnapshot, BudgetState, SystemInfo, Task, UsageSummary } from '../types';
 import { api } from '../api';
 import { fmtCost, fmtNum, STATUS_LABEL, totalTokens } from '../format';
 import { Office } from './Office';
@@ -8,7 +8,10 @@ interface Props {
   agents: AgentSnapshot[];
   tasks: Task[];
   usage: UsageSummary | null;
+  budget: BudgetState | null;
   projectDir: string;
+  /** Ayarlar modalını açar (bütçe sınırı orada). */
+  onOpenSettings: () => void;
   /** Mürettebat kamerasına (ofis sekmesi) geç. */
   onOpenOffice: () => void;
   onOpenAgent: (id: string) => void;
@@ -102,7 +105,7 @@ function Gauge({ pct, label, sub }: { pct: number; label: string; sub?: string }
   );
 }
 
-export function Bridge({ agents, tasks, usage, projectDir, onOpenOffice, onOpenAgent }: Props) {
+export function Bridge({ agents, tasks, usage, budget, projectDir, onOpenOffice, onOpenAgent, onOpenSettings }: Props) {
   const [sys, setSys] = useState<SystemInfo | null>(null);
   const [plan, setPlan] = useState<Record<string, RateWindow | null> | null>(null);
   const [planAvailable, setPlanAvailable] = useState(false);
@@ -169,6 +172,29 @@ export function Bridge({ agents, tasks, usage, projectDir, onOpenOffice, onOpenA
           <Office agents={agents} tasks={tasks} onOpen={onOpenAgent} compact />
           <div className="bridge-cam-hint">Ekrana tıkla → tam görünüm</div>
         </div>
+      </Module>
+
+      {/* --- günlük bütçe --- */}
+      <Module label="Günlük Bütçe" onClick={onOpenSettings}>
+        {budget && budget.limitUSD ? (
+          <>
+            <Gauge
+              pct={budget.pct ?? 0}
+              label={`$${budget.spentUSD.toFixed(4)} / $${budget.limitUSD.toFixed(2)}`}
+              sub={budget.exceeded ? 'sınır aşıldı — yeni iş kabul edilmiyor' : `sıfırlanma: gece yarısı (${budget.date})`}
+            />
+            {budget.exceeded && <Stat k="Durum" v="KİLİTLİ" tone="alarm" />}
+            {!budget.exceeded && budget.warn && <Stat k="Durum" v="eşiğe yakın" tone="warn" />}
+          </>
+        ) : (
+          <>
+            <div className="muted small">
+              Sınır tanımlı değil — harcama sınırsız.
+            </div>
+            {budget && <Stat k="Bugün" v={fmtCost(budget.spentUSD)} />}
+            <div className="bgauge-sub">Sınır koymak için tıkla</div>
+          </>
+        )}
       </Module>
 
       {/* --- kota --- */}

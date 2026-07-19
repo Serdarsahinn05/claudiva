@@ -9,11 +9,13 @@ import { Rail, ICONS } from './components/Rail';
 import { TaskBoard } from './components/TaskBoard';
 import { PromptLibrary } from './components/PromptLibrary';
 import { Office } from './components/Office';
+import { Changes } from './components/Changes';
 import { ThemePicker } from './components/ThemePicker';
+import { Settings } from './components/Settings';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
-type Tab = 'bridge' | 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts';
+type Tab = 'bridge' | 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts' | 'changes';
 
 const TAB_TITLE: Record<Tab, string> = {
   bridge: 'Köprü',
@@ -22,6 +24,7 @@ const TAB_TITLE: Record<Tab, string> = {
   terminal: 'Terminal',
   tasks: 'Görevler',
   prompts: 'Promptlar',
+  changes: 'Değişiklikler',
 };
 
 /** Mürettebat listesinin görüneceği bölümler — diğerlerinde yer kaplamasın. */
@@ -35,6 +38,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const selected = store.agents.find((a) => a.config.id === selectedId) ?? null;
 
@@ -113,6 +117,18 @@ export default function App() {
           <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
           {store.connected ? 'bağlantı aktif' : 'bağlantı yok'}
         </span>
+        <button
+          className={`icon-btn${store.budget?.exceeded ? ' alarm' : store.budget?.warn ? ' warn' : ''}`}
+          onClick={() => setSettingsOpen(true)}
+          title={
+            store.budget?.limitUSD
+              ? `Bugün $${store.budget.spentUSD.toFixed(4)} / $${store.budget.limitUSD.toFixed(2)}`
+              : 'Ayarlar · bütçe sınırı'
+          }
+          aria-label="Ayarlar"
+        >
+          {ICONS.settings}
+        </button>
         <button className="icon-btn" onClick={() => setThemeOpen(true)} title="Tema seç" aria-label="Tema seç">
           {ICONS.theme}
         </button>
@@ -132,6 +148,7 @@ export default function App() {
             { id: 'terminal', label: 'Terminal', icon: ICONS.terminal, disabled: !selected, badge: pendingCount || undefined },
             { id: 'tasks', label: 'Görevler', icon: ICONS.tasks },
             { id: 'prompts', label: 'Promptlar', icon: ICONS.prompts },
+            { id: 'changes', label: 'Değişim', icon: ICONS.changes },
           ]}
         />
 
@@ -203,7 +220,9 @@ export default function App() {
               agents={store.agents}
               tasks={store.tasks}
               usage={store.usage}
+              budget={store.budget}
               projectDir={store.projectDir}
+              onOpenSettings={() => setSettingsOpen(true)}
               onOpenOffice={() => setTab('office')}
               onOpenAgent={openAgent}
             />
@@ -251,6 +270,8 @@ export default function App() {
 
           {tab === 'tasks' && <TaskBoard tasks={store.tasks} agents={store.agents} />}
 
+          {tab === 'changes' && <Changes agents={store.agents} />}
+
           {tab === 'prompts' && (
             <PromptLibrary
               prompts={store.prompts}
@@ -263,6 +284,14 @@ export default function App() {
       </div>
 
       {themeOpen && <ThemePicker onClose={() => setThemeOpen(false)} />}
+
+      {settingsOpen && (
+        <Settings
+          budget={store.budget}
+          onClose={() => setSettingsOpen(false)}
+          onSaved={() => void store.refreshBudget()}
+        />
+      )}
 
       {formAgent !== null && (
         <AgentForm

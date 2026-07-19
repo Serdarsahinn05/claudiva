@@ -12,6 +12,7 @@ import {
   type McpServerConfig,
 } from '@anthropic-ai/claude-agent-sdk';
 import { AsyncQueue } from './asyncQueue.js';
+import type { SessionStore } from './sessionStore.js';
 import {
   addUsage,
   zeroUsage,
@@ -56,7 +57,10 @@ interface PendingPermission {
 /**
  * One running agent = one long-lived Agent SDK query() in streaming-input
  * mode. Messages are pushed into the queue; the SDK keeps the session alive
- * between turns, so context is preserved without resume gymnastics.
+ * between turns, so no resume is needed WHILE THE PROCESS LIVES.
+ *
+ * Sunucu yeniden başladığında ise oturum ölür. O yüzden sessionId diske
+ * yazılır ve sonraki açılışta `resume` olarak geri verilir (bkz. SessionStore).
  */
 export class AgentSession extends EventEmitter {
   readonly config: AgentConfig;
@@ -72,6 +76,11 @@ export class AgentSession extends EventEmitter {
   currentModel: string;
   /** Bu oturumda "/" ile çağrılabilen komutlar; panelin otomatik tamamlaması bunu kullanır. */
   commands: SlashCommand[] = [];
+  /**
+   * Bütçe muhafızı. Yeni iş kabul edilemiyorsa gerekçe döner, aksi hâlde null.
+   * Manager tarafından bağlanır — oturum manager'ı tanımasın diye geri çağırım.
+   */
+  budgetGuard?: () => string | null;
 
   private queue: AsyncQueue<SDKUserMessage> | null = null;
   private q: Query | null = null;
@@ -80,10 +89,32 @@ export class AgentSession extends EventEmitter {
   /** Set while a turn is in flight so queued sends show as working. */
   private turnDepth = 0;
 
-  constructor(config: AgentConfig, private personality: string) {
+  // --- resume durumu ---
+  /** Bu açılışta hangi id ile resume denendi (yoksa null). */
+  private resumeAttempt: string | null = null;
+  /** Bu açılışta SDK'dan system/init mesajı geldi mi? */
+  private sawInit = false;
+  /** loop() bitince sıfırdan yeniden başlatılmalı mı? */
+  private resumeFailed = false;
+  /**
+   * Henüz sonuçlanmamış turların ham metni.
+   *
+   * Resume başarısız olursa oturum ölür ve kuyruktaki mesajlar kaybolur;
+   * sıfırdan açılan oturuma bunları yeniden gönderebilmek için tutulur.
+   */
+  private inFlightMessages: string[] = [];
+
+  constructor(
+    config: AgentConfig,
+    private personality: string,
+    private store?: SessionStore,
+  ) {
     super();
     this.config = config;
     this.currentModel = config.model;
+    // Önceki çalıştırmadan kalan döküm panelde boş ekran görünmesin diye
+    // hemen yüklenir; oturumun açık olması gerekmez.
+    if (store) this.transcript = store.loadTranscript(config.id);
   }
 
   get pendingPermissions(): PermissionRequestInfo[] {
@@ -98,14 +129,25 @@ export class AgentSession extends EventEmitter {
     const ws = agentWorkspaceDir(this.config.id);
     fs.mkdirSync(ws, { recursive: true });
 
+    // Önceki çalıştırmadan kalan oturum varsa modele geçmişi yükletiriz.
+    const resume = this.store?.getSessionId(this.config.id);
+    this.resumeAttempt = resume ?? null;
+    this.sawInit = false;
+    this.resumeFailed = false;
+
     this.currentModel = this.config.model;
     this.q = query({
       prompt: this.queue,
-      options: this.buildOptions(ws),
+      options: { ...this.buildOptions(ws), ...(resume ? { resume } : {}) },
     });
 
     this.setStatus('idle');
-    this.pushEvent({ kind: 'system', text: `Oturum başlatıldı (model: ${this.resolveModel()})` });
+    this.pushEvent({
+      kind: 'system',
+      text: resume
+        ? `Oturum sürdürülüyor (model: ${this.resolveModel()})`
+        : `Oturum başlatıldı (model: ${this.resolveModel()})`,
+    });
     void this.loop();
     void this.refreshCommands();
   }
@@ -124,8 +166,21 @@ export class AgentSession extends EventEmitter {
 
   /** Send a user message (a task or a chat turn) to this agent. */
   send(text: string): void {
+    /**
+     * Bütçe kapısı. Burada olmak ZORUNDA: aşağıdaki satır ölü oturumu
+     * kendiliğinden yeniden başlatıyor, dolayısıyla "ajanı durdur" biçiminde
+     * bir yaptırım bir sonraki mesajda kendiliğinden delinirdi.
+     */
+    const blocked = this.budgetGuard?.();
+    if (blocked) {
+      this.pushEvent({ kind: 'error', text: blocked });
+      return;
+    }
     if (!this.q || !this.queue) this.start();
     this.pushEvent({ kind: 'user', text });
+    // Resume başarısız olursa oturumla birlikte bu mesaj da yok olur;
+    // sıfırdan açılan oturuma yeniden gönderebilmek için sakla.
+    this.inFlightMessages.push(text);
     this.turnDepth += 1;
     this.setStatus('working');
     // Otomatik model seçimi: sistem prompt'unun dibindeki talimat (özellikle
@@ -319,9 +374,35 @@ export class AgentSession extends EventEmitter {
         this.handleMessage(msg);
       }
     } catch (err) {
+      // Bozuk resume iki biçimde gelebilir: önce `error_during_execution`
+      // sonuçlu bir result (case 'result' yakalar) ya da doğrudan fırlatma.
+      // İkincisinde de geri düşmeliyiz, yoksa ajan anlaşılmaz bir hatayla
+      // çevrimdışı kalır ve kayıtlı bozuk id bir daha hep denenir.
+      if (!this.sawInit && this.resumeAttempt) this.resumeFailed = true;
       this.pushEvent({ kind: 'error', text: `Oturum hatası: ${(err as Error).message}` });
     } finally {
+      const retry = this.resumeFailed;
+      const replay = retry ? [...this.inFlightMessages] : [];
       this.cleanup();
+
+      /**
+       * Resume geri düşüşü.
+       *
+       * Bozuk/eskimiş bir sessionId ile açılan sorgu HATA FIRLATMAZ — ampirik
+       * olarak ölçüldü: system/init hiç gelmez ve tur `error_during_execution`
+       * ile sonuçlanır. Yani başarısızlık ancak bu noktada, döngü bittikten
+       * sonra anlaşılır. Kayıtlı id'yi atıp sıfırdan açıyor ve kaybolan
+       * mesajları yeniden gönderiyoruz.
+       */
+      if (retry) {
+        this.store?.clearSessionId(this.config.id);
+        this.pushEvent({
+          kind: 'system',
+          text: 'Önceki oturum yüklenemedi (kayıt eskimiş olabilir); sıfırdan başlatıldı.',
+        });
+        this.start();
+        for (const text of replay) this.send(text);
+      }
     }
   }
 
@@ -334,6 +415,7 @@ export class AgentSession extends EventEmitter {
     this.q = null;
     this.queue = null;
     this.turnDepth = 0;
+    this.inFlightMessages = [];
     this.currentActivity = undefined;
     this.contextTokens = 0;
     this.setStatus('offline');
@@ -395,7 +477,11 @@ export class AgentSession extends EventEmitter {
     switch (msg.type) {
       case 'system': {
         if (msg.subtype === 'init') {
+          // init'in gelmesi = oturum gerçekten kuruldu. Resume denendiyse
+          // başarılı demektir; gelmezse loop() sonunda geri düşülür.
+          this.sawInit = true;
           this.sessionId = msg.session_id;
+          this.store?.setSessionId(this.config.id, msg.session_id);
         } else if (msg.subtype === 'commands_changed') {
           this.setCommands((msg as { commands?: SlashCommand[] }).commands ?? []);
         } else if (msg.subtype === 'session_state_changed') {
@@ -446,6 +532,17 @@ export class AgentSession extends EventEmitter {
         break;
       }
       case 'result': {
+        /**
+         * Resume başarısızlığı buraya düşer: init hiç gelmemişse oturum
+         * kurulamamış demektir. Bu bir TUR SONUCU DEĞİL — kullanım sayılmaz,
+         * hata olayı yazılmaz ve özellikle `turn_complete` YAYILMAZ; yoksa
+         * görev kuyruğu çalışan bir görevi yanlışlıkla "başarısız" kapatır.
+         * Gerçek toparlanma loop()'un finally'sinde yapılır.
+         */
+        if (!this.sawInit && this.resumeAttempt) {
+          this.resumeFailed = true;
+          break;
+        }
         const usage = msg.usage as
           | { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number }
           | undefined;
@@ -472,6 +569,7 @@ export class AgentSession extends EventEmitter {
           meta: { subtype: msg.subtype, costUSD: (msg as { total_cost_usd?: number }).total_cost_usd },
         });
         this.turnDepth = Math.max(0, this.turnDepth - 1);
+        this.inFlightMessages.shift(); // bu tur sonuçlandı, tekrar gönderilmeyecek
         this.currentActivity = undefined;
         if (this.turnDepth === 0) this.setStatus('idle');
         // Otomatik model seçimi: yükseltme görev-bazlıdır — tur bitince temel
@@ -501,6 +599,7 @@ export class AgentSession extends EventEmitter {
   private pushEvent(partial: Omit<TranscriptEvent, 'id' | 'ts'> & { kind: TranscriptKind }): void {
     const event: TranscriptEvent = { id: randomUUID(), ts: Date.now(), ...partial };
     this.transcript.push(event);
+    this.store?.appendEvent(this.config.id, event);
     if (this.transcript.length > MAX_TRANSCRIPT) this.transcript.splice(0, this.transcript.length - MAX_TRANSCRIPT);
     this.emit('event', event);
   }

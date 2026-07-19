@@ -30,6 +30,8 @@ export interface AgentConfig {
   mcpServers?: Record<string, McpServerDef>;
   /** Paneldeki sıra. Küçük olan üstte; tanımsızsa listenin sonuna düşer. */
   order?: number;
+  /** Bu ajanın günlük harcama tavanı (USD). 0/tanımsız = yalnızca genel sınır geçerli. */
+  dailyLimitUSD?: number;
   createdAt: string;
 }
 

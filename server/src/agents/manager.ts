@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AgentSession } from './session.js';
+import { SessionStore } from './sessionStore.js';
+import { SettingsStore } from '../settings.js';
 import {
   addUsage,
   zeroUsage,
@@ -19,6 +21,32 @@ const COMMANDS_FILE = path.join(DATA_DIR, 'commands.json');
 interface UsageFile {
   total: TokenUsage;
   perAgent: Record<string, TokenUsage>;
+  /**
+   * Günlük pencere. Bütçe sınırı buna bakar, `total`'a DEĞİL: `total` tüm
+   * zamanların toplamı ve diskten geri yükleniyor; ona sınır konsaydı bir kez
+   * aşıldığında proje kalıcı olarak kilitlenirdi.
+   */
+  daily?: { date: string; total: TokenUsage; perAgent: Record<string, TokenUsage> };
+}
+
+/** Yerel gün (YYYY-MM-DD). Pencere yerel gece yarısında döner. */
+function today(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** a - b (negatife düşmez). Turun kendi payını bulmak için. */
+function deltaUsage(a: TokenUsage, b?: TokenUsage): Partial<TokenUsage> {
+  const d = (x: number, y: number) => Math.max(0, x - y);
+  const z = b ?? zeroUsage();
+  return {
+    inputTokens: d(a.inputTokens, z.inputTokens),
+    outputTokens: d(a.outputTokens, z.outputTokens),
+    cacheReadTokens: d(a.cacheReadTokens, z.cacheReadTokens),
+    cacheCreationTokens: d(a.cacheCreationTokens, z.cacheCreationTokens),
+    costUSD: Math.max(0, a.costUSD - z.costUSD),
+    requests: d(a.requests, z.requests),
+  };
 }
 
 /**
@@ -27,6 +55,11 @@ interface UsageFile {
  */
 export class AgentManager extends EventEmitter {
   private sessions = new Map<string, AgentSession>();
+  /** sessionId + transcript kalıcılığı; oturumlara aktarılır. */
+  readonly store = new SessionStore();
+  readonly settings = new SettingsStore();
+  /** Sınır aşımı her turda tekrar duyurulmasın. */
+  private budgetAnnounced = false;
   private usage: UsageFile = { total: zeroUsage(), perAgent: {} };
   private saveTimer: NodeJS.Timeout | null = null;
   /** Son bilinen slash komut listeleri. Komutlar ancak oturum açıkken SDK'dan
@@ -38,6 +71,8 @@ export class AgentManager extends EventEmitter {
   sessionDecorator?: (session: AgentSession) => void;
 
   init(): void {
+    this.store.init();
+    this.settings.init();
     if (fs.existsSync(USAGE_FILE)) {
       try {
         this.usage = JSON.parse(fs.readFileSync(USAGE_FILE, 'utf-8'));
@@ -113,7 +148,12 @@ export class AgentManager extends EventEmitter {
   // ---------------------------------------------------------- sessions
 
   private attachSession(config: AgentConfig): AgentSession {
-    const session = new AgentSession(config, this.readPersonality(config.id));
+    const session = new AgentSession(config, this.readPersonality(config.id), this.store);
+    // Oturum manager'ı tanımaz; sınırı bir geri çağırımla sorar.
+    session.budgetGuard = () => {
+      const r = this.canWork(config.id);
+      return r.ok ? null : r.reason;
+    };
     this.sessionDecorator?.(session);
     this.sessions.set(config.id, session);
 
@@ -132,10 +172,25 @@ export class AgentManager extends EventEmitter {
     session.on('permission_request', (req) => this.emit('permission_request', req));
     session.on('permission_resolved', (id) => this.emit('permission_resolved', config.id, id));
     session.on('usage', () => {
+      // session.usage tümel (diskten geri yükleniyor); günlük pencereye
+      // yalnızca bu turun payı eklenmeli, o yüzden önceki değerle farkı alınır.
+      const delta = deltaUsage(session.usage, this.usage.perAgent[config.id]);
       this.usage.perAgent[config.id] = structuredClone(session.usage);
       this.recomputeTotal();
+      this.addDaily(config.id, delta);
       this.persistUsage();
       this.emit('usage', this.usageSummary());
+
+      // Sınır aşıldıysa SÜREN TUR KESİLMEZ (yarım iş bırakmamak için);
+      // yeni iş send()/dispatch() tarafında reddedilir. Panel haberdar olsun.
+      const b = this.budget();
+      if (b.exceeded && !this.budgetAnnounced) {
+        this.budgetAnnounced = true;
+        session.pushLocal('error', `Günlük bütçe sınırı aşıldı ($${b.spentUSD.toFixed(4)} / $${b.limitUSD?.toFixed(2)}). Yeni iş kabul edilmiyor.`);
+        this.emit('agents_changed');
+      } else if (!b.exceeded) {
+        this.budgetAnnounced = false;
+      }
     });
     return session;
   }
@@ -152,6 +207,81 @@ export class AgentManager extends EventEmitter {
     const total = zeroUsage();
     for (const u of Object.values(this.usage.perAgent)) addUsage(total, u);
     this.usage.total = total;
+  }
+
+  // ------------------------------------------------------------- bütçe
+
+  /** Gün döndüyse pencereyi sıfırlar ve bugünkü kaydı döndürür. */
+  private dailyWindow(): NonNullable<UsageFile['daily']> {
+    const d = today();
+    if (!this.usage.daily || this.usage.daily.date !== d) {
+      this.usage.daily = { date: d, total: zeroUsage(), perAgent: {} };
+    }
+    return this.usage.daily;
+  }
+
+  private addDaily(agentId: string, delta: Partial<TokenUsage>): void {
+    const w = this.dailyWindow();
+    addUsage(w.total, delta);
+    w.perAgent[agentId] = w.perAgent[agentId] ?? zeroUsage();
+    addUsage(w.perAgent[agentId], delta);
+  }
+
+  /** Bugünkü harcama ve sınır durumu. */
+  budget(): {
+    date: string;
+    spentUSD: number;
+    limitUSD?: number;
+    perAgentUSD: Record<string, number>;
+    pct: number | null;
+    warn: boolean;
+    exceeded: boolean;
+  } {
+    const w = this.dailyWindow();
+    const limit = this.settings.get().dailyLimitUSD;
+    const warnAt = this.settings.get().warnAtPercent ?? 80;
+    const spent = w.total.costUSD;
+    const pct = limit && limit > 0 ? (spent / limit) * 100 : null;
+    const perAgentUSD: Record<string, number> = {};
+    for (const [id, u] of Object.entries(w.perAgent)) perAgentUSD[id] = u.costUSD;
+    return {
+      date: w.date,
+      spentUSD: spent,
+      limitUSD: limit,
+      perAgentUSD,
+      pct,
+      warn: pct !== null && pct >= warnAt,
+      exceeded: pct !== null && pct >= 100,
+    };
+  }
+
+  /**
+   * Yeni iş kabul edilebilir mi? Sınır aşıldıysa gerekçe döner.
+   *
+   * İki yerden çağrılır — `AgentSession.send()` ve `TaskQueue.dispatch()`.
+   * İkisi de gerekli: send() ölü oturumu kendiliğinden yeniden başlattığı için
+   * yalnızca ajanı durdurmak sınırı delerdi.
+   */
+  canWork(agentId?: string): { ok: true } | { ok: false; reason: string } {
+    const b = this.budget();
+    if (b.exceeded) {
+      return {
+        ok: false,
+        reason: `Günlük bütçe sınırı aşıldı ($${b.spentUSD.toFixed(4)} / $${b.limitUSD?.toFixed(2)}). Sınırı Ayarlar'dan değiştirebilirsin.`,
+      };
+    }
+    if (agentId) {
+      const cfg = this.sessions.get(agentId)?.config;
+      const own = cfg?.dailyLimitUSD;
+      const spent = b.perAgentUSD[agentId] ?? 0;
+      if (own && own > 0 && spent >= own) {
+        return {
+          ok: false,
+          reason: `"${cfg?.name}" ajanının günlük sınırı aşıldı ($${spent.toFixed(4)} / $${own.toFixed(2)}).`,
+        };
+      }
+    }
+    return { ok: true };
   }
 
   // ---------------------------------------------------------- public API

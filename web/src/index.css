@@ -139,11 +139,16 @@
      opacity animasyonlanır (düzen hesabı tetiklemez). */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Yay eğrisi: bırakışta ~%2,4 aşma. Aşağıda linear() destekleniyorsa
+     gerçek yayla değiştirilir; burada güvenli yedeği duruyor. */
+  --ease-spring: cubic-bezier(0.23, 1, 0.32, 1);
   --t-press: 90ms;    /* basış: anında hissedilmeli */
   --t-release: 180ms; /* bırakış: biraz daha yumuşak */
   --t-fast: 140ms;    /* hover, renk geçişleri */
-  --t-ui: 200ms;      /* açılır menü, sekme */
+  --t-ui: 200ms;      /* açılır menü, hover dolgusu */
   --t-modal: 260ms;   /* modal, büyük yüzey */
+  --t-pane: 320ms;    /* bölüm değişimi — kat edilen mesafe büyük, süre uzun */
+  --t-theme: 300ms;   /* tema geçişi (geçici olarak her yüzeye uygulanır) */
 
   /* ===== tipografi ===== */
   --font-display: 'Audiowide', 'Segoe UI', system-ui, sans-serif;
@@ -166,6 +171,26 @@
   --purple: var(--aux);
   --cli: var(--hud);
   --cli-dim: var(--hud-dim);
+}
+
+/**
+ * Yay (spring) eğrisi.
+ *
+ * Gerçek dünyada hiçbir şey saf bir eğriyle durmaz; bırakışta çok küçük bir
+ * aşma hareketi "canlı" hissettirir. linear() bunu CSS'te ifade eder.
+ * Aşma tepesi 1.024 — UI için kasıtlı olarak düşük; belirgin zıplama
+ * sürükle-bırak gibi oyuncul anlara saklanır.
+ *
+ * @supports ile sarılı: desteklenmeyen tarayıcıda yukarıdaki ease-out yedeği
+ * yürürlükte kalır (var() ile yazılsaydı geçersiz değer geçişi tamamen
+ * bozardı, kademeli olarak eski değere düşmezdi).
+ */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(
+      0, 0.061, 0.221, 0.44, 0.667, 0.847, 0.955, 1.008, 1.024, 1.022, 1.013, 1.005, 1
+    );
+  }
 }
 
 html, body, #root { height: 100%; margin: 0; }
@@ -238,46 +263,159 @@ body {
 .gauge.crit > span { background: var(--alarm); box-shadow: 0 0 6px rgb(var(--err-rgb) / calc(0.5 * var(--glow-a))); }
 
 /**
- * Hareket duyarlılığı. Her şeyi tamamen kaldırmak yerine yer değiştirmeyi
- * kapatıp opaklık geçişini çok kısa bırakırız — durum değişimi yine okunur.
+ * Hareket duyarlılığı.
+ *
+ * Her şeyi 1ms'ye indirmek kolay ama zararlı: yükleniyor göstergesi ve durum
+ * LED'leri de susar, kullanıcı ajanın çalışıp çalışmadığını göremez. Bunun
+ * yerine KONUMSAL hareketi kaldırıp geri bildirimi koruyoruz.
  */
 @media (prefers-reduced-motion: reduce) {
+  /* 1. Yer değiştirmeyi kaldır, yerine sade bir soluş bırak */
   *, *::before, *::after {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    transition-duration: 100ms !important;
   }
+  main > *, .bridge > *, .card-grid > *, aside,
+  .ev, .cmd-menu, .modal, .modal-backdrop, .task-detail, .permission-banner {
+    animation: rm-fade 140ms var(--ease-out) backwards !important;
+  }
+  @keyframes rm-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* 2. Hover'da kalkma yok; basış geri bildirimi (ölçek) kalır */
+  button:hover:not(:disabled), .agent-row:hover, .tb-agent:hover, .bcrew:hover,
+  .rail-btn:hover:not(:disabled), .modal-nav-btn:hover, .tb-filter:hover,
+  .choice:hover, .cmd-row:hover, .card:hover, .pl-card:hover,
+  .theme-card:hover, .bridge-mod.clickable:hover {
+    transform: none !important;
+  }
+
+  /* 3. Süreklilik bildiren geri bildirim KORUNUR — yoksa "çalışıyor mu?"
+        sorusunun görsel yanıtı kalmaz. Yalnızca yavaşlatılır. */
+  .cli-spinner { animation: cli-spin 1.6s linear infinite !important; }
+  .led-working, .led-waiting { animation: led-pulse 2s ease-in-out infinite !important; }
+  .dot-working, .dot-waiting { animation: pulse 2s ease-in-out infinite !important; }
 }
 
-/* ---------- hareket katmanı ---------- */
+/* ---------- hareket katmanı ----------
+   TEK YETKİLİ YER. Aşağıdaki bileşen kurallarında `transition` YAZMA — bu
+   katmandan sonra geldikleri için onu ezerler ve tıklama "şak" diye geçer.
+   Süre/eğri değişikliği gerekiyorsa buradaki token'lardan yürüt. */
 
-/* Basış geri bildirimi: her tıklanabilir yüzeyde aynı his */
-button, .agent-row, .card, .tb-agent, .choice, .bcrew, .rail-btn, .bridge-mod.clickable {
+/**
+ * Etkileşimli yüzeyler. Jest üç adımlı:
+ *   dinlenme → hover'da hafifçe KALKAR → basışta AŞAĞI iner + küçülür
+ *              → bırakışta yay eğrisiyle geri yükselir (minik aşmayla)
+ * Basış anlık olmalı (90ms, düz ease-out); bırakış yaylanır (180ms).
+ * Asimetri kasıtlı: basışta gecikme "duymadı" hissi verir.
+ */
+button, .agent-row, .card, .tb-agent, .choice, .bcrew, .rail-btn,
+.bridge-mod.clickable, .modal-nav-btn, .tb-filter, .pl-card, .theme-card,
+.task-head, .cli-link, .agent-grip, .task-caret, .cmd-row, .ch-file {
   transition:
-    transform var(--t-release) var(--ease-out),
-    background-color var(--t-fast) var(--ease-out),
-    border-color var(--t-fast) var(--ease-out),
+    transform var(--t-release) var(--ease-spring),
+    background-color var(--t-ui) var(--ease-out),
+    border-color var(--t-ui) var(--ease-out),
+    box-shadow var(--t-ui) var(--ease-out),
     color var(--t-fast) var(--ease-out),
     opacity var(--t-fast) var(--ease-out);
 }
-button:active:not(:disabled),
-.agent-row:active, .tb-agent:active, .choice:active, .bcrew:active, .rail-btn:active:not(:disabled) {
-  transform: scale(0.97);
-  transition-duration: var(--t-press);
-}
-/* Kartlar zaten yukarı kalkıyor; basışta ölçek yerine geri otursun */
-.card:active { transform: translateY(0) scale(0.995); transition-duration: var(--t-press); }
 
-/* Sekme/bölüm geçişi: içerik yumuşak belirir */
-main > * { animation: pane-in var(--t-ui) var(--ease-out) both; }
+/**
+ * Hover kalkışı yalnızca gerçek işaretçili cihazlarda.
+ * Dokunmatikte :hover dokununca tetiklenir ve başka yere dokunana kadar
+ * takılı kalır — kart havada asılı kalırdı.
+ */
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled), .agent-row:hover, .tb-agent:hover, .bcrew:hover,
+  .rail-btn:hover:not(:disabled), .modal-nav-btn:hover, .tb-filter:hover,
+  .choice:hover, .cmd-row:hover, .ch-file:hover {
+    transform: translateY(-1px);
+    will-change: transform;
+  }
+  /* Büyük yüzeyler daha çok kalkar — kütle hissi */
+  .card:hover, .pl-card:hover, .theme-card:hover, .bridge-mod.clickable:hover {
+    transform: translateY(-3px);
+    will-change: transform;
+  }
+}
+
+/* Basış: yüzey parmağın altına iner. will-change yalnızca jest boyunca
+   duruyor — her etkileşimli öğede kalıcı olsa boşuna bellek tüketirdi. */
+button:active:not(:disabled),
+.agent-row:active, .tb-agent:active, .choice:active, .bcrew:active,
+.rail-btn:active:not(:disabled), .modal-nav-btn:active, .tb-filter:active,
+.cmd-row:active {
+  transform: translateY(0) scale(0.97);
+  transition-duration: var(--t-press);
+  transition-timing-function: var(--ease-out);
+  will-change: transform;
+}
+/* Kartlarda 0.97 fazla geliyor: yüzey büyük, ölçek hareketi de büyük görünür */
+.card:active, .pl-card:active, .theme-card:active, .bridge-mod.clickable:active {
+  transform: translateY(0) scale(0.99);
+  transition-duration: var(--t-press);
+  transition-timing-function: var(--ease-out);
+  will-change: transform;
+}
+
+/* Sekme/bölüm geçişi: içerik aşağıdan yumuşak belirir.
+   Izgara bölümleri hariç — onlarda kap yerine kartlar tek tek giriyor,
+   ikisi birden çalışırsa animasyon üst üste binip bulanık duruyor. */
+main > *:not(.bridge):not(.card-grid) {
+  animation: pane-in var(--t-pane) var(--ease-out) backwards;
+}
 @keyframes pane-in {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 
+/**
+ * Kademeli giriş. Bir ızgaranın bütün kartları aynı anda belirince geçiş
+ * "yanıp sönme" gibi duruyor; küçük gecikmelerle göz içeriğin üstünden akıyor.
+ * Gecikme 8. karttan sonra sabitlenir — kalabalık ızgarada sondaki kartların
+ * yarım saniye beklemesi yavaşlık hissi yaratır.
+ */
+/* Dolgu kipi `backwards` — `both` DEĞİL. `both`, animasyon bittikten sonra
+   son kareyi (transform: none) kalıcı olarak uygular ve animasyonlar
+   cascade'de normal bildirimleri yendiği için hover kalkışını tamamen
+   öldürür. `backwards` yalnızca gecikme boyunca ilk kareyi tutar. */
+.bridge > *, .card-grid > * { animation: pane-in var(--t-pane) var(--ease-out) backwards; }
+.bridge > *:nth-child(1), .card-grid > *:nth-child(1) { animation-delay: 0ms; }
+.bridge > *:nth-child(2), .card-grid > *:nth-child(2) { animation-delay: 40ms; }
+.bridge > *:nth-child(3), .card-grid > *:nth-child(3) { animation-delay: 80ms; }
+.bridge > *:nth-child(4), .card-grid > *:nth-child(4) { animation-delay: 115ms; }
+.bridge > *:nth-child(5), .card-grid > *:nth-child(5) { animation-delay: 145ms; }
+.bridge > *:nth-child(6), .card-grid > *:nth-child(6) { animation-delay: 170ms; }
+.bridge > *:nth-child(7), .card-grid > *:nth-child(7) { animation-delay: 190ms; }
+.bridge > *:nth-child(n + 8), .card-grid > *:nth-child(n + 8) { animation-delay: 205ms; }
+
+/* Mürettebat paneli yalnızca bazı bölümlerde var; girerken soldan kayar */
+aside { animation: aside-in var(--t-pane) var(--ease-out) backwards; }
+@keyframes aside-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/**
+ * Tema değişimi. Renkler normalde anında sıçrar; seçiciyi kurcalarken bu
+ * rahatsız edici. Tema uygulanırken kök öğeye kısa süreliğine bu sınıf
+ * eklenir (themes.ts), böylece TÜM yüzeyler birlikte solarak geçer.
+ * Kalıcı olsaydı her hover gecikmeli hissedilirdi — o yüzden geçici.
+ */
+.theme-shifting, .theme-shifting *, .theme-shifting *::before, .theme-shifting *::after {
+  transition:
+    background-color var(--t-theme) var(--ease-out),
+    border-color var(--t-theme) var(--ease-out),
+    color var(--t-theme) var(--ease-out),
+    box-shadow var(--t-theme) var(--ease-out),
+    fill var(--t-theme) var(--ease-out),
+    stroke var(--t-theme) var(--ease-out) !important;
+}
+
 /* Modal: arkaplan solar, panel hafifçe büyüyerek gelir (scale(0)'dan asla) */
-.modal-backdrop { animation: fade-in var(--t-ui) var(--ease-out) both; }
-.modal { animation: modal-in var(--t-modal) var(--ease-out) both; }
+.modal-backdrop { animation: fade-in var(--t-ui) var(--ease-out) backwards; }
+.modal { animation: modal-in var(--t-modal) var(--ease-out) backwards; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modal-in {
   from { opacity: 0; transform: translateY(8px) scale(0.97); }
@@ -285,14 +423,33 @@ main > * { animation: pane-in var(--t-ui) var(--ease-out) both; }
 }
 
 /* Görev satırı detayının açılması */
-.task-detail { animation: detail-in var(--t-ui) var(--ease-out) both; }
+.task-detail { animation: detail-in var(--t-ui) var(--ease-out) backwards; }
 @keyframes detail-in {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: none; }
 }
 
+/**
+ * Transcript satırları. Anahtar olay kimliği olduğundan yalnızca GERÇEKTEN
+ * yeni satırlar animasyonlanır; ajan değiştirince hepsi birden yenilenir ve
+ * ekran "yükleniyor" gibi akar. Otomatik kaydırmayla çakışmasın diye mesafe
+ * kısa ve süre düşük tutuldu.
+ */
+.ev { animation: ev-in 180ms var(--ease-out) backwards; }
+@keyframes ev-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Slash menüsü yazarken açılıp kapanır — girişi yumuşak olmalı */
+.cmd-menu { animation: menu-in var(--t-ui) var(--ease-out) backwards; transform-origin: bottom center; }
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
 /* İzin bandı dikkat ister: aşağıdan kayarak girer */
-.permission-banner { animation: banner-in var(--t-ui) var(--ease-out) both; }
+.permission-banner { animation: banner-in var(--t-ui) var(--ease-out) backwards; }
 @keyframes banner-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
@@ -331,7 +488,6 @@ header h1 {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
   background: transparent; border: none; border-radius: var(--radius);
   padding: var(--s2) 2px; cursor: pointer; color: var(--muted);
-  transition: color 140ms ease, background 140ms ease;
 }
 .rail-btn::before {
   /* aktif göstergesi: sol kenarda ışık çubuğu */
@@ -394,7 +550,7 @@ aside {
 /* sürükleme tutamağı — yalnızca satır üzerindeyken belirir */
 .agent-grip {
   color: var(--dim); font-size: 10px; letter-spacing: -2px; cursor: grab;
-  opacity: 0; transition: opacity 140ms ease;
+  opacity: 0;
 }
 .agent-row:hover .agent-grip { opacity: 1; }
 .agent-row.dragging { opacity: 0.4; }
@@ -407,7 +563,7 @@ aside {
   display: flex; align-items: center; gap: var(--s2);
   padding: var(--s2) var(--s2) var(--s2) var(--s3);
   border: var(--border-w) solid transparent; border-radius: var(--radius);
-  cursor: pointer; transition: background 120ms ease, border-color 120ms ease;
+  cursor: pointer;
 }
 .agent-row::before {
   content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
@@ -455,9 +611,8 @@ main {
   display: flex; flex-direction: column; gap: var(--s2);
   clip-path: var(--clip-panel);
   box-shadow: var(--shadow-card);
-  transition: border-color 140ms ease, transform 140ms ease;
 }
-.card:hover { border-color: var(--edge-lit); transform: translateY(-2px); }
+.card:hover { border-color: var(--edge-lit); }
 .card::after {
   /* sağ alt köşe braketi */
   content: ''; position: absolute; right: 10px; bottom: 4px;
@@ -506,7 +661,6 @@ button {
   border: var(--border-w) solid var(--edge-lit); border-radius: var(--radius);
   padding: 6px var(--s3); cursor: pointer;
   font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.4px;
-  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
 }
 button:hover:not(:disabled) { border-color: var(--hud-dim); color: var(--hud); background: var(--hud-wash); }
 button:disabled { opacity: 0.35; cursor: default; }
@@ -535,6 +689,16 @@ button.wide { width: 100%; padding: var(--s2); }
   background: transparent; border-color: var(--edge);
 }
 .icon-btn:hover:not(:disabled) { color: var(--hud); }
+/* Bütçe uyarısı komuta çubuğunda görünsün — ayrı bir rozete gerek yok */
+.icon-btn.warn { color: var(--caution); border-color: rgb(var(--warn-rgb) / 0.4); }
+.icon-btn.alarm { color: var(--alarm); border-color: rgb(var(--err-rgb) / 0.5); }
+
+/* Ayarlar modalındaki açıklama satırları */
+.set-note {
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+  line-height: 1.6; padding-top: var(--s2); border-top: var(--border-w) solid var(--edge);
+}
+.set-note.dim { color: var(--dim); border-top: none; padding-top: 0; }
 
 /* Klavye odağı her yerde görünür (WCAG 2.2 AA) */
 :focus-visible {
@@ -780,11 +944,10 @@ label.check.small { font-size: 12px; color: var(--muted); }
   padding: var(--s5) var(--s4) var(--s4);
   clip-path: var(--clip-panel);
   box-shadow: var(--shadow-card);
-  animation: mod-in var(--t-modal) var(--ease-out) both;
 }
 .bridge-mod.wide { grid-column: span 2; }
-.bridge-mod.clickable { cursor: pointer; transition: border-color 160ms ease, transform 160ms ease; }
-.bridge-mod.clickable:hover { border-color: var(--hud-dim); transform: translateY(-2px); }
+.bridge-mod.clickable { cursor: pointer; }
+.bridge-mod.clickable:hover { border-color: var(--hud-dim); }
 .bridge-mod-label {
   position: absolute; top: var(--s3); left: var(--s4);
   font-family: var(--font-display); font-size: 9px; letter-spacing: var(--track);
@@ -818,7 +981,6 @@ label.check.small { font-size: 12px; color: var(--muted); }
   background: transparent; border: none; border-left: 2px solid var(--edge);
   padding: 5px var(--s2); border-radius: 0; cursor: pointer; width: 100%;
   font-family: var(--font-mono); font-size: 11px; color: var(--muted);
-  transition: background 120ms ease, border-color 120ms ease;
 }
 .bcrew:hover { background: var(--hud-wash); border-left-color: var(--hud); color: var(--fg); }
 .bcrew-name { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -928,7 +1090,6 @@ label.check.small { font-size: 12px; color: var(--muted); }
   display: flex; flex-direction: column; gap: 1px; text-align: left;
   background: transparent; border: none; border-left: 2px solid transparent;
   border-radius: 0; padding: var(--s2) var(--s3); cursor: pointer; color: var(--muted);
-  transition: background 130ms ease, border-color 130ms ease, color 130ms ease;
 }
 .modal-nav-btn:hover { background: var(--hud-wash); color: var(--fg); }
 .modal-nav-btn.sel { background: var(--hud-wash); border-left-color: var(--hud); color: var(--hud); }
@@ -950,9 +1111,8 @@ label.check.small { font-size: 12px; color: var(--muted); }
   display: flex; flex-direction: column; gap: 3px; text-align: left;
   background: var(--hull-1); border: var(--border-w) solid var(--edge); border-radius: var(--radius);
   padding: var(--s2) var(--s3); cursor: pointer;
-  transition: border-color 130ms ease, background 130ms ease, transform 130ms ease;
 }
-.choice:hover { border-color: var(--edge-lit); transform: translateY(-1px); }
+.choice:hover { border-color: var(--edge-lit); }
 .choice.sel { border-color: var(--hud-dim); background: var(--hud-wash); }
 .choice-label { font-size: 12px; color: var(--fg); }
 .choice.sel .choice-label { color: var(--hud); }
@@ -1015,7 +1175,6 @@ label.check.small { font-size: 12px; color: var(--muted); }
   display: flex; align-items: center; gap: var(--s2);
   background: transparent; border: var(--border-w) solid transparent; border-radius: var(--radius);
   padding: 6px var(--s2); cursor: pointer; text-align: left; width: 100%;
-  transition: background 130ms ease, border-color 130ms ease;
 }
 .tb-agent:hover { background: var(--hud-wash); border-color: var(--edge); }
 .tb-agent.sel { background: var(--hud-wash); border-color: var(--hud-dim); }
@@ -1054,7 +1213,7 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .task-title { flex-shrink: 0; font-size: 13px; }
 .task-meta { font-family: var(--font-mono); font-size: 11px; color: var(--dim); }
 .task-time { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--dim); }
-.task-caret { color: var(--dim); transition: transform 160ms ease; }
+.task-caret { color: var(--dim); }
 .task-caret.open { transform: rotate(90deg); color: var(--hud); }
 /* Panel = modül: pahlı köşe + gömülü başlık hissi */
 .panel {
@@ -1128,7 +1287,6 @@ label.check.small { font-size: 12px; color: var(--muted); }
   padding: var(--s3) var(--s3) var(--s2);
   clip-path: var(--clip-panel);
   box-shadow: var(--shadow-card);
-  transition: border-color var(--t-fast) var(--ease-out);
 }
 .pl-card:hover { border-color: var(--edge-lit); }
 .pl-card-head { display: flex; align-items: baseline; gap: var(--s2); }
@@ -1153,6 +1311,62 @@ label.check.small { font-size: 12px; color: var(--muted); }
 /* Editördeki satır sayacı */
 .pl-count { margin-left: auto; color: var(--dim); text-transform: none; letter-spacing: 0; }
 
+/* ---------- değişiklikler ---------- */
+.changes { display: flex; flex-direction: column; gap: var(--s4); min-height: 0; flex: 1; }
+
+/* Solda dosya listesi, sağda fark. Dar ekranda alt alta düşer. */
+.ch-split {
+  display: grid; grid-template-columns: minmax(240px, 340px) 1fr;
+  gap: var(--s3); min-height: 0; flex: 1;
+}
+@media (max-width: 1000px) { .ch-split { grid-template-columns: 1fr; } }
+
+.ch-list { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; min-height: 0; }
+.ch-file {
+  display: flex; flex-direction: column; gap: 3px; text-align: left; width: 100%;
+  background: transparent; border: var(--border-w) solid transparent;
+  border-radius: var(--radius); padding: var(--s2) var(--s2); cursor: pointer;
+}
+.ch-file:hover { background: var(--hud-wash); border-color: var(--edge); }
+.ch-file.sel { background: var(--hud-wash); border-color: var(--hud-dim); }
+.ch-file-top { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+/* Uzun yolda baş taraf değil SON taraf önemli (dosya adı) — sondan kırpma yok,
+   yön çevirip başı kırpıyoruz. */
+.ch-file-path {
+  flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 11.5px; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left;
+}
+.ch-file.sel .ch-file-path { color: var(--hud); }
+.ch-file-by { font-family: var(--font-mono); font-size: 9.5px; color: var(--dim); }
+
+.ch-diff {
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--surface-grad);
+  border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  clip-path: var(--clip-panel); box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.ch-diff-head {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s2) var(--s3); border-bottom: var(--border-w) solid var(--edge);
+}
+.ch-diff-path {
+  flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ch-diff-body {
+  flex: 1; margin: 0; overflow: auto; min-height: 0;
+  padding: var(--s2) 0;
+  background: var(--void);
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.5;
+}
+/* Satırlar blok: renk tüm satır genişliğini kaplasın, yatay kaydırmada da sürsün */
+.dl { display: block; padding: 0 var(--s3); white-space: pre; }
+.dl-add { background: rgb(var(--ok-rgb) / 0.13); color: var(--nominal); }
+.dl-del { background: rgb(var(--err-rgb) / 0.13); color: var(--alarm); }
+.dl-hunk { color: var(--aux); }
+.dl-meta { color: var(--dim); }
+
 /* ---------- tema seçici ---------- */
 .theme-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
@@ -1170,9 +1384,8 @@ label.check.small { font-size: 12px; color: var(--muted); }
   background: var(--hull-1); border: var(--border-w) solid var(--edge);
   border-radius: var(--radius); padding: var(--s2) var(--s2) var(--s3);
   cursor: pointer;
-  transition: border-color 130ms ease, transform 130ms ease;
 }
-.theme-card:hover { border-color: var(--edge-lit); transform: translateY(-2px); }
+.theme-card:hover { border-color: var(--edge-lit); }
 .theme-card.sel { border-color: var(--hud-dim); background: var(--hud-wash); }
 
 /* Önizleme: minyatür bir arayüz. Kap kendi data-theme'ini taşıdığı için

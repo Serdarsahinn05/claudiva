@@ -4,6 +4,8 @@ import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
 import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
 import { systemInfo } from './system.js';
+import type { ChangeLog } from '../changes.js';
+import { changedFiles, diffFile, headSha, isRepo, revertFile, safeResolve } from '../git.js';
 
 function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>) {
   return async (req: Request, res: Response) => {
@@ -16,7 +18,12 @@ function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>)
   };
 }
 
-export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: PromptStore): Router {
+export function createRoutes(
+  manager: AgentManager,
+  tasks: TaskQueue,
+  prompts: PromptStore,
+  changes: ChangeLog,
+): Router {
   const r = Router();
 
   // ------------------------------------------------------------- agents
@@ -86,6 +93,8 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
     const s = manager.get(req.params.id);
     if (!s) throw new Error('Ajan bulunamadı.');
     s.transcript.length = 0;
+    // Diskteki döküm de silinmezse yeniden başlatmada geri gelir.
+    manager.store.clearTranscript(req.params.id);
   }));
 
   r.post('/agents/:id/permission', handle((req) => {
@@ -122,6 +131,49 @@ export function createRoutes(manager: AgentManager, tasks: TaskQueue, prompts: P
     tracked: manager.usageSummary(),
     plan: await manager.planUsage(),
   })));
+
+  // ------------------------------------------------------------- bütçe
+  /** Bugünkü harcama + sınır durumu; panel göstergesi ve Ayarlar bunu okur. */
+  r.get('/budget', handle(() => ({ ...manager.budget(), settings: manager.settings.get() })));
+
+  r.put('/settings', handle((req) => {
+    manager.settings.update(req.body ?? {});
+    return { ...manager.budget(), settings: manager.settings.get() };
+  }));
+
+  // ------------------------------------------------------------ changes
+  /**
+   * Çalışma ağacındaki değişiklikler + kim dokundu.
+   *
+   * git "ne değişti"yi, ChangeLog "kim değiştirdi"yi bilir; ikisi burada
+   * birleşir. Git deposu değilse `isRepo:false` döner ve panel geri alma
+   * düğmelerini kapatır — çökme yok.
+   */
+  r.get('/changes', handle(async () => {
+    if (!(await isRepo())) return { isRepo: false, head: null, files: [] };
+    const files = await changedFiles();
+    return {
+      isRepo: true,
+      head: await headSha(),
+      files: files.map((f) => ({ ...f, touches: changes.touchesFor(f.path) })),
+    };
+  }));
+
+  r.get('/changes/diff', handle(async (req) => {
+    const p = String(req.query.path ?? '');
+    if (!p || !safeResolve(p)) throw new Error('Geçersiz yol.');
+    return { path: p, diff: await diffFile(p) };
+  }));
+
+  /** Geri alma yıkıcıdır: commit'lenmemiş çalışmayı siler. Panel onay ister. */
+  r.post('/changes/revert', handle(async (req) => {
+    const p = String(req.body?.path ?? '');
+    if (!p || !safeResolve(p)) throw new Error('Geçersiz yol.');
+    if (!(await isRepo())) throw new Error('Bu klasör bir git deposu değil; geri alınamaz.');
+    await revertFile(p);
+    changes.forget(p);
+    return { ok: true };
+  }));
 
   // ------------------------------------------------------------ prompts
   r.get('/prompts', handle(() => prompts.list()));

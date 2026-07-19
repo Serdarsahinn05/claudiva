@@ -1,4 +1,14 @@
-import type { AgentSnapshot, PromptTemplate, SystemInfo, Task, TranscriptEvent, UsageSummary } from './types';
+import type {
+  AgentSnapshot,
+  BudgetSettings,
+  BudgetState,
+  ChangesResponse,
+  PromptTemplate,
+  SystemInfo,
+  Task,
+  TranscriptEvent,
+  UsageSummary,
+} from './types';
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -35,6 +45,12 @@ export const api = {
   createPrompt: (input: unknown) => req<PromptTemplate>('POST', '/api/prompts', input),
   updatePrompt: (id: string, patch: unknown) => req<PromptTemplate>('PUT', `/api/prompts/${id}`, patch),
   deletePrompt: (id: string) => req('DELETE', `/api/prompts/${id}`),
+  budget: () => req<BudgetState>('GET', '/api/budget'),
+  updateSettings: (patch: BudgetSettings) => req<BudgetState>('PUT', '/api/settings', patch),
+  changes: () => req<ChangesResponse>('GET', '/api/changes'),
+  changeDiff: (p: string) =>
+    req<{ path: string; diff: string }>('GET', `/api/changes/diff?path=${encodeURIComponent(p)}`),
+  revertChange: (p: string) => req('POST', '/api/changes/revert', { path: p }),
   info: () => req<{ memoryDir: string; projectDir: string }>('GET', '/api/info'),
   system: () => req<SystemInfo>('GET', '/api/system'),
 };

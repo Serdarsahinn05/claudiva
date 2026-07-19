@@ -145,12 +145,59 @@ export interface UsageSummary {
   perAgent: Record<string, TokenUsage>;
 }
 
+// ------------------------------------------------------------------ bütçe
+export interface BudgetSettings {
+  /** Günlük toplam harcama tavanı (USD). 0/tanımsız = sınırsız. */
+  dailyLimitUSD?: number;
+  /** Bu yüzdede uyarı verilir. */
+  warnAtPercent?: number;
+}
+
+export interface BudgetState {
+  /** Pencerenin günü (YYYY-MM-DD); yerel gece yarısında döner. */
+  date: string;
+  spentUSD: number;
+  limitUSD?: number;
+  perAgentUSD: Record<string, number>;
+  /** Sınır yoksa null. */
+  pct: number | null;
+  warn: boolean;
+  exceeded: boolean;
+  settings?: BudgetSettings;
+}
+
+// ----------------------------------------------------------- değişiklikler
+export type ChangeStatus = 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked';
+
+/** Bir dosyaya yapılan tek bir ajan dokunuşu. */
+export interface Touch {
+  agentId: string;
+  taskId?: string;
+  ts: number;
+  tool: string;
+}
+
+export interface ChangedFile {
+  /** Proje köküne göreli yol. */
+  path: string;
+  status: ChangeStatus;
+  /** Yeniden eskiye; boşsa değişikliği ajan değil kullanıcı yapmış demektir. */
+  touches: Touch[];
+}
+
+export interface ChangesResponse {
+  /** false ise geri alma yapılamaz; panel düğmeleri kapanır. */
+  isRepo: boolean;
+  head: string | null;
+  files: ChangedFile[];
+}
+
 export type WsPayload =
   | { type: 'agent_status'; agentId: string; status: AgentStatus; activity?: string }
   | { type: 'agent_event'; agentId: string; event: TranscriptEvent }
   | { type: 'permission_request'; request: PermissionRequestInfo }
   | { type: 'permission_resolved'; agentId: string; requestId: string }
-  | { type: 'usage'; usage: UsageSummary; context?: Record<string, number> }
+  | { type: 'usage'; usage: UsageSummary; context?: Record<string, number>; budget?: BudgetState }
   | { type: 'agents_changed' }
   | { type: 'commands_changed'; agentId: string; commands: SlashCommand[] }
   | { type: 'task_update'; task: Task };

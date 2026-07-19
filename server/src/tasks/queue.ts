@@ -53,6 +53,17 @@ export class TaskQueue extends EventEmitter {
   }
 
   /**
+   * Şu an bu ajanda çalışan görevin id'si.
+   *
+   * Dosya değişikliği atfı için: ajan bir dosyaya dokunduğunda hangi görev
+   * bağlamında olduğunu bilmek gerekiyor. FIFO'nun başı = en eski açık görev,
+   * yani o anda işlenen tur.
+   */
+  currentTaskFor(agentId: string): string | undefined {
+    return this.inFlight.get(agentId)?.[0];
+  }
+
+  /**
    * Dispatch a task to an agent. Returns the task immediately; use
    * `waitFor()` to await completion.
    */
@@ -60,6 +71,30 @@ export class TaskQueue extends EventEmitter {
     const session = this.manager.get(input.assignedTo);
     if (!session) throw new Error(`Ajan bulunamadı: ${input.assignedTo}`);
     this.wireAgent(input.assignedTo);
+
+    /**
+     * Bütçe kapısı. send() de kontrol ediyor ama görev oradan sessizce
+     * düşerdi: kayıt `running` kalır, hiç turn_complete gelmez ve görev
+     * sonsuza kadar asılı görünürdü. Burada açıkça `failed` yazıyoruz.
+     */
+    const gate = this.manager.canWork(input.assignedTo);
+    if (!gate.ok) {
+      const blocked: Task = {
+        id: randomUUID().slice(0, 8),
+        title: input.title,
+        prompt: input.prompt,
+        assignedTo: input.assignedTo,
+        assignedBy: input.assignedBy,
+        status: 'failed',
+        result: gate.reason,
+        createdAt: Date.now(),
+        finishedAt: Date.now(),
+      };
+      this.tasks.set(blocked.id, blocked);
+      this.emit('task_update', blocked);
+      this.persist();
+      return blocked;
+    }
 
     const task: Task = {
       id: randomUUID().slice(0, 8),
