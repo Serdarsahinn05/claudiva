@@ -8,6 +8,7 @@ import { AgentManager } from './agents/manager.js';
 import { TaskQueue } from './tasks/queue.js';
 import { PromptStore } from './prompts/store.js';
 import { createTeamServer, TEAM_TOOL_RULES } from './boss/tools.js';
+import { createTaskServer, TASK_TOOL_RULES } from './tasks/tools.js';
 import { createSelfServer, SELF_TOOL_RULES } from './agents/selfTools.js';
 import { createRoutes } from './api/routes.js';
 import { ChangeLog } from './changes.js';
@@ -35,6 +36,9 @@ manager.sessionDecorator = (session) => {
     mcpServers.team = createTeamServer(manager, tasks, session.config.id);
     allowedTools.push(...TEAM_TOOL_RULES);
   }
+  // Görev bitişini ajan kendi bildirir; her rol görev alabildiği için istisnasız.
+  mcpServers.task = createTaskServer(tasks, session.config.id);
+  allowedTools.push(...TASK_TOOL_RULES);
   session.extraMcpServers = mcpServers;
   session.extraAllowedTools = allowedTools;
 };

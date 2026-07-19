@@ -43,9 +43,22 @@ Rules:
 - Ortamda başka oturumlardan kalmış artık sunucular olabilir; port çakışmasının ilk
   şüphelisi budur.
 
+## Görev tamamlanması — turdan türetilemez
+
+- **`send()` ile `result` 1:1 DEĞİL.** Ölçülmüş iki kırılma: (a) tur sürerken gelen
+  mesaj o turun **içine emilir** → iki mesaj, tek sonuç; (b) `Monitor` gibi arka plan
+  bildirimleri **mesajsız yeni tur doğurur**. Bu yüzden görevi tur sayarak kapatmak
+  ilkesel olarak yanlış — konumsal FIFO da, mesaja jeton iliştirmek de yetmez.
+- Kapanış **birincil olarak ajanın kendi bildirimidir**: `mcp__task__complete_task`
+  (`server/src/tasks/tools.ts`), her role verilir (worker'lar `team` sunucusunu almaz).
+  Yedek olarak son turdan `GRACE_MS` (90sn) sonra hâlâ açık görevler **son turun**
+  metniyle kapatılır ve sonuca not düşülür.
+- `turn_complete` yine de `taskId` taşır; ama yalnızca **hata turunda** kapatmak için
+  ve dosya değişikliği atfı için kullanılır (`session.currentTaskId`).
+- `cleanup()` sonuçlanmamış görev turları için `turn_abandoned` yayar — yoksa oturum
+  ölünce görevler sonsuza dek `running` asılı kalırdı.
+
 ## Bilinen açık sorun
 
-- **Görev↔tur eşleştirmesi konumsal** (`server/src/tasks/queue.ts`, `fifo.shift()`).
-  Bir görev çalışırken ajana terminalden mesaj yazmak, o sohbet turunu görevin sonucu
-  sanıp görevi yanlış metinle kapatır. Görev zincirleri bunun üstüne kurulmadan önce
-  düzeltilmeli. Planı: `~/.claude/plans/precious-dancing-sifakis.md` (madde 5a).
+- Ajan `complete_task`'ı çağırmadan önce `ToolSearch` ile yüklemek zorunda kalıyor
+  (deferred tool); fazladan bir tur maliyeti var, işlevi bozmuyor.

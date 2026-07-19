@@ -41,8 +41,18 @@ export interface SessionEvents {
   permission_request: (req: PermissionRequestInfo) => void;
   permission_resolved: (requestId: string) => void;
   usage: (usage: TokenUsage) => void;
-  /** A turn finished (result message received). Carries the final result text. */
-  turn_complete: (resultText: string, isError: boolean) => void;
+  /**
+   * A turn finished (result message received). Carries the final result text.
+   *
+   * `taskId` yalnızca tur bir görev olarak gönderildiyse doludur. Sohbet
+   * turlarında undefined gelir — kuyruk bu turları görmezden gelmelidir.
+   */
+  turn_complete: (resultText: string, isError: boolean, taskId?: string) => void;
+  /**
+   * Bir görev turu sonuçlanmadan oturum kapandı. Bu olmadan görev sonsuza
+   * kadar `running` asılı kalırdı.
+   */
+  turn_abandoned: (taskId: string) => void;
   /** Model switched (auto-model self-assessment or panel edit). */
   model_changed: (model: string) => void;
   /** Kullanılabilir slash komutları değişti (oturum açılışı veya orta-oturum keşif). */
@@ -97,12 +107,18 @@ export class AgentSession extends EventEmitter {
   /** loop() bitince sıfırdan yeniden başlatılmalı mı? */
   private resumeFailed = false;
   /**
-   * Henüz sonuçlanmamış turların ham metni.
+   * Henüz sonuçlanmamış turlar: ham metin + (varsa) görev kimliği.
    *
-   * Resume başarısız olursa oturum ölür ve kuyruktaki mesajlar kaybolur;
-   * sıfırdan açılan oturuma bunları yeniden gönderebilmek için tutulur.
+   * İki işi birden görür:
+   *  1. **Korelasyon.** SDK'ya gönderilen mesajlar sırayla işlendiği için bu
+   *     dizinin başı = şu an işlenen tur. `result` gelince baştaki tur çıkarılır
+   *     ve `taskId` `turn_complete` ile birlikte yayılır. Böylece bir görev
+   *     çalışırken araya giren sohbet mesajı görevi yanlışlıkla kapatamaz —
+   *     eskiden konumsal FIFO yüzünden kapatıyordu.
+   *  2. **Resume geri düşüşü.** Oturum ölürse kuyruktaki mesajlar kaybolur;
+   *     sıfırdan açılan oturuma görev kimliğiyle birlikte yeniden gönderilir.
    */
-  private inFlightMessages: string[] = [];
+  private inFlightTurns: { text: string; taskId?: string }[] = [];
 
   constructor(
     config: AgentConfig,
@@ -164,8 +180,22 @@ export class AgentSession extends EventEmitter {
     this.cleanup();
   }
 
-  /** Send a user message (a task or a chat turn) to this agent. */
-  send(text: string): void {
+  /**
+   * Şu an işlenmekte olan turun görev kimliği (yoksa undefined).
+   * Dosya değişikliği atfı bunu kullanır: ajan bir dosyaya dokunduğunda
+   * hangi görev bağlamında olduğunu bilmek gerekir.
+   */
+  get currentTaskId(): string | undefined {
+    return this.inFlightTurns[0]?.taskId;
+  }
+
+  /**
+   * Send a user message to this agent.
+   *
+   * `taskId` verilirse bu tur o göreve aittir ve sonucu `turn_complete` ile
+   * birlikte geri döner. Sohbet mesajlarında verilmez.
+   */
+  send(text: string, taskId?: string): void {
     /**
      * Bütçe kapısı. Burada olmak ZORUNDA: aşağıdaki satır ölü oturumu
      * kendiliğinden yeniden başlatıyor, dolayısıyla "ajanı durdur" biçiminde
@@ -178,9 +208,7 @@ export class AgentSession extends EventEmitter {
     }
     if (!this.q || !this.queue) this.start();
     this.pushEvent({ kind: 'user', text });
-    // Resume başarısız olursa oturumla birlikte bu mesaj da yok olur;
-    // sıfırdan açılan oturuma yeniden gönderebilmek için sakla.
-    this.inFlightMessages.push(text);
+    this.inFlightTurns.push({ text, taskId });
     this.turnDepth += 1;
     this.setStatus('working');
     // Otomatik model seçimi: sistem prompt'unun dibindeki talimat (özellikle
@@ -382,8 +410,8 @@ export class AgentSession extends EventEmitter {
       this.pushEvent({ kind: 'error', text: `Oturum hatası: ${(err as Error).message}` });
     } finally {
       const retry = this.resumeFailed;
-      const replay = retry ? [...this.inFlightMessages] : [];
-      this.cleanup();
+      const replay = retry ? [...this.inFlightTurns] : [];
+      this.cleanup(!retry);
 
       /**
        * Resume geri düşüşü.
@@ -401,21 +429,34 @@ export class AgentSession extends EventEmitter {
           text: 'Önceki oturum yüklenemedi (kayıt eskimiş olabilir); sıfırdan başlatıldı.',
         });
         this.start();
-        for (const text of replay) this.send(text);
+        // Görev kimliğiyle birlikte: aksi hâlde yeniden gönderilen görev
+        // sohbet turu sanılır ve kuyrukta kapanmadan kalır.
+        for (const turn of replay) this.send(turn.text, turn.taskId);
       }
     }
   }
 
-  private cleanup(): void {
+  /**
+   * @param abandon Sonuçlanmamış görev turları "terk edildi" sayılsın mı.
+   *   Resume geri düşüşünde `false` verilir: turlar kaybolmuyor, birazdan
+   *   yeni oturuma aynı kimlikle yeniden gönderilecekler.
+   */
+  private cleanup(abandon = true): void {
     for (const [id, p] of this.pending) {
       p.resolve({ behavior: 'deny', message: 'Oturum kapandı.' });
       this.emit('permission_resolved', id);
     }
     this.pending.clear();
+    if (abandon) {
+      // Haber vermezsek bu görevler kuyrukta sonsuza dek `running` asılı kalır.
+      for (const turn of this.inFlightTurns) {
+        if (turn.taskId) this.emit('turn_abandoned', turn.taskId);
+      }
+    }
     this.q = null;
     this.queue = null;
     this.turnDepth = 0;
-    this.inFlightMessages = [];
+    this.inFlightTurns = [];
     this.currentActivity = undefined;
     this.contextTokens = 0;
     this.setStatus('offline');
@@ -569,7 +610,8 @@ export class AgentSession extends EventEmitter {
           meta: { subtype: msg.subtype, costUSD: (msg as { total_cost_usd?: number }).total_cost_usd },
         });
         this.turnDepth = Math.max(0, this.turnDepth - 1);
-        this.inFlightMessages.shift(); // bu tur sonuçlandı, tekrar gönderilmeyecek
+        // Bu tur sonuçlandı: tekrar gönderilmeyecek, kimliği sonuca eşlik edecek.
+        const finished = this.inFlightTurns.shift();
         this.currentActivity = undefined;
         if (this.turnDepth === 0) this.setStatus('idle');
         // Otomatik model seçimi: yükseltme görev-bazlıdır — tur bitince temel
@@ -582,7 +624,7 @@ export class AgentSession extends EventEmitter {
         ) {
           void this.switchModel(this.config.model, 'tur bitti — temel modele dönüş').catch(() => {});
         }
-        this.emit('turn_complete', resultText, isError);
+        this.emit('turn_complete', resultText, isError, finished?.taskId);
         break;
       }
       default:

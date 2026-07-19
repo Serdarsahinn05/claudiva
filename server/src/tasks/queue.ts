@@ -8,17 +8,36 @@ import { DATA_DIR } from '../paths.js';
 
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 const MAX_RESULT_LEN = 20_000;
+/** Ajan bildirmeden sustuysa görevin yedekle kapatılacağı süre. */
+const GRACE_MS = 90_000;
 
 /**
  * Dispatches tasks to agent sessions and tracks their lifecycle.
- * Completion detection: messages to a session are processed in order, so each
- * `turn_complete` on an agent closes that agent's oldest running task.
+ *
+ * ## Tamamlanma nasıl anlaşılır
+ *
+ * **Birincil: ajanın kendi bildirimi** (`mcp__task__complete_task`). Turlardan
+ * bağımsız olduğu için tek sağlam sinyal bu.
+ *
+ * Eskiden eşleştirme konumsaldı (ajan başına FIFO, her tur en eski görevi
+ * kapatırdı) ve bir görev çalışırken ajana terminalden mesaj yazmak o sohbet
+ * turunu görevin sonucu sanıp görevi yanlış metinle kapatıyordu. Jeton taşımak
+ * bunu tek başına çözmüyor, çünkü ölçtüğümüz üzere gönderilen mesaj ile biten
+ * tur 1:1 değil: tur sürerken gelen mesaj o turun içine emiliyor ve Monitor
+ * gibi arka plan bildirimleri mesajsız yeni tur doğuruyor.
+ *
+ * **Yedek: sessizlik.** Ajan bildirmeyi unutursa görev sonsuza dek açık
+ * kalmasın diye, son turdan `GRACE_MS` sonra hâlâ açık görevler o turun
+ * metniyle kapatılır. Son turun metni kullanılır — ilk turunki değil — çünkü
+ * iş gerçekten en son turda bitmiş olur.
  */
 export class TaskQueue extends EventEmitter {
   private tasks = new Map<string, Task>();
-  /** Per-agent FIFO of task ids awaiting a turn_complete. */
-  private inFlight = new Map<string, string[]>();
   private waiters = new Map<string, { resolve: (t: Task) => void }>();
+  /** Ajan başına yedek kapanış zamanlayıcısı. */
+  private grace = new Map<string, NodeJS.Timeout>();
+  /** Ajan başına son tur sonucu — yedek kapanışta sonuç metni olarak kullanılır. */
+  private lastTurn = new Map<string, { text: string; isError: boolean }>();
   private saveTimer: NodeJS.Timeout | null = null;
   private wired = new Set<string>();
 
@@ -53,14 +72,12 @@ export class TaskQueue extends EventEmitter {
   }
 
   /**
-   * Şu an bu ajanda çalışan görevin id'si.
-   *
-   * Dosya değişikliği atfı için: ajan bir dosyaya dokunduğunda hangi görev
-   * bağlamında olduğunu bilmek gerekiyor. FIFO'nun başı = en eski açık görev,
-   * yani o anda işlenen tur.
+   * Şu an bu ajanda işlenen turun görev kimliği (sohbet turunda undefined).
+   * Dosya değişikliği atfı kullanır. Kaynak oturumun kendisi — kuyrukta ayrı
+   * bir kopya tutmak iki durumun ayrışması demek olurdu.
    */
   currentTaskFor(agentId: string): string | undefined {
-    return this.inFlight.get(agentId)?.[0];
+    return this.manager.get(agentId)?.currentTaskId;
   }
 
   /**
@@ -107,14 +124,14 @@ export class TaskQueue extends EventEmitter {
       startedAt: Date.now(),
     };
     this.tasks.set(task.id, task);
-    const fifo = this.inFlight.get(input.assignedTo) ?? [];
-    fifo.push(task.id);
-    this.inFlight.set(input.assignedTo, fifo);
 
     session.send(
       `# Görev (id: ${task.id}) — atayan: ${input.assignedBy}\n` +
         `## ${input.title}\n\n${input.prompt}\n\n` +
-        `Görevi tamamla ve sonucu net bir özetle bitir.`,
+        `Görevi tamamla. Bitirdiğinde SON İŞ olarak mcp__task__complete_task aracını ` +
+        `task_id="${task.id}" ve sonucu özetleyen bir summary ile çağır; görev ancak ` +
+        `bu çağrıyla kapanır. Yapamadıysan aynı aracı failed=true ile çağır.`,
+      task.id,
     );
 
     this.emit('task_update', task);
@@ -145,23 +162,70 @@ export class TaskQueue extends EventEmitter {
     const session = this.manager.get(agentId);
     if (!session) return;
     this.wired.add(agentId);
-    session.on('turn_complete', (resultText: string, isError: boolean) => {
-      const fifo = this.inFlight.get(agentId);
-      const taskId = fifo?.shift();
-      if (!taskId) return;
-      const task = this.tasks.get(taskId);
-      if (!task) return;
-      task.status = isError ? 'failed' : 'done';
-      task.result = resultText.slice(0, MAX_RESULT_LEN);
-      task.finishedAt = Date.now();
-      this.emit('task_update', task);
-      this.persist();
-      const waiter = this.waiters.get(taskId);
-      if (waiter) {
-        this.waiters.delete(taskId);
-        waiter.resolve(task);
-      }
+    session.on('turn_complete', (resultText: string, isError: boolean, taskId?: string) => {
+      this.lastTurn.set(agentId, { text: resultText, isError });
+      // Tur hatayla bittiyse ajan complete_task'ı çağıramaz — hemen kapat.
+      // Jeton burada güvenilir: hata turu, göreve ait olan turun ta kendisidir.
+      if (taskId && isError) this.finish(taskId, 'failed', resultText);
+      this.armGrace(agentId);
     });
+    // Oturum sonuçlanmamış bir görev turuyla kapandı; sonsuz `running` olmasın.
+    session.on('turn_abandoned', (taskId: string) => {
+      this.finish(taskId, 'failed', 'Oturum kapandı; görev yarıda kaldı.');
+    });
+  }
+
+  /** Bu ajanda hâlâ açık olan görevler. */
+  private openFor(agentId: string): Task[] {
+    return [...this.tasks.values()].filter((t) => t.assignedTo === agentId && t.status === 'running');
+  }
+
+  /**
+   * Yedek kapanışı kur/ertele. Her tur sonunda çağrılır: ajan konuşmaya devam
+   * ettiği sürece sayaç sıfırlanır, ancak gerçekten sustuğunda çalışır.
+   */
+  private armGrace(agentId: string): void {
+    clearTimeout(this.grace.get(agentId));
+    this.grace.delete(agentId);
+    if (!this.openFor(agentId).length) return;
+
+    const timer = setTimeout(() => {
+      this.grace.delete(agentId);
+      const last = this.lastTurn.get(agentId);
+      for (const task of this.openFor(agentId)) {
+        this.finish(
+          task.id,
+          last?.isError ? 'failed' : 'done',
+          `${last?.text ?? '(sonuç yok)'}\n\n— Not: ajan görevi complete_task ile kapatmadı; ` +
+            `sonuç son turun çıktısından alındı.`,
+        );
+      }
+    }, GRACE_MS);
+    timer.unref?.(); // yedek zamanlayıcı süreci ayakta tutmasın
+    this.grace.set(agentId, timer);
+  }
+
+  /** Ajanın kendi bildirimi (mcp__task__complete_task). Birincil kapanış yolu. */
+  complete(taskId: string, status: 'done' | 'failed', summary: string): void {
+    const task = this.tasks.get(taskId);
+    this.finish(taskId, status, summary);
+    // Bu ajanda başka açık görev kalmadıysa yedek zamanlayıcı boşuna beklemesin.
+    if (task) this.armGrace(task.assignedTo);
+  }
+
+  private finish(taskId: string, status: 'done' | 'failed', resultText: string): void {
+    const task = this.tasks.get(taskId);
+    if (!task || task.status === 'done' || task.status === 'failed') return;
+    task.status = status;
+    task.result = resultText.slice(0, MAX_RESULT_LEN);
+    task.finishedAt = Date.now();
+    this.emit('task_update', task);
+    this.persist();
+    const waiter = this.waiters.get(taskId);
+    if (waiter) {
+      this.waiters.delete(taskId);
+      waiter.resolve(task);
+    }
   }
 
   private persist(): void {
