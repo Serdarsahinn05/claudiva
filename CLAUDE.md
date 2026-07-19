@@ -33,6 +33,19 @@ Rules:
   durdur" biçimindeki hiçbir yaptırım tek başına yeterli değil; kapı `send()` ve
   `TaskQueue.dispatch()` içinde olmak zorunda (bütçe sınırı böyle uygulanıyor).
 
+## Derleme tuzakları (ikisi de canlı hataya yol açtı)
+
+- **`claude-manager` CLI `server/dist`i çalıştırır, kaynağı değil**
+  (`bin/claude-manager.js`). `tsx` ile kaynaktan test etmek CLI yolunu HİÇ
+  kapsamaz. Sunucu değişikliğinden sonra `npm run build` çalıştırılmazsa CLI eski
+  sunucuyu açar; taze `web/dist` olmayan uçları çağırır (`/api/budget` vb.),
+  `Promise.all` reddedilir ve panel açılış perdesinde sonsuza dek asılı kalır.
+- **`web/` içinde `npx tsc --noEmit` HİÇBİR ŞEYİ denetlemez.** `web/tsconfig.json`
+  bir çözüm dosyası (`"files": []` + references). Gerçek denetim için `tsc -b` ya da
+  `npm run build`. Ölçüldü: kasıtlı bir tip hatası `--noEmit`ten geçti, `-b` yakaladı.
+- Sonuç: web/sunucu değişikliğinden sonra doğrulama **`npm run build`**; `npx vite build`
+  tek başına `tsc -b`yi atlar ve kırık tipi görmezden gelir.
+
 ## Test/çalıştırma tuzakları
 
 - Sunucu `tsx --watch` ile çalışır. **Test sırasında kod düzenlemek sunucuyu yeniden

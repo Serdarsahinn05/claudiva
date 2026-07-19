@@ -64,7 +64,9 @@ export const FUEL_GAUGE_BG = 'rgba(20,20,26,0.8)';
 
 // ── Renkler ──────────────────────────────────────────────────
 export const WALL_COLOR = '#3A3A5C';
-export const VOID_COLOR = '#15171d';
+/* VOID_COLOR kaldırıldı: ofis zemin rengi artık temadan okunuyor
+   (bkz. office/themeColors.ts). Ham renk sabiti bırakmak tema sistemini
+   sessizce delen bir kopyala-yapıştır kaynağı olurdu. */
 /** Zemin bölge renkleri: hue, doygunluk (%), açıklık kaydırması */
 export const FLOOR_ZONE_COLORS = {
   /** Worker alanı — sıcak bej */
@@ -86,3 +88,4 @@ export const READING_TOOLS = new Set([
   'NotebookRead',
   'TodoRead',
 ]);
+
