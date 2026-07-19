@@ -57,6 +57,11 @@ export const THEMES: ThemeDef[] = [
   { id: 'catppuccin', name: 'Catppuccin', desc: 'Mocha; pastel lavanta ve şeftali', group: 'Geliştirici paletleri' },
   { id: 'gruvbox', name: 'Gruvbox', desc: 'Retro toprak tonları, hardal sarısı', group: 'Geliştirici paletleri' },
   { id: 'nord', name: 'Nord', desc: 'Kuzey buzulu; soğuk gri-mavi', group: 'Geliştirici paletleri' },
+  { id: 'dracula', name: 'Dracula', desc: 'Mor ve pembe ikilisi, gece mavisi zemin', group: 'Geliştirici paletleri' },
+  { id: 'solarized', name: 'Solarized Dark', desc: 'Camgöbeği zemin, ölçülmüş düşük kontrast', group: 'Geliştirici paletleri' },
+  { id: 'everforest', name: 'Everforest', desc: 'Sakin orman yeşili, sıcak kum metin', group: 'Geliştirici paletleri' },
+  { id: 'monokai', name: 'Monokai', desc: 'Limon yeşili ve macenta, yüksek kontrast', group: 'Geliştirici paletleri' },
+  { id: 'rose-pine-dawn', name: 'Rosé Pine Dawn', desc: 'Açık tema; yumuşak gül ve çam', group: 'Geliştirici paletleri' },
 ];
 
 /** Grup sırası — seçicide bu düzende listelenir. */

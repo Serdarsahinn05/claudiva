@@ -17,7 +17,12 @@ Rules:
 - **`Task` ve diğer paylaşılan tipler iki yerde elle çoğaltılmış**: `server/src/types.ts`
   ve `web/src/types.ts`. Şema değiştirirken ikisini birden güncelle.
 - **CSS**: renkler kanal token'ı (`rgb(var(--x-rgb) / a)`), ham renk yazma. Temalar
-  (`web/src/themes.css`) yalnızca token ezer, kural yazmaz. **Yeni etkileşimli sınıf
+  (`web/src/themes.css`) yalnızca token ezer, kural yazmaz.
+- **Yeni tema eklerken kontrastı ÖLÇ, göz kararı yapma.** Yüzeye karşı eşikler:
+  `fg` ≥ 7, `muted` ≥ 4.5, `dim`/`accent`/`err`/`ok`/`warn` ≥ 3. Ölçüm üç ayrı
+  temada gözden kaçmış hata buldu (`spaceship` dim 2.52, `nord` err 2.46,
+  `brutal` warn 2.79). Yayımlanmış paletler bile bu arayüzde eşiği tutmayabilir —
+  Solarized'ın resmî metin tonları 4.86:1 kalıyordu, açmak gerekti. **Yeni etkileşimli sınıf
   eklerken** `index.css`'teki ortak `transition` ve hover seçici listelerine de ekle,
   yoksa animasyon almaz.
 - **Açılış perdesi `web/index.html`'de, React'te değil.** React bileşenine taşınırsa
