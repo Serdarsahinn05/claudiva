@@ -16,9 +16,14 @@ interface Props {
   children: React.ReactNode;
   /** Geniş form (ajan düzenleme) için. */
   wide?: boolean;
+  /**
+   * Dikey hizalama. Komut paleti üstte durur: liste daraldıkça kutu ekranın
+   * ortasında zıplamasın, üst kenarı sabit kalsın.
+   */
+  align?: 'center' | 'top';
 }
 
-export function Modal({ onClose, children, wide }: Props) {
+export function Modal({ onClose, children, wide, align = 'center' }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -33,7 +38,7 @@ export function Modal({ onClose, children, wide }: Props) {
   }, [onClose]);
 
   return createPortal(
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className={`modal-backdrop${align === 'top' ? ' align-top' : ''}`} onClick={onClose}>
       <div className={`modal${wide ? ' modal-wide' : ''}`} onClick={(e) => e.stopPropagation()}>
         {children}
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from './useStore';
 import { api } from './api';
 import { AgentCard } from './components/AgentCard';
@@ -12,6 +12,8 @@ import { Office } from './components/Office';
 import { Changes } from './components/Changes';
 import { ThemePicker } from './components/ThemePicker';
 import { Settings } from './components/Settings';
+import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
+import { useHotkey } from './useHotkey';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
@@ -39,6 +41,7 @@ export default function App() {
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
   const [themeOpen, setThemeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const selected = store.agents.find((a) => a.config.id === selectedId) ?? null;
 
@@ -69,6 +72,32 @@ export default function App() {
 
   const pendingCount = store.permissions.length;
   const activeCount = store.agents.filter((a) => a.status !== 'offline').length;
+
+  // ---------------------------------------------------------- komut paleti
+  useHotkey('mod+k', () => setPaletteOpen((v) => !v));
+
+  const commands = useMemo<Command[]>(
+    () => [
+      ...(Object.keys(TAB_TITLE) as Tab[])
+        // Terminal ancak bir ajan seçiliyken anlamlı; palet ölü bir sekmeye atmasın.
+        .filter((t) => t !== 'terminal' || selected)
+        .map((t) => ({
+          id: `tab:${t}`,
+          label: `${TAB_TITLE[t]}'e git`,
+          hint: 'bölüm',
+          keywords: `sekme bölüm ${t}`,
+          run: () => setTab(t),
+        })),
+      { id: 'new-agent', label: 'Yeni ajan', hint: 'oluştur', keywords: 'ekle create', run: () => setFormAgent('new') },
+      { id: 'new-task', label: 'Yeni görev', hint: 'görevler', keywords: 'ata zincir', run: () => setTab('tasks') },
+      { id: 'settings', label: 'Ayarlar', hint: 'bütçe', keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
+      { id: 'theme-picker', label: 'Tema seç…', hint: 'görünüm', keywords: 'tema renk', run: () => setThemeOpen(true) },
+      ...agentCommands(store.agents, openAgent, (a) => void toggleAgent(a)),
+      ...themeCommands(),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [store.agents, selected],
+  );
 
   /** Sürüklenen ajanı hedef sıraya taşıyıp sunucuya yazar. */
   async function commitReorder(toIndex: number) {
@@ -117,6 +146,10 @@ export default function App() {
           <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
           {store.connected ? 'bağlantı aktif' : 'bağlantı yok'}
         </span>
+        {/* Kısayol keşfedilebilir olsun: tıklanabilir bir ipucu */}
+        <button className="kbd-hint" onClick={() => setPaletteOpen(true)} title="Komut paleti">
+          {navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl+'}K
+        </button>
         <button
           className={`icon-btn${store.budget?.exceeded ? ' alarm' : store.budget?.warn ? ' warn' : ''}`}
           onClick={() => setSettingsOpen(true)}
@@ -282,6 +315,8 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
 
       {themeOpen && <ThemePicker onClose={() => setThemeOpen(false)} />}
 
