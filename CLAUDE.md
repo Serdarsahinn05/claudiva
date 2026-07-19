@@ -20,6 +20,10 @@ Rules:
   (`web/src/themes.css`) yalnızca token ezer, kural yazmaz. **Yeni etkileşimli sınıf
   eklerken** `index.css`'teki ortak `transition` ve hover seçici listelerine de ekle,
   yoksa animasyon almaz.
+- **Açılış perdesi `web/index.html`'de, React'te değil.** React bileşenine taşınırsa
+  ancak bundle ayrıştırıldıktan sonra görünür — yani örtmesi gereken boşluğun tam
+  ortasında belirir. Stiller de inline olmak zorunda (aynı sebep). Perde SÜREYE değil
+  `store.ready`e bağlı kalkar; sabit süreli açılış ekranı her yenilemede vergi olurdu.
 - **Giriş animasyonlarında `animation-fill-mode: backwards` kullan, `both` değil.**
   `both` bitişte `transform: none`'ı kalıcı uygular ve hover hareketini tamamen öldürür.
 - **`session.usage` tümel toplamdır** (açılışta diskten geri yüklenir). Bütçe/kota gibi

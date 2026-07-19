@@ -22,6 +22,8 @@ export interface Store {
   transcripts: Record<string, TranscriptEvent[]>;
   permissions: PermissionRequestInfo[];
   connected: boolean;
+  /** İlk veri yüklemesi tamamlandı mı — açılış perdesi buna bakar. */
+  ready: boolean;
   /** Ajanların üzerinde çalıştığı proje kökü (terminal karşılama kutusunda gösterilir). */
   projectDir: string;
   refreshBudget: () => Promise<void>;
@@ -40,6 +42,7 @@ export function useStore(): Store {
   const [transcripts, setTranscripts] = useState<Record<string, TranscriptEvent[]>>({});
   const [permissions, setPermissions] = useState<PermissionRequestInfo[]>([]);
   const [connected, setConnected] = useState(false);
+  const [ready, setReady] = useState(false);
   const [projectDir, setProjectDir] = useState('');
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -72,6 +75,7 @@ export function useStore(): Store {
           api.budget().then(setBudget),
           api.info().then((i) => setProjectDir(i.projectDir)),
         ]);
+        if (!cancelled) setReady(true);
       } catch {
         if (cancelled) return;
         timer = setTimeout(() => void load(attempt + 1), Math.min(500 * 2 ** attempt, 5000));
@@ -193,6 +197,7 @@ export function useStore(): Store {
     transcripts,
     permissions,
     connected,
+    ready,
     projectDir,
     refreshAgents,
     refreshTasks,

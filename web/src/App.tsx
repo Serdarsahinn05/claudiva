@@ -14,6 +14,7 @@ import { ThemePicker } from './components/ThemePicker';
 import { Settings } from './components/Settings';
 import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
 import { useHotkey } from './useHotkey';
+import { dismissBoot } from './boot';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
@@ -44,6 +45,11 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const selected = store.agents.find((a) => a.config.id === selectedId) ?? null;
+
+  // Açılış perdesi veri gelir gelmez kalkar (sabit süre yok — bkz. boot.ts).
+  useEffect(() => {
+    if (store.ready) dismissBoot();
+  }, [store.ready]);
 
   useEffect(() => {
     if (selectedId && !store.transcripts[selectedId]) {
