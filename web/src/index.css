@@ -311,7 +311,7 @@ body {
  */
 button, .agent-row, .card, .tb-agent, .choice, .bcrew, .rail-btn,
 .bridge-mod.clickable, .modal-nav-btn, .tb-filter, .pl-card, .theme-card,
-.task-head, .cli-link, .agent-grip, .task-caret, .cmd-row, .ch-file {
+.task-head, .cli-link, .agent-grip, .task-caret, .cmd-row, .ch-file, .tb-step {
   transition:
     transform var(--t-release) var(--ease-spring),
     background-color var(--t-ui) var(--ease-out),
@@ -1251,6 +1251,51 @@ label.check.small { font-size: 12px; color: var(--muted); }
   padding: var(--s2); border-radius: var(--radius);
   font-family: var(--font-mono); font-size: 12px; max-height: 300px; overflow-y: auto;
 }
+
+/* --- zincirler --------------------------------------------------------- */
+/* Zincir, adımları tek blokta tutar; sol şerit dizinin nerede başlayıp
+   nerede bittiğini gözle takip ettirir. */
+.chain {
+  border: var(--border-w) solid rgb(var(--accent-rgb) / 0.28);
+  border-radius: var(--radius); background: var(--hud-wash); overflow: hidden;
+}
+.chain-head {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s2) var(--s3); font-size: 12px;
+  border-bottom: var(--border-w) solid rgb(var(--accent-rgb) / 0.2);
+}
+.chain-label {
+  font-family: var(--font-mono); color: var(--hud);
+  letter-spacing: var(--track-tight); text-transform: var(--upper);
+}
+.chain-progress { margin-left: auto; color: var(--muted); font-size: 11px; }
+.chain-steps {
+  display: flex; flex-direction: column; gap: var(--s1);
+  padding: var(--s2); padding-left: var(--s3);
+  border-left: 2px solid rgb(var(--accent-rgb) / 0.3); margin-left: var(--s3);
+}
+/* Adım numarası: başlıkla aynı hizada, sabit genişlikte kalsın diye monospace */
+.task-step { font-family: var(--font-mono); color: var(--hud); font-size: 12px; }
+
+/* Zincir kurma şeridi */
+.tb-compose-head { display: flex; align-items: center; gap: var(--s2); }
+.tb-steps {
+  display: flex; flex-direction: column; gap: var(--s1);
+  margin: var(--s2) 0 0; padding: 0; list-style: none; counter-reset: step;
+}
+.tb-step {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s1) var(--s2); font-size: 12px;
+  border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  background: var(--hull-1);
+}
+.tb-step:hover { border-color: var(--edge-lit); }
+.tb-step-no {
+  font-family: var(--font-mono); color: var(--hud); min-width: 1.4em;
+}
+.tb-step-main { display: flex; align-items: baseline; gap: var(--s2); flex: 1; min-width: 0; }
+.tb-step-title { color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-step-meta { color: var(--muted); font-size: 11px; white-space: nowrap; }
 
 /* Durum çipleri: köşeli, monospace, kenarlıklı */
 .chip {

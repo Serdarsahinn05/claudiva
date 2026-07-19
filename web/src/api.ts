@@ -36,6 +36,8 @@ export const api = {
     req('POST', `/api/agents/${id}/permission`, { requestId, allow, message }),
   listTasks: () => req<Task[]>('GET', '/api/tasks'),
   createTask: (input: { title: string; prompt: string; assignedTo: string }) => req<Task>('POST', '/api/tasks', input),
+  createChain: (steps: { title: string; prompt: string; assignedTo: string }[]) =>
+    req<Task[]>('POST', '/api/tasks/chain', { steps }),
   usage: () => req<UsageSummary>('GET', '/api/usage'),
   usageDetail: () => req<{ tracked: UsageSummary; plan: unknown }>('GET', '/api/usage/detail'),
   clearTranscript: (id: string) => req('POST', `/api/agents/${id}/clear`),

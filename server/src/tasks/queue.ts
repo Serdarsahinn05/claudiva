@@ -11,6 +11,15 @@ const MAX_RESULT_LEN = 20_000;
 /** Ajan bildirmeden sustuysa görevin yedekle kapatılacağı süre. */
 const GRACE_MS = 90_000;
 
+export interface TaskInput {
+  title: string;
+  prompt: string;
+  assignedTo: string;
+  assignedBy: string;
+  /** Zincirde: önceki adımın sonucu prompt'a eklensin mi (varsayılan: evet). */
+  passResult?: boolean;
+}
+
 /**
  * Dispatches tasks to agent sessions and tracks their lifecycle.
  *
@@ -50,15 +59,37 @@ export class TaskQueue extends EventEmitter {
       try {
         const arr = JSON.parse(fs.readFileSync(TASKS_FILE, 'utf-8')) as Task[];
         for (const t of arr) {
-          // Anything left running from a previous process is stale.
-          if (t.status === 'running' || t.status === 'pending') {
+          // Süren tur süreçle birlikte öldü; kayıt bayat.
+          if (t.status === 'running') {
             t.status = 'failed';
             t.result = 'Sunucu yeniden başlatıldı; görev yarıda kaldı.';
           }
+          // `pending` KORUNUR. Eskiden bu da `failed` yapılıyordu; zincirler
+          // bunun üstüne kurulsaydı sunucu her yeniden başladığında sessizce
+          // ölürlerdi. Bağımlılıkları aşağıda çözülür.
           this.tasks.set(t.id, t);
         }
+        this.resumeChains();
       } catch {
         // start fresh
+      }
+    }
+  }
+
+  /**
+   * Açılışta bekleyen adımları bağımlılıklarına göre yerleştirir: bağımlılık
+   * bittiyse adım fırlatılır, başarısızsa adım da başarısız olur, hâlâ
+   * bekliyorsa dokunulmaz (o adım bittiğinde `finish()` devralır).
+   */
+  private resumeChains(): void {
+    for (const task of this.tasks.values()) {
+      if (task.status !== 'pending') continue;
+      const dep = task.dependsOn ? this.tasks.get(task.dependsOn) : undefined;
+      if (!task.dependsOn) this.launch(task);
+      else if (!dep) this.finish(task.id, 'failed', 'Bağlı olduğu görev kayıtlarda yok.');
+      else if (dep.status === 'done') this.launch(task);
+      else if (dep.status === 'failed') {
+        this.finish(task.id, 'failed', `Önceki adım başarısız oldu (${dep.id}); zincir durduruldu.`);
       }
     }
   }
@@ -84,50 +115,128 @@ export class TaskQueue extends EventEmitter {
    * Dispatch a task to an agent. Returns the task immediately; use
    * `waitFor()` to await completion.
    */
-  dispatch(input: { title: string; prompt: string; assignedTo: string; assignedBy: string }): Task {
-    const session = this.manager.get(input.assignedTo);
-    if (!session) throw new Error(`Ajan bulunamadı: ${input.assignedTo}`);
-    this.wireAgent(input.assignedTo);
-
-    /**
-     * Bütçe kapısı. send() de kontrol ediyor ama görev oradan sessizce
-     * düşerdi: kayıt `running` kalır, hiç turn_complete gelmez ve görev
-     * sonsuza kadar asılı görünürdü. Burada açıkça `failed` yazıyoruz.
-     */
-    const gate = this.manager.canWork(input.assignedTo);
-    if (!gate.ok) {
-      const blocked: Task = {
-        id: randomUUID().slice(0, 8),
-        title: input.title,
-        prompt: input.prompt,
-        assignedTo: input.assignedTo,
-        assignedBy: input.assignedBy,
-        status: 'failed',
-        result: gate.reason,
-        createdAt: Date.now(),
-        finishedAt: Date.now(),
-      };
-      this.tasks.set(blocked.id, blocked);
-      this.emit('task_update', blocked);
-      this.persist();
-      return blocked;
+  dispatch(input: TaskInput): Task {
+    if (!this.manager.get(input.assignedTo)) {
+      throw new Error(`Ajan bulunamadı: ${input.assignedTo}`);
     }
+    const task = this.create(input);
+    this.launch(task);
+    return task;
+  }
 
+  /**
+   * Zincir oluşturur: ilk adım hemen başlar, kalanlar bir öncekine bağlı
+   * `pending` doğar. Adım bittiğinde `finish()` bir sonrakini fırlatır.
+   */
+  createChain(steps: TaskInput[], assignedBy: string): Task[] {
+    if (!steps.length) throw new Error('Zincir en az bir adım içermeli.');
+    for (const s of steps) {
+      if (!this.manager.get(s.assignedTo)) throw new Error(`Ajan bulunamadı: ${s.assignedTo}`);
+    }
+    const chainId = randomUUID().slice(0, 8);
+    const created: Task[] = [];
+    let prev: Task | undefined;
+    for (const [i, step] of steps.entries()) {
+      const task = this.create({
+        ...step,
+        assignedBy: step.assignedBy || assignedBy,
+        chainId,
+        stepIndex: i,
+        dependsOn: prev?.id,
+        status: prev ? 'pending' : undefined,
+      });
+      created.push(task);
+      prev = task;
+    }
+    this.launch(created[0]);
+    return created;
+  }
+
+  /**
+   * Var olan bir görevin ardına adım ekler (ajanların `delegate_task
+   * after_task_id` yolu). Önceki görev zincirin parçası değilse burada bir
+   * zincire dönüşür, böylece panel ikisini birlikte gösterir.
+   */
+  chainAfter(prevId: string, input: TaskInput): Task {
+    const prev = this.tasks.get(prevId);
+    if (!prev) throw new Error(`Görev bulunamadı: ${prevId}`);
+    if (!this.manager.get(input.assignedTo)) throw new Error(`Ajan bulunamadı: ${input.assignedTo}`);
+
+    if (!prev.chainId) {
+      prev.chainId = randomUUID().slice(0, 8);
+      prev.stepIndex = 0;
+      this.emit('task_update', prev);
+    }
+    const step = this.create({
+      ...input,
+      chainId: prev.chainId,
+      stepIndex: (prev.stepIndex ?? 0) + 1,
+      dependsOn: prevId,
+      status: 'pending',
+    });
+
+    // Bağlandığı görev çoktan bitmişse beklemenin anlamı yok.
+    if (prev.status === 'done') this.launch(step);
+    else if (prev.status === 'failed') {
+      this.finish(step.id, 'failed', `Önceki adım başarısız oldu (${prevId}); zincir durduruldu.`);
+    }
+    this.persist();
+    return step;
+  }
+
+  /** Kaydı oluşturur; `status` verilmezse `pending` doğar ve fırlatılmaz. */
+  private create(input: TaskInput & { status?: 'pending'; chainId?: string; stepIndex?: number; dependsOn?: string }): Task {
     const task: Task = {
       id: randomUUID().slice(0, 8),
       title: input.title,
       prompt: input.prompt,
       assignedTo: input.assignedTo,
       assignedBy: input.assignedBy,
-      status: 'running',
+      status: 'pending',
       createdAt: Date.now(),
-      startedAt: Date.now(),
+      ...(input.chainId ? { chainId: input.chainId, stepIndex: input.stepIndex } : {}),
+      ...(input.dependsOn ? { dependsOn: input.dependsOn } : {}),
+      ...(input.passResult === false ? { passResult: false } : {}),
     };
     this.tasks.set(task.id, task);
+    this.emit('task_update', task);
+    this.persist();
+    return task;
+  }
+
+  /**
+   * Bekleyen bir görevi ajana gönderir. Bütçe kapısı burada: `send()` de
+   * kontrol ediyor ama görev oradan sessizce düşerdi — kayıt `running` kalır,
+   * hiç sonuç gelmez ve görev sonsuza kadar asılı görünürdü.
+   */
+  private launch(task: Task): void {
+    if (task.status !== 'pending') return;
+    const session = this.manager.get(task.assignedTo);
+    if (!session) {
+      this.finish(task.id, 'failed', `Ajan bulunamadı: ${task.assignedTo}`);
+      return;
+    }
+    this.wireAgent(task.assignedTo);
+
+    const gate = this.manager.canWork(task.assignedTo);
+    if (!gate.ok) {
+      this.finish(task.id, 'failed', gate.reason);
+      return;
+    }
+
+    task.status = 'running';
+    task.startedAt = Date.now();
+
+    // Zincirde önceki adımın çıktısı, aksi belirtilmedikçe prompt'un başına eklenir.
+    const dep = task.dependsOn ? this.tasks.get(task.dependsOn) : undefined;
+    const carried =
+      dep && task.passResult !== false && dep.result
+        ? `## Önceki adımın çıktısı — "${dep.title}" (${dep.assignedTo})\n\n${dep.result}\n\n---\n\n`
+        : '';
 
     session.send(
-      `# Görev (id: ${task.id}) — atayan: ${input.assignedBy}\n` +
-        `## ${input.title}\n\n${input.prompt}\n\n` +
+      `# Görev (id: ${task.id}) — atayan: ${task.assignedBy}\n` +
+        `## ${task.title}\n\n${carried}${task.prompt}\n\n` +
         `Görevi tamamla. Bitirdiğinde SON İŞ olarak mcp__task__complete_task aracını ` +
         `task_id="${task.id}" ve sonucu özetleyen bir summary ile çağır; görev ancak ` +
         `bu çağrıyla kapanır. Yapamadıysan aynı aracı failed=true ile çağır.`,
@@ -136,7 +245,11 @@ export class TaskQueue extends EventEmitter {
 
     this.emit('task_update', task);
     this.persist();
-    return task;
+  }
+
+  /** Bu göreve bağlı bekleyen adımlar. */
+  private dependentsOf(taskId: string): Task[] {
+    return [...this.tasks.values()].filter((t) => t.dependsOn === taskId && t.status === 'pending');
   }
 
   waitFor(taskId: string, timeoutMs = 15 * 60 * 1000): Promise<Task> {
@@ -225,6 +338,13 @@ export class TaskQueue extends EventEmitter {
     if (waiter) {
       this.waiters.delete(taskId);
       waiter.resolve(task);
+    }
+
+    // Zinciri ilerlet. Başarısızlık aşağı doğru yayılır: bir adım yapılamadıysa
+    // sonraki adım eksik girdiyle çalışıp yanıltıcı bir sonuç üretmesin.
+    for (const next of this.dependentsOf(taskId)) {
+      if (status === 'done') this.launch(next);
+      else this.finish(next.id, 'failed', `Önceki adım başarısız oldu (${taskId}); zincir durduruldu.`);
     }
   }
 

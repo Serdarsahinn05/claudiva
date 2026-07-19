@@ -58,6 +58,18 @@ Rules:
 - `cleanup()` sonuçlanmamış görev turları için `turn_abandoned` yayar — yoksa oturum
   ölünce görevler sonsuza dek `running` asılı kalırdı.
 
+## Görev zincirleri
+
+- Zincir adımı `pending` doğar (`chainId`/`stepIndex`/`dependsOn`/`passResult`).
+  **`init()` `pending`'i ASLA `failed` yapmamalı** — eskiden yapıyordu; zincirler
+  sunucu her yeniden başladığında sessizce ölürdü. Yalnızca `running` bayat sayılır,
+  `pending` korunup `resumeChains()` ile bağımlılığına göre yerleştirilir.
+- Başarısızlık aşağı yayılır: bir adım `failed` ise sonraki adım da `failed` olur
+  (eksik girdiyle çalışıp yanıltıcı sonuç üretmesin).
+- `delegate_task after_task_id` verildiğinde **`wait` bilerek yok sayılır**; zincir
+  boyunca bloklamak `waitFor`ın 15dk zaman aşımını aşar ve biten işi "BAŞARISIZ"
+  diye raporlardı.
+
 ## Bilinen açık sorun
 
 - Ajan `complete_task`'ı çağırmadan önce `ToolSearch` ile yüklemek zorunda kalıyor

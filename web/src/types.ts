@@ -78,6 +78,16 @@ export interface Task {
   createdAt: number;
   startedAt?: number;
   finishedAt?: number;
+
+  // --- zincir alanları (tekil görevlerde tanımsız) ---
+  /** Aynı zincirin adımlarını gruplar. */
+  chainId?: string;
+  /** Zincir içindeki sıra (0'dan başlar) — panel sıralaması için. */
+  stepIndex?: number;
+  /** Bu adım hangi görev bittikten sonra başlar. */
+  dependsOn?: string;
+  /** Önceki adımın sonucu prompt'un başına eklensin mi (varsayılan: evet). */
+  passResult?: boolean;
 }
 
 export interface PromptTemplate {

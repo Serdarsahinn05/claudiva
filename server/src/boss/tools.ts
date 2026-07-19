@@ -70,6 +70,12 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
           title: z.string().describe('Görevin kısa başlığı'),
           task: z.string().describe('Görevin tam açıklaması: hedef, bağlam, beklenen çıktı'),
           wait: z.boolean().optional().describe('true: sonucu bekle ve döndür (varsayılan). false: hemen dön.'),
+          after_task_id: z
+            .string()
+            .optional()
+            .describe(
+              'Verilirse görev hemen başlamaz: bu görev bittikten sonra, onun sonucu girdi olarak eklenerek başlar. Zincir kurmak için kullan. Verildiğinde wait yok sayılır ve görev id hemen döner.',
+            ),
         },
         async (args) => {
           if (args.agent_id === selfId) {
@@ -78,6 +84,27 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
           if (!manager.get(args.agent_id)) {
             return text(`HATA: "${args.agent_id}" kimlikli ajan yok. list_agents ile kontrol et.`);
           }
+
+          /**
+           * Zincir adımı. `wait` bilerek yok sayılır: zincir boyunca bloklamak
+           * waitFor'ın 15dk zaman aşımını kolayca aşar ve tamamlanmış bir işi
+           * "BAŞARISIZ" diye raporlardı.
+           */
+          if (args.after_task_id) {
+            const prev = tasks.get(args.after_task_id);
+            if (!prev) return text(`HATA: Görev bulunamadı: ${args.after_task_id}`);
+            const step = tasks.chainAfter(args.after_task_id, {
+              title: args.title,
+              prompt: args.task,
+              assignedTo: args.agent_id,
+              assignedBy: selfId,
+            });
+            return text(
+              `Adım zincire eklendi. task_id: ${step.id} — "${prev.title}" (${prev.id}) bittikten ` +
+                `sonra başlayacak. Durumu check_task ile sorgula.`,
+            );
+          }
+
           const task = tasks.dispatch({
             title: args.title,
             prompt: args.task,
@@ -88,6 +115,14 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
             return text(`Görev atandı. task_id: ${task.id} (durumu check_task ile sorgula)`);
           }
           const done = await tasks.waitFor(task.id);
+          // Zaman aşımında görev hâlâ çalışıyor olabilir; bunu "BAŞARISIZ"
+          // diye raporlamak yanıltıcıydı — iş sürüyor, sadece bekleme bitti.
+          if (done.status === 'running' || done.status === 'pending') {
+            return text(
+              `Görev hâlâ sürüyor (task_id: ${done.id}, ajan: ${done.assignedTo}). Bekleme süresi doldu; ` +
+                `sonucu check_task ile sorgula.`,
+            );
+          }
           return text(
             `Görev ${done.status === 'done' ? 'tamamlandı' : 'BAŞARISIZ'} (task_id: ${done.id}, ajan: ${done.assignedTo}).\n\n--- Sonuç ---\n${done.result ?? '(sonuç yok)'}`,
           );

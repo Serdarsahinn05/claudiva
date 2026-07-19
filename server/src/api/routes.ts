@@ -119,6 +119,22 @@ export function createRoutes(
     });
   }));
 
+  /** Zincir: adımlar sırayla çalışır, her adım bir öncekinin çıktısını alır. */
+  r.post('/tasks/chain', handle((req) => {
+    const raw = req.body?.steps;
+    if (!Array.isArray(raw) || !raw.length) throw new Error('En az bir adım gerekli.');
+    return tasks.createChain(
+      raw.map((s: Record<string, unknown>, i: number) => ({
+        title: String(s.title ?? `Adım ${i + 1}`),
+        prompt: String(s.prompt ?? ''),
+        assignedTo: String(s.assignedTo ?? ''),
+        assignedBy: 'user',
+        passResult: s.passResult !== false,
+      })),
+      'user',
+    );
+  }));
+
   // -------------------------------------------------------------- usage
   r.get('/usage', handle(() => manager.usageSummary()));
 
