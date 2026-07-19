@@ -7,21 +7,35 @@
  */
 
 const FADE_MS = 260;
-/** Bu süreden uzun sürerse bekleyişin sebebini söyle (boş boş bekletme). */
-const SLOW_MS = 2500;
 
-let slowTimer: number | undefined;
+/**
+ * Bekleyiş mesajları kademeli.
+ *
+ * Tek eşikli ve sert bir "sunucu yanıt vermiyor" yanlıştı: bu projede birkaç
+ * saniyelik kesinti RUTİN — kod düzenlemek `tsx --watch`i yeniden başlatıyor ve
+ * `npm run dev`de vite sunucudan önce hazır oluyor. İkisi de arıza değil, ama
+ * panel arıza varmış gibi konuşuyordu. Önce sakin bekleme, ancak gerçekten
+ * uzun sürünse teşhis.
+ */
+const STAGES: { at: number; text: string }[] = [
+  { at: 4000, text: 'sunucu bekleniyor — yeniden deneniyor' },
+  { at: 12000, text: 'sunucu yanıt vermiyor · `npm run dev` ile başlattığından emin ol' },
+];
 
-/** Sunucu geç kalıyorsa durum metnini güncelle — sessiz bekleyiş kaygı verir. */
+let timers: number[] = [];
+
 export function watchSlowBoot(): void {
-  slowTimer = window.setTimeout(() => {
-    const el = document.getElementById('boot-status');
-    if (el) el.textContent = 'sunucu yanıt vermiyor — yeniden deneniyor';
-  }, SLOW_MS);
+  timers = STAGES.map((s) =>
+    window.setTimeout(() => {
+      const el = document.getElementById('boot-status');
+      if (el) el.textContent = s.text;
+    }, s.at),
+  );
 }
 
 export function dismissBoot(): void {
-  window.clearTimeout(slowTimer);
+  for (const t of timers) window.clearTimeout(t);
+  timers = [];
   const el = document.getElementById('boot');
   if (!el) return;
   el.classList.add('boot-out');
