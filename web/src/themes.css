@@ -417,7 +417,7 @@
   --ok-rgb:        133 153 0;
   --warn-rgb:      181 137 0;
   --err-rgb:       222 62 59;
-  --aux-rgb:       108 113 196;
+  --aux-rgb:       111 116 197;
   --inert-rgb:     88 110 117;
 
   --radius: 4px; --radius-lg: 6px; --border-w: 1px;
@@ -575,4 +575,306 @@
   --btn-primary-bg: rgb(var(--accent-rgb));
   --btn-primary-fg: rgb(255 250 243);
   --btn-primary-border: rgb(var(--accent-rgb));
+}
+
+/* ============ ÖZEL (ek) ============ */
+/* Bu gruptaki temaları ayıran şey palet DEĞİL yapı: doku katmanları, köşe
+   yarıçapı, glow yoğunluğu, tipografi ve yüzey gradyanı. Yalnızca renk
+   değiştiren bir blok bu gruba ait değildir. */
+
+/* Fosfor CRT — tek renk yeşil tüp. İmza: tarama çizgisi dokusu + güçlü bloom,
+   sıfır köşe, baştan sona monospace ve büyük harf. */
+:root[data-theme='phosphor'], [data-theme='phosphor'] {
+  --bg-rgb:        2 6 3;
+  --surface-rgb:   8 16 10;
+  --surface-2-rgb: 12 22 14;
+  --surface-3-rgb: 18 32 20;
+  --void-rgb:      0 3 1;
+  --edge-rgb:      26 56 32;
+  --edge-lit-rgb:  48 100 58;
+  --fg-rgb:        178 255 196;
+  --muted-rgb:     126 205 146;
+  --dim-rgb:       92 158 108;
+  --accent-rgb:    61 255 122;
+  --accent-2-rgb:  32 208 96;
+  --ok-rgb:        61 255 122;
+  --warn-rgb:      222 255 110;
+  --err-rgb:       255 122 122;
+  --aux-rgb:       130 255 220;
+  --inert-rgb:     74 126 84;
+
+  --radius: 0px; --radius-lg: 0px; --border-w: 1px;
+  --clip-panel: none;
+  /* Bloom yüksek: fosfor tüpte ışık gerçekten taşar */
+  --glow-a: 2.2; --wash-a: 1.5; --glass-blur: 0px;
+  --shadow-card: none;
+  --shadow-pop: 0 0 24px rgb(61 255 122 / 0.18);
+  --shadow-modal: 0 0 80px rgb(61 255 122 / 0.14);
+  --shadow-screen: inset 0 0 90px rgb(0 0 0 / 0.85);
+  --surface-grad: linear-gradient(180deg, rgb(61 255 122 / 0.04), transparent);
+  /* İmza doku: yatay tarama çizgileri + tüpün ortasındaki hafif parlama */
+  --texture:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.55) 0 1px, transparent 1px 3px),
+    radial-gradient(130% 95% at 50% 45%, rgb(61 255 122 / 0.10), transparent 72%),
+    rgb(var(--bg-rgb));
+  --texture-blend: normal, screen, normal;
+
+  --font-display: 'JetBrains Mono', Consolas, monospace;
+  --font-ui: 'JetBrains Mono', Consolas, monospace;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 700;
+  --track: 2px; --track-tight: 0.8px;
+  --upper: uppercase;
+
+  --btn-primary-bg: rgb(61 255 122 / 0.14);
+  --btn-primary-fg: rgb(var(--accent-rgb));
+  --btn-primary-border: rgb(var(--accent-rgb));
+  --cam-filter: saturate(0.3) brightness(0.85) sepia(0.5) hue-rotate(65deg) contrast(1.2);
+  --cam-scanline: 0.38;
+}
+
+/* Teknik Çizim — ozalit kağıdı. İmza: iç içe iki ızgara (kaba + ince),
+   sıfır köşe, beyaz çizgi hissi, glow yok. */
+:root[data-theme='blueprint'], [data-theme='blueprint'] {
+  --bg-rgb:        13 38 66;
+  --surface-rgb:   18 50 84;
+  --surface-2-rgb: 24 60 98;
+  --surface-3-rgb: 32 74 116;
+  --void-rgb:      9 28 50;
+  --edge-rgb:      46 92 140;
+  --edge-lit-rgb:  86 144 198;
+  --fg-rgb:        224 238 255;
+  --muted-rgb:     180 206 236;
+  --dim-rgb:       140 174 214;
+  --accent-rgb:    128 214 255;
+  --accent-2-rgb:  255 255 255;
+  --ok-rgb:        132 232 172;
+  --warn-rgb:      255 212 124;
+  --err-rgb:       255 138 138;
+  --aux-rgb:       194 184 255;
+  --inert-rgb:     96 136 182;
+
+  --radius: 0px; --radius-lg: 0px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 0; --wash-a: 1.3; --glass-blur: 0px;
+  --shadow-card: none;
+  --shadow-pop: 0 8px 24px rgb(0 0 0 / 0.45);
+  --surface-grad: rgb(var(--surface-rgb));
+  /* İmza doku: 80px kaba ızgara üstüne 16px ince ızgara — ozalit karesi */
+  --texture:
+    linear-gradient(rgb(255 255 255 / 0.10) 1px, transparent 1px) 0 0 / 100% 80px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.10) 1px, transparent 1px) 0 0 / 80px 100%,
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 100% 16px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 16px 100%,
+    rgb(var(--bg-rgb));
+  --texture-blend: normal;
+
+  --font-display: 'JetBrains Mono', Consolas, monospace;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 700;
+  --track: 1.6px; --track-tight: 0.6px;
+  --upper: uppercase;
+
+  --btn-primary-bg: transparent;
+  --btn-primary-fg: rgb(var(--accent-2-rgb));
+  --btn-primary-border: rgb(var(--accent-2-rgb));
+  --cam-filter: saturate(0.6) brightness(0.85) hue-rotate(-15deg) contrast(1.1);
+  --cam-scanline: 0.08;
+}
+
+/* Sinyal — synthwave ufuk çizgisi. İmza: alttan menekşe/camgöbeği patlaması,
+   perspektif ızgara, yüksek bloom, geniş harf aralığı. */
+:root[data-theme='synthwave'], [data-theme='synthwave'] {
+  --bg-rgb:        26 11 46;
+  --surface-rgb:   40 19 68;
+  --surface-2-rgb: 50 25 82;
+  --surface-3-rgb: 64 34 102;
+  --void-rgb:      18 7 34;
+  --edge-rgb:      76 42 118;
+  --edge-lit-rgb:  128 74 184;
+  --fg-rgb:        246 234 255;
+  --muted-rgb:     210 186 238;
+  --dim-rgb:       168 142 202;
+  --accent-rgb:    255 106 196;
+  --accent-2-rgb:  60 234 255;
+  --ok-rgb:        88 240 184;
+  --warn-rgb:      255 206 100;
+  --err-rgb:       255 106 138;
+  --aux-rgb:       60 234 255;
+  --inert-rgb:     120 88 160;
+
+  --radius: 4px; --radius-lg: 8px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 1.9; --wash-a: 1.35; --glass-blur: 0px;
+  --shadow-card: 0 0 0 1px rgb(255 106 196 / 0.10);
+  --shadow-pop: 0 12px 40px rgb(255 106 196 / 0.22);
+  --shadow-modal: 0 0 90px rgb(60 234 255 / 0.16);
+  --surface-grad: linear-gradient(160deg, rgb(255 106 196 / 0.10), rgb(60 234 255 / 0.05));
+  /* İmza doku: ufuk parlaması + yere doğru sıklaşan ızgara */
+  --texture:
+    linear-gradient(0deg, rgb(255 106 196 / 0.20), transparent 42%),
+    radial-gradient(1000px 420px at 50% 104%, rgb(60 234 255 / 0.24), transparent 66%),
+    linear-gradient(rgb(255 106 196 / 0.06) 1px, transparent 1px) 0 0 / 100% 44px,
+    rgb(var(--bg-rgb));
+  --texture-blend: normal, screen, normal, normal;
+
+  --font-display: 'Audiowide', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 400;
+  --track: 1.8px; --track-tight: 0.6px;
+  --upper: uppercase;
+
+  --btn-primary-bg: rgb(255 106 196 / 0.16);
+  --btn-primary-fg: rgb(var(--accent-rgb));
+  --btn-primary-border: rgb(var(--accent-rgb));
+  --cam-filter: saturate(1.3) brightness(0.9) contrast(1.1) hue-rotate(-12deg);
+  --cam-scanline: 0.2;
+}
+
+/* ============ SİTELERDEN (ek) ============ */
+
+/* Geist (Vercel) — imza: mutlak tek renk. Saf siyah, kıl payı kenar,
+   tek bir mavi dışında renk yok, sıfır glow, sıkı tipografi. */
+:root[data-theme='geist'], [data-theme='geist'] {
+  --bg-rgb:        0 0 0;
+  --surface-rgb:   10 10 10;
+  --surface-2-rgb: 17 17 17;
+  --surface-3-rgb: 28 28 28;
+  --void-rgb:      0 0 0;
+  --edge-rgb:      38 38 38;
+  --edge-lit-rgb:  92 92 92;
+  --fg-rgb:        237 237 237;
+  --muted-rgb:     163 163 163;
+  --dim-rgb:       138 138 138;
+  --accent-rgb:    82 158 255;
+  --accent-2-rgb:  237 237 237;
+  --ok-rgb:        62 197 118;
+  --warn-rgb:      240 180 62;
+  --err-rgb:       240 100 100;
+  --aux-rgb:       168 130 255;
+  --inert-rgb:     112 112 112;
+
+  --radius: 6px; --radius-lg: 10px; --border-w: 1px;
+  --clip-panel: none;
+  /* İmza: efekt yok. Ne glow, ne doku, ne gradyan. */
+  --glow-a: 0; --wash-a: 1.15; --glass-blur: 0px;
+  --shadow-card: none;
+  --shadow-pop: 0 8px 30px rgb(0 0 0 / 0.8);
+  --shadow-modal: 0 24px 60px rgb(0 0 0 / 0.85);
+  --surface-grad: rgb(var(--surface-rgb));
+  --texture: rgb(var(--bg-rgb));
+  --texture-blend: normal;
+
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 600;
+  --track: -0.2px; --track-tight: -0.3px;
+  --upper: none;
+
+  --btn-primary-bg: rgb(237 237 237);
+  --btn-primary-fg: rgb(0 0 0);
+  --btn-primary-border: rgb(237 237 237);
+  --cam-filter: saturate(0.85) brightness(0.9) contrast(1.05);
+  --cam-scanline: 0;
+}
+
+/* Stripe — AÇIK tema. İmza: üstten inen indigo→camgöbeği yıkama, geniş
+   yumuşak gölgeler, yuvarlak köşe. */
+:root[data-theme='stripe'], [data-theme='stripe'] {
+  --bg-rgb:        247 249 252;
+  --surface-rgb:   255 255 255;
+  --surface-2-rgb: 247 249 252;
+  --surface-3-rgb: 238 243 249;
+  --void-rgb:      255 255 255;
+  --edge-rgb:      224 230 238;
+  --edge-lit-rgb:  186 198 214;
+  --fg-rgb:        26 31 54;
+  --muted-rgb:     86 98 130;
+  --dim-rgb:       108 120 150;
+  --accent-rgb:    88 80 236;
+  --accent-2-rgb:  0 148 190;
+  --ok-rgb:        22 145 100;
+  --warn-rgb:      166 108 0;
+  --err-rgb:       200 46 70;
+  --aux-rgb:       116 84 226;
+  --inert-rgb:     150 160 180;
+
+  --radius: 10px; --radius-lg: 16px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 0; --wash-a: 1.4; --glass-blur: 0px;
+  --shadow-card: 0 2px 5px rgb(26 31 54 / 0.07), 0 1px 1px rgb(26 31 54 / 0.04);
+  --shadow-pop: 0 15px 35px rgb(26 31 54 / 0.12), 0 5px 15px rgb(26 31 54 / 0.06);
+  --shadow-modal: 0 30px 70px rgb(26 31 54 / 0.18);
+  --surface-grad: rgb(var(--surface-rgb));
+  /* İmza doku: sayfanın üstünden inen renkli yıkama */
+  --texture:
+    linear-gradient(180deg, rgb(88 80 236 / 0.10), transparent 420px),
+    radial-gradient(760px 340px at 88% -6%, rgb(0 190 235 / 0.16), transparent 62%),
+    rgb(var(--bg-rgb));
+  --texture-blend: normal;
+  /* Açık zeminde ekran karartması ve tarama çizgisi anlamsız (bkz. brutal) */
+  --shadow-screen: none;
+  --cam-filter: saturate(1.05) contrast(1.02);
+  --cam-scanline: 0;
+
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 700;
+  --track: -0.2px; --track-tight: -0.3px;
+  --upper: none;
+
+  --btn-primary-bg: rgb(var(--accent-rgb));
+  --btn-primary-fg: rgb(255 255 255);
+  --btn-primary-border: rgb(var(--accent-rgb));
+}
+
+/* Spotify — imza: kömür siyahı üstünde tek asit yeşili, çok yuvarlak köşe,
+   kalın başlık, efekt yok. */
+:root[data-theme='spotify'], [data-theme='spotify'] {
+  --bg-rgb:        18 18 18;
+  --surface-rgb:   24 24 24;
+  --surface-2-rgb: 33 33 33;
+  --surface-3-rgb: 44 44 44;
+  --void-rgb:      0 0 0;
+  --edge-rgb:      44 44 44;
+  --edge-lit-rgb:  90 90 90;
+  --fg-rgb:        255 255 255;
+  --muted-rgb:     179 179 179;
+  --dim-rgb:       150 150 150;
+  --accent-rgb:    30 215 96;
+  --accent-2-rgb:  255 255 255;
+  --ok-rgb:        30 215 96;
+  --warn-rgb:      255 196 70;
+  --err-rgb:       255 110 110;
+  --aux-rgb:       170 140 255;
+  --inert-rgb:     120 120 120;
+
+  --radius: 8px; --radius-lg: 16px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 0; --wash-a: 1.25; --glass-blur: 0px;
+  --shadow-card: none;
+  --shadow-pop: 0 16px 40px rgb(0 0 0 / 0.7);
+  --shadow-modal: 0 24px 60px rgb(0 0 0 / 0.8);
+  --surface-grad: linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent);
+  --texture:
+    linear-gradient(180deg, rgb(30 215 96 / 0.07), transparent 460px),
+    rgb(var(--bg-rgb));
+  --texture-blend: normal;
+
+  --font-display: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 700;
+  --track: -0.3px; --track-tight: -0.4px;
+  --upper: none;
+
+  --btn-primary-bg: rgb(var(--accent-rgb));
+  --btn-primary-fg: rgb(0 0 0);
+  --btn-primary-border: rgb(var(--accent-rgb));
+  --cam-filter: saturate(0.9) brightness(0.9);
+  --cam-scanline: 0;
 }

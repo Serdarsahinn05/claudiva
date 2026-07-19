@@ -18,6 +18,12 @@ Rules:
   ve `web/src/types.ts`. Şema değiştirirken ikisini birden güncelle.
 - **CSS**: renkler kanal token'ı (`rgb(var(--x-rgb) / a)`), ham renk yazma. Temalar
   (`web/src/themes.css`) yalnızca token ezer, kural yazmaz.
+- **Grup, temanın ne kadar iş yaptığını belirler.** `Geliştirici paletleri`
+  yalnızca renk ezebilir. **`Özel` ve `Sitelerden` temaları yapıyı da değiştirmek
+  zorunda**: `--texture`/`--texture-blend` (çok katmanlı zemin), `--radius`,
+  `--border-w`, `--glow-a`, `--surface-grad`, `--clip-panel`, font ve `--upper`.
+  Sadece renk değiştiren bir blok bu iki gruba ait değildir — panel "çok basit"
+  görünür.
 - **Yeni tema eklerken kontrastı ÖLÇ, göz kararı yapma.** Yüzeye karşı eşikler:
   `fg` ≥ 7, `muted` ≥ 4.5, `dim`/`accent`/`err`/`ok`/`warn` ≥ 3. Ölçüm üç ayrı
   temada gözden kaçmış hata buldu (`spaceship` dim 2.52, `nord` err 2.46,
