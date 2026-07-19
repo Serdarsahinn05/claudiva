@@ -1,12 +1,21 @@
 /**
  * Açılış perdesini (index.html'deki #boot) yönetir.
  *
- * Perde SÜREYE göre değil VERİYE göre kalkar: sunucu 60ms'de cevap verirse
- * 60ms'de kalkar. Sabit süreli bir açılış ekranı her sayfa yenilemesinde
- * kullanıcıdan vergi almak olurdu — panel geliştirirken sayfa çok yenileniyor.
+ * Perde iki koşulun İKİSİNİ birden bekler: veri hazır olacak VE en az
+ * `MIN_VISIBLE_MS` geçmiş olacak.
+ *
+ * Alt sınır neden var: yalnızca veriye bağlıyken sunucu yerelde hızlı cevap
+ * verdiği için logo ~190ms parlayıp kayboluyordu — ölçüldü, göz zar zor
+ * seçiyordu. Açılış animasyonunun görülmesi istendiği için alt sınır kondu.
+ * Süre tarama çubuğunun döngüsüyle (1.1sn) eşleşiyor: perde, çubuk turunu
+ * yarıda kesmeden kalkıyor.
  */
 
 const FADE_MS = 260;
+/** Perdenin ekranda kalacağı en az süre (sayfa yüklenmeye başladığından beri). */
+const MIN_VISIBLE_MS = 1100;
+
+let dismissed = false;
 
 /**
  * Bekleyiş mesajları kademeli.
@@ -34,6 +43,15 @@ export function watchSlowBoot(): void {
 }
 
 export function dismissBoot(): void {
+  if (dismissed) return; // etki iki kez koşabilir (StrictMode); perde bir kez kalkar
+  dismissed = true;
+  // performance.now() sayfanın yüklenmeye başladığı andan beri geçen süre —
+  // kullanıcının "ne kadar bekledim" algısıyla aynı başlangıç noktası.
+  const kalan = Math.max(0, MIN_VISIBLE_MS - performance.now());
+  window.setTimeout(hide, kalan);
+}
+
+function hide(): void {
   for (const t of timers) window.clearTimeout(t);
   timers = [];
   const el = document.getElementById('boot');
