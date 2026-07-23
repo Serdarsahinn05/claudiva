@@ -515,6 +515,15 @@ export class AgentSession extends EventEmitter {
   }
 
   private handleMessage(msg: SDKMessage): void {
+    /**
+     * Yarış: `for await (const msg of this.q)` bir mesajı çoktan almışken
+     * `stop()` eşzamanlı `cleanup()` çağırıp `this.q`'yu null'layabilir
+     * (durum 'offline' olur). Bekçisiz bırakılırsa gecikmiş bir
+     * `session_state_changed: idle` mesajı durumu 'offline'dan geri 'idle'a
+     * çevirir — ajan durmuş görünür ama panelde çalışıyor gibi kalır.
+     * Ölçüldü: 8 ajanı paralel durdurmada ~1/8 oranında tetikleniyordu.
+     */
+    if (!this.q) return;
     switch (msg.type) {
       case 'system': {
         if (msg.subtype === 'init') {

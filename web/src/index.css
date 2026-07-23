@@ -547,6 +547,23 @@ aside {
   letter-spacing: 0; text-transform: none; color: var(--dim);
 }
 
+/* Toplu eylemler: tüm ajanları başlat/durdur, tümünde oto-onay. İkisi de
+   yan yana sığması için eşit genişlikte, dar sidebar'a göre kompakt. */
+.roster-actions { display: flex; gap: var(--s2); }
+.roster-action {
+  flex: 1; min-width: 0;
+  background: transparent; border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  padding: 5px 6px; cursor: pointer; color: var(--muted);
+  font-family: var(--font-ui); font-size: 10.5px; letter-spacing: 0.2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.roster-action:hover:not(:disabled) { border-color: var(--edge-lit); color: var(--fg); }
+.roster-action:disabled { opacity: 0.5; cursor: default; }
+/* Tüm ajanlarda oto-onay açıkken düğme kendisi bir uyarı haline gelir —
+   izin istemeden araç çalıştıran bir durumun sürüp gittiğini hatırlatır. */
+.roster-action.warn { color: var(--caution); border-color: rgb(var(--warn-rgb) / 0.4); }
+.roster-action.warn:hover:not(:disabled) { border-color: rgb(var(--warn-rgb) / 0.7); }
+
 /* sürükleme tutamağı — yalnızca satır üzerindeyken belirir */
 .agent-grip {
   color: var(--dim); font-size: 10px; letter-spacing: -2px; cursor: grab;

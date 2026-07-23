@@ -43,6 +43,13 @@ Rules:
 - **`AgentSession.send()` ölü oturumu kendiliğinden yeniden başlatır.** Bu yüzden "ajanı
   durdur" biçimindeki hiçbir yaptırım tek başına yeterli değil; kapı `send()` ve
   `TaskQueue.dispatch()` içinde olmak zorunda (bütçe sınırı böyle uygulanıyor).
+- **`handleMessage()`'ın başında `if (!this.q) return;` bekçisi var — kaldırma.**
+  `stop()` içindeki `cleanup()` `this.q`'yu null'layıp durumu `offline` yapar, ama
+  `loop()`'taki `for await` döngüsü o anda elinde bekleyen bir mesajı (ör.
+  `session_state_changed: idle`) hâlâ işleyebilir; bekçisiz kalırsa durum `offline`'dan
+  geri `idle`'a döner. Yalnız tek ajanı durdurunca fark edilmez, birden fazla ajanı
+  **paralel** durdurunca (~1/8 oranında) ortaya çıkar — bu yüzden ilk kez "tümünü
+  durdur" toplu eylemiyle bulundu.
 
 ## Derleme tuzakları (ikisi de canlı hataya yol açtı)
 

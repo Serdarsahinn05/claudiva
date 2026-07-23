@@ -69,6 +69,41 @@ export default function App() {
     await store.refreshAgents();
   }
 
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const allOffline = store.agents.length > 0 && store.agents.every((a) => a.status === 'offline');
+  const allAutoApprove = store.agents.length > 0 && store.agents.every((a) => a.config.autoApprove);
+
+  /**
+   * Tek düğmeyle tümünü başlat/durdur. Hedefi filtrelemeye gerek yok:
+   * start()/stop() zaten doğru durumdaki ajanda no-op (bkz. session.ts),
+   * yani karışık durumda (bazısı çalışıyor) bile güvenle herkese uygulanır.
+   */
+  async function toggleAllAgents() {
+    if (bulkBusy || store.agents.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const starting = allOffline;
+      await Promise.all(
+        store.agents.map((a) => (starting ? api.startAgent(a.config.id) : api.stopAgent(a.config.id))),
+      );
+      await store.refreshAgents();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function toggleAllAutoApprove() {
+    if (bulkBusy || store.agents.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const next = !allAutoApprove;
+      await Promise.all(store.agents.map((a) => api.updateAgent(a.config.id, { autoApprove: next })));
+      await store.refreshAgents();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   async function deleteAgent(a: AgentSnapshot) {
     if (!confirm(`"${a.config.name}" ajanı ve tanım dosyaları silinsin mi? (Hafızası silinmez)`)) return;
     await api.deleteAgent(a.config.id);
@@ -98,6 +133,20 @@ export default function App() {
       { id: 'new-task', label: 'Yeni görev', hint: 'görevler', keywords: 'ata zincir', run: () => setTab('tasks') },
       { id: 'settings', label: 'Ayarlar', hint: 'bütçe', keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
       { id: 'theme-picker', label: 'Tema seç…', hint: 'görünüm', keywords: 'tema renk', run: () => setThemeOpen(true) },
+      {
+        id: 'toggle-all-agents',
+        label: allOffline ? 'Tüm ajanları başlat' : 'Tüm ajanları durdur',
+        hint: 'toplu',
+        keywords: 'hepsi tumu baslat durdur',
+        run: () => void toggleAllAgents(),
+      },
+      {
+        id: 'toggle-all-auto-approve',
+        label: allAutoApprove ? 'Tüm ajanlarda otomatik onayı kapat' : 'Tüm ajanlarda otomatik onayı aç',
+        hint: 'toplu',
+        keywords: 'oto onay izin hepsi tumu',
+        run: () => void toggleAllAutoApprove(),
+      },
       ...agentCommands(store.agents, openAgent, (a) => void toggleAgent(a)),
       ...themeCommands(),
     ],
@@ -198,6 +247,26 @@ export default function App() {
             Mürettebat · {store.agents.length}
             <span className="roster-hint">sürükle → sırala</span>
           </div>
+          {store.agents.length > 0 && (
+            <div className="roster-actions">
+              <button
+                className="roster-action"
+                disabled={bulkBusy}
+                onClick={() => void toggleAllAgents()}
+                title={allOffline ? 'Tüm ajanları başlat' : 'Tüm ajanları durdur'}
+              >
+                {allOffline ? 'Tümünü başlat' : 'Tümünü durdur'}
+              </button>
+              <button
+                className={`roster-action${allAutoApprove ? ' warn' : ''}`}
+                disabled={bulkBusy}
+                onClick={() => void toggleAllAutoApprove()}
+                title="Araç izin isteklerini onay istemeden otomatik kabul et"
+              >
+                {allAutoApprove ? 'Oto-onayı kapat' : 'Tümünde oto-onay aç'}
+              </button>
+            </div>
+          )}
           <div className="agent-list">
             {store.agents.map((a, i) => (
               <div
