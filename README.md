@@ -16,13 +16,23 @@
 
 ## Kurulum
 
-Gereksinimler: Node.js 20+, giriş yapılmış Claude Code (`claude login` — Agent SDK aboneliğinizi otomatik kullanır, API anahtarı gerekmez).
+Gereksinimler:
+- [Node.js 20+](https://nodejs.org) kurulu olmalı.
+- [Claude Code](https://claude.com/product/claude-code) kurulu ve giriş yapılmış olmalı (`claude login` — Agent SDK aboneliğinizi otomatik kullanır, ayrı bir API anahtarı gerekmez).
+- Git.
 
 ```bash
+git clone https://github.com/Serdarsahinn05/claude-manager.git
+cd claude-manager
 npm install
 npm run build
 npm link          # `claude-manager` komutunu global olarak kaydeder
 ```
+
+Ayrı bir kurulum dosyası (installer) yok — `npm link` bunun karşılığı. Panel
+çalışırken `~/.claude-manager/` (ajan tanımları, tüm projelerde ortak) ve
+çalıştığınız projenin içinde `.claude-manager/` (o projeye özel veri) klasörleri
+oluşturur; ayrıntı için aşağıdaki **Dizinler** bölümüne bakın.
 
 ## Kullanım
 
