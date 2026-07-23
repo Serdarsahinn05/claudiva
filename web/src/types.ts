@@ -10,11 +10,17 @@ export interface McpServerDef {
   url?: string;
 }
 
+/** Sunucudaki ProviderId'nin aynısı (server/src/types.ts) — proje kuralı gereği
+ *  elle çoğaltılmış. Tek üye: soyutlama katmanı kuruldu, ikinci sağlayıcı yok. */
+export type ProviderId = 'claude';
+
 export interface AgentConfig {
   id: string;
   name: string;
   role: AgentRole;
   model: string;
+  /** Tanımsızsa 'claude' sayılır. */
+  provider?: ProviderId;
   memoryMode: MemoryMode;
   autoApprove: boolean;
   /** Göreve göre otomatik model seçimi (set_model aracı). Varsayılan: açık. */

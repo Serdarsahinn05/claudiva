@@ -40,6 +40,19 @@ Rules:
 - **`session.usage` tümel toplamdır** (açılışta diskten geri yüklenir). Bütçe/kota gibi
   pencereli hesaplar bundan türetilemez; `usage.json` içindeki `daily` penceresi kullanılır
   ve tur payı önceki değerle **fark** alınarak bulunur (`deltaUsage`).
+- **`AgentSession` sağlayıcıdan bağımsız; SDK'ya özel her şey `AgentBackend`
+  arkasında.** (`server/src/agents/backend.ts` arayüz, `agents/backends/claudeBackend.ts`
+  tek uygulama.) Döküm/bütçe/görev-korelasyonu/izin-bekletme/durum-makinesi
+  `AgentSession`'da kalır — hiçbiri SDK mesaj şeklini bilmez, yalnızca normalleştirilmiş
+  `BackendEvent`i (`kind` değerleri `TranscriptKind` ile bilerek aynı) işler.
+  `ProviderId` şu an tek üyeli (`'claude'`) — ikinci sağlayıcı henüz YOK, yalnızca
+  soyutlama katmanı var. Yeni sağlayıcı eklerken tek dokunulacak yer `backends/`
+  altına yeni dosya + `backends/index.ts`'e bir dal; `AgentSession`'a dokunulmaz.
+  `extraMcpServers` bilerek `Record<string, unknown>` (opak) — backend.ts SDK
+  import ETMEZ, yalnızca `ClaudeBackend` içeriği SDK'nın gerçek tipine çevirir.
+  **Bunu unutup birleştirmeyi atlamak** (`Object.assign(mcpServers, opts.extraMcpServers)`)
+  team/self/task delegasyon araçlarını sessizce kırar — derleme hatası vermez,
+  yalnızca ajan o araçları hiç göremez.
 - **`AgentSession.send()` ölü oturumu kendiliğinden yeniden başlatır.** Bu yüzden "ajanı
   durdur" biçimindeki hiçbir yaptırım tek başına yeterli değil; kapı `send()` ve
   `TaskQueue.dispatch()` içinde olmak zorunda (bütçe sınırı böyle uygulanıyor).
@@ -72,6 +85,14 @@ Rules:
   Eski süreç sağ kalırsa yeni sunucu sessizce bağlanamaz ve farkında olmadan eski
   sunucuyla konuşursun (bu tuzağa iki kez düşüldü):
   `Get-NetTCPConnection -LocalPort <p> -State Listen` → `Stop-Process -Id <pid> -Force`
+- **`DATA_DIR` altındaki JSON dosyalarını (sessions.json, tasks.json, usage.json…)
+  sunucu ÇALIŞIRKEN elle düzenlemek hiçbir işe yaramaz.** İlgili Store sınıfı
+  (`SessionStore` vb.) dosyayı yalnızca `init()`'te okur, sonrası bellekte yaşar;
+  disk yazımı tek yönlüdür. Bozuk bir sessionId enjekte edip resume geri düşüşünü
+  test ederken bu yüzden yanlış negatif alındı — canlı sunucu kendi bellekteki
+  geçerli id'yi kullanmaya devam etti, dosya değişikliği görünmedi. Doğru yöntem:
+  **önce sunucuyu durdur, dosyayı düzenle, SONRA yeniden başlat** (init() dosyayı
+  o an okur).
 - `npm run dev` vite'ı da açar; vite `/api`'yi **sabit** `localhost:4600`'e proxy'ler.
   Farklı portla test ediyorsan paneli sunucunun kendi portundan aç (server, `web/dist`
   varsa onu servis eder) — önce `npx vite build`.

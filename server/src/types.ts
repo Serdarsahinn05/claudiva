@@ -7,6 +7,14 @@ export type MemoryMode = 'shared' | 'private' | 'both' | 'none';
 /** Short aliases mapped to real model IDs in session.ts; full IDs pass through. */
 export type ModelChoice = 'haiku' | 'sonnet' | 'opus' | string;
 
+/**
+ * Ajanın arkasında hangi CLI/SDK'nın konuştuğu. Şimdilik tek üye — soyutlama
+ * katmanı (bkz. agents/backend.ts) kuruldu ama ikinci bir sağlayıcı henüz
+ * uygulanmadı. Genişledikçe yalnızca burası ve agents/backends/index.ts
+ * değişir, AgentSession'a dokunulmaz.
+ */
+export type ProviderId = 'claude';
+
 export interface McpServerDef {
   type: 'stdio' | 'http' | 'sse';
   command?: string;
@@ -20,6 +28,8 @@ export interface AgentConfig {
   name: string;
   role: AgentRole;
   model: ModelChoice;
+  /** Tanımsızsa 'claude' sayılır (bkz. AgentManager.readConfigs/create). */
+  provider?: ProviderId;
   memoryMode: MemoryMode;
   /** When true, tool permission requests are auto-approved. */
   autoApprove: boolean;

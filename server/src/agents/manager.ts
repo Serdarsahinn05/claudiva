@@ -102,7 +102,9 @@ export class AgentManager extends EventEmitter {
       const file = path.join(AGENTS_DIR, entry.name, 'config.json');
       if (!fs.existsSync(file)) continue;
       try {
-        configs.push(JSON.parse(fs.readFileSync(file, 'utf-8')) as AgentConfig);
+        const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as AgentConfig;
+        // Eski config.json dosyalarında provider yok — 'claude' say (geriye uyum).
+        configs.push({ ...raw, provider: raw.provider ?? 'claude' });
       } catch (err) {
         console.error(`Bozuk config atlandı: ${file}`, err);
       }
@@ -366,6 +368,7 @@ export class AgentManager extends EventEmitter {
     name: string;
     role: AgentConfig['role'];
     model: string;
+    provider?: AgentConfig['provider'];
     memoryMode: AgentConfig['memoryMode'];
     autoApprove: boolean;
     autoModel?: boolean;
@@ -384,6 +387,7 @@ export class AgentManager extends EventEmitter {
       name: input.name,
       role: input.role,
       model: input.model,
+      provider: input.provider ?? 'claude',
       memoryMode: input.memoryMode,
       autoApprove: input.autoApprove,
       autoModel: input.autoModel ?? true,
@@ -399,7 +403,7 @@ export class AgentManager extends EventEmitter {
 
   async update(
     id: string,
-    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
+    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'provider' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
       personality?: string;
     },
   ): Promise<AgentSnapshot> {
