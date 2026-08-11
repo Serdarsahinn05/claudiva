@@ -89,6 +89,18 @@ export const THEMES: ThemeDef[] = [
     desc: 'Kömür siyahı, asit yeşili, çok yuvarlak köşe',
     group: 'Sitelerden',
   },
+  {
+    id: 'codex',
+    name: 'Codex CLI',
+    desc: 'Grayscale gövde, kehribar durum, keskin köşe',
+    group: 'Sitelerden',
+  },
+  {
+    id: 'grok',
+    name: 'Grok',
+    desc: 'Kehribar vurgu, nokta-matris doku, yuvarlak köşe',
+    group: 'Sitelerden',
+  },
   { id: 'tokyo-night', name: 'Tokyo Night', desc: 'Gece mavisi, yumuşak indigo', group: 'Geliştirici paletleri' },
   { id: 'catppuccin', name: 'Catppuccin', desc: 'Mocha; pastel lavanta ve şeftali', group: 'Geliştirici paletleri' },
   { id: 'gruvbox', name: 'Gruvbox', desc: 'Retro toprak tonları, hardal sarısı', group: 'Geliştirici paletleri' },

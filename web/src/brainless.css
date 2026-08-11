@@ -1,0 +1,18 @@
+/**
+ * brainless (shadcn) bileşenleri için Tailwind katmanı.
+ *
+ * ÖNEMLİ: Tailwind'in `preflight` (temel reset) katmanı BİLEREK dışarıda —
+ * projenin kendi reset'i ve 20 temalı token sistemi index.css'te yaşıyor ve
+ * preflight bunların tümünü ezip paneli bozardı. Yalnızca `theme` (arbitrary
+ * değerler + değişkenler) ve `utilities` (flex, font-mono, text-[...] vb.)
+ * alınıyor; brainless bileşenleri zaten renkleri inline/arbitrary veriyor,
+ * preflight'a ihtiyaçları yok.
+ *
+ * Tailwind yalnızca `.brainless-scope` altındaki utility'lere uygulanır gibi
+ * DÜŞÜNÜLMESİN — utility'ler global class'lardır; ama panelin semantik
+ * sınıflarıyla (.terminal, .ev …) ad çakışması yok, o yüzden güvenli.
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { THEMES, THEME_GROUPS, getTheme, setTheme } from '../themes';
+import { CLI_MARKS, CLI_SKINS, getCliSkin, setCliSkin } from '../cliSkins';
+import type { CliSkin } from '../cliSkins';
 
 interface Props {
   onClose: () => void;
@@ -15,20 +17,50 @@ interface Props {
  */
 export function ThemePicker({ onClose }: Props) {
   const [current, setCurrent] = useState(getTheme);
+  const [cli, setCli] = useState<CliSkin>(getCliSkin);
 
   function pick(id: string) {
     setTheme(id);
     setCurrent(id);
   }
 
+  function pickCli(id: CliSkin) {
+    setCliSkin(id);
+    setCli(id);
+  }
+
   return (
     <Modal onClose={onClose} wide>
       <div className="modal-head">
-        <h2>Tema</h2>
+        <h2>Görünüm</h2>
         <span className="modal-sub">seçim anında uygulanır</span>
       </div>
 
       <div className="modal-pane">
+        {/* Terminal tipi: temadan AYRI eksen; tüm terminalleri birden etkiler. */}
+        <div>
+          <div className="theme-group-label">Terminal tipi</div>
+          <div className="theme-grid">
+            {CLI_SKINS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`theme-card${cli === s.id ? ' sel' : ''}`}
+                onClick={() => pickCli(s.id)}
+                aria-pressed={cli === s.id}
+              >
+                <span className={`cli-skin-swatch cli-skin-swatch-${s.id}`}>
+                  {CLI_MARKS[s.id].text}
+                  {CLI_MARKS[s.id].thinking}
+                  {CLI_MARKS[s.id].toolresult}
+                </span>
+                <span className="theme-card-name">{s.name}</span>
+                <span className="theme-card-desc">{s.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {THEME_GROUPS.map((group) => (
           <div key={group}>
             <div className="theme-group-label">{group}</div>

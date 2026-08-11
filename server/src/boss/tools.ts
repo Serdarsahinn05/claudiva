@@ -129,6 +129,60 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
         },
       ),
       tool(
+        'delegate_tasks',
+        'Birden fazla BAĞIMSIZ görevi FARKLI ajanlara AYNI ANDA dağıtır. Kaç ajan gerekiyorsa o kadarını tek çağrıda ver — iki ajan da olabilir, altı ajan da (ör. frontend + backend + araştırmacı + testçi + dokümancı hepsi paralel). Hepsi aynı anda başlar; wait=true (varsayılan) ise hepsi bitene kadar bekler ve tüm sonuçları birlikte döndürür — toplam süre en uzun görev kadardır, görevlerin toplamı kadar değil. Bağımsız işleri tek tek delegate_task ile sırayla vermek yerine BUNU kullan. Bağımlı/sıralı işler için delegate_task after_task_id kullan.',
+        {
+          tasks: z
+            .array(
+              z.object({
+                agent_id: z.string().describe('Görevin atanacağı ajanın id değeri (list_agents çıktısından)'),
+                title: z.string().describe('Görevin kısa başlığı'),
+                task: z.string().describe('Görevin tam açıklaması: hedef, bağlam, beklenen çıktı'),
+              }),
+            )
+            .min(1)
+            .describe('Aynı anda dağıtılacak bağımsız görevler'),
+          wait: z
+            .boolean()
+            .optional()
+            .describe('true: hepsi bitene kadar bekle ve tüm sonuçları döndür (varsayılan). false: hemen id listesiyle dön.'),
+        },
+        async (args) => {
+          // Önce hepsini doğrula: biri geçersizse hiçbirini dağıtma (kısmi
+          // dağıtım, "3 ajana verdim" beklentisini sessizce bozardı).
+          const errors: string[] = [];
+          args.tasks.forEach((t, i) => {
+            if (t.agent_id === selfId) errors.push(`#${i + 1}: kendine görev atayamazsın`);
+            else if (!manager.get(t.agent_id)) errors.push(`#${i + 1}: "${t.agent_id}" kimlikli ajan yok`);
+          });
+          if (errors.length) {
+            return text(`HATA: hiçbir görev dağıtılmadı. Sorunlar:\n${errors.join('\n')}\nlist_agents ile kontrol et.`);
+          }
+
+          const dispatched = args.tasks.map((t) =>
+            tasks.dispatch({
+              title: t.title,
+              prompt: t.task,
+              assignedTo: t.agent_id,
+              assignedBy: selfId,
+            }),
+          );
+
+          if (args.wait === false) {
+            const lines = dispatched.map((d) => `- task_id: ${d.id} | ajan: ${d.assignedTo} | ${d.title}`);
+            return text(`${dispatched.length} görev aynı anda dağıtıldı:\n${lines.join('\n')}\nSonuçları check_task ile sorgula.`);
+          }
+
+          const done = await Promise.all(dispatched.map((d) => tasks.waitFor(d.id)));
+          const blocks = done.map((t) => {
+            const head =
+              t.status === 'done' ? 'tamamlandı' : t.status === 'running' || t.status === 'pending' ? 'HÂLÂ SÜRÜYOR (bekleme doldu)' : 'BAŞARISIZ';
+            return `### ${t.title} (task_id: ${t.id}, ajan: ${t.assignedTo}) — ${head}\n${t.result ?? '(sonuç yok)'}`;
+          });
+          return text(`${done.length} paralel görevin sonucu:\n\n${blocks.join('\n\n---\n\n')}`);
+        },
+      ),
+      tool(
         'check_task',
         'Bir görevin durumunu ve (bittiyse) sonucunu döndürür.',
         {
@@ -164,6 +218,7 @@ export const TEAM_TOOL_RULES = [
   'mcp__team__list_agents',
   'mcp__team__get_usage',
   'mcp__team__delegate_task',
+  'mcp__team__delegate_tasks',
   'mcp__team__check_task',
   'mcp__team__list_tasks',
 ];

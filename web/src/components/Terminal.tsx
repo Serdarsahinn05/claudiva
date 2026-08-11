@@ -3,6 +3,10 @@ import type { AgentSnapshot, SlashCommand, TranscriptEvent } from '../types';
 import { api } from '../api';
 import { STATUS_LABEL } from '../format';
 import { isLocal, localAsSlashCommands, matchLocal } from '../localCommands';
+import type { CliSkin } from '../cliSkins';
+import { CLI_MARKS, useCliSkin } from '../cliSkins';
+import { SkinnedTranscript } from './SkinnedTranscript';
+import { SkinnedPermission } from './SkinnedPermission';
 
 const ROLE_LABEL: Record<string, string> = {
   boss: 'patron',
@@ -10,11 +14,21 @@ const ROLE_LABEL: Record<string, string> = {
   worker: 'çalışan',
 };
 
-/** CLI'ın karşılama maskotunun piksel-art karşılığı. */
+/** CLI'ın karşılama maskotunun piksel-art karşılığı (Claude skin). */
 const CAT_LOGO = ` ▄▄▄▄▄▄▄
 █ ▀▀ ▀▀ █
 █  ▀▀▀  █
  ▀█▀ ▀█▀ `;
+
+/** Codex skin: minimal komut istemi işareti (brainless "launch card" >_). */
+const CODEX_LOGO = '>_';
+
+/** Grok skin: nokta-matris (braille) çerçeveli elmas — imza dot-matrix marki. */
+const GROK_LOGO = `⠿⠿⠿⠿⠿
+⠿⠿◆⠿⠿
+⠿⠿⠿⠿⠿`;
+
+const SKIN_LOGO: Record<CliSkin, string> = { claude: CAT_LOGO, codex: CODEX_LOGO, grok: GROK_LOGO };
 
 /** Girdi bir slash komutu yazılıyorsa henüz tamamlanmamış komut adını verir. */
 function slashPrefix(input: string): string | null {
@@ -43,87 +57,6 @@ interface Props {
   onCleared: () => void;
 }
 
-/**
- * Claude Code CLI'ın transcript biçimi: her olay bir işaretle başlar
- * (● mesaj/araç, ⎿ araç sonucu, > kullanıcı). Zaman damgası satırı
- * kalabalıklaştırmasın diye tooltip'e alındı.
- */
-function EventLine({ ev }: { ev: TranscriptEvent }) {
-  const time = new Date(ev.ts).toLocaleTimeString('tr-TR');
-  switch (ev.kind) {
-    case 'user':
-      return (
-        <div className="ev ev-user" title={time}>
-          <span className="ev-mark">&gt;</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-    case 'text':
-      return (
-        <div className="ev ev-text" title={time}>
-          <span className="ev-mark dot-mark">●</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-    case 'thinking':
-      return (
-        <div className="ev ev-thinking" title={time}>
-          <span className="ev-mark">✻</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-    case 'tool_use':
-      return (
-        <div className="ev ev-tool" title={time}>
-          <span className="ev-mark dot-mark">●</span>
-          <span className="ev-content">
-            <span className="tool-name">{ev.toolName}</span>
-            <span className="tool-args">({ev.input})</span>
-          </span>
-        </div>
-      );
-    case 'tool_result':
-      return (
-        <div className={`ev ev-toolresult${ev.meta?.isError ? ' ev-error' : ''}`} title={time}>
-          <span className="ev-mark">⎿</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-    case 'result':
-      return (
-        <div className="ev ev-result" title={time}>
-          <span className="ev-mark">✓</span>
-          <span className="ev-content">
-            Tur bitti
-            {typeof ev.meta?.costUSD === 'number' && ` · $${(ev.meta.costUSD as number).toFixed(4)}`}
-          </span>
-        </div>
-      );
-    case 'error':
-      return (
-        <div className="ev ev-error" title={time}>
-          <span className="ev-mark">✗</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-    case 'local':
-      // Panelin kendi çıktısı (/usage gibi) — hizalama korunsun diye <pre>.
-      return (
-        <div className="ev ev-local" title={time}>
-          <span className="ev-mark">⎿</span>
-          <pre className="ev-content">{ev.text}</pre>
-        </div>
-      );
-    default:
-      return (
-        <div className="ev ev-system" title={time}>
-          <span className="ev-mark">·</span>
-          <span className="ev-content">{ev.text}</span>
-        </div>
-      );
-  }
-}
-
 export function Terminal({ agent, events, projectDir, agentCount, onCleared }: Props) {
   const [input, setInput] = useState('');
   const [showThinking, setShowThinking] = useState(false);
@@ -133,6 +66,10 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const id = agent.config.id;
+
+  // Terminal tipi TEK global seçim (temalar gibi) — Tema seçicisinden değişir.
+  const skin = useCliSkin();
+  const marks = CLI_MARKS[skin];
 
   // Panelin kendi komutları listenin başında durur; ajanınkilerle isim
   // çakışırsa (ör. /clear) panel sürümü kazanır, çünkü yerel işlenir.
@@ -221,7 +158,7 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
   const visible = showThinking ? events : events.filter((e) => e.kind !== 'thinking');
 
   return (
-    <div className="terminal">
+    <div className="terminal" data-cli={skin}>
       <div className="terminal-body" ref={scrollRef}>
         {/* CLI'da olduğu gibi karşılama kutusu geçmişin en üstünde kalıcıdır;
             oturum başlayınca kaybolmaz, yukarı kaydırınca hep orada durur. */}
@@ -230,7 +167,7 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
           <div className="cli-welcome-cols">
             <div className="cli-welcome-left">
               <div className="cli-hello">Merhaba, {agent.config.name}!</div>
-              <pre className="cli-logo">{CAT_LOGO}</pre>
+              <pre className={`cli-logo cli-logo-${skin}`}>{SKIN_LOGO[skin]}</pre>
               <div className="cli-meta">
                 {agent.currentModel ?? agent.config.model} · {ROLE_LABEL[agent.config.role] ?? agent.config.role}
               </div>
@@ -252,38 +189,16 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
           </div>
         </div>
 
-        {visible.map((ev) => (
-          <EventLine key={ev.id} ev={ev} />
-        ))}
-
-        {agent.status === 'working' && (
-          <div className="cli-busy">
-            <span className="cli-spinner">✻</span>
-            <span>{agent.currentActivity ? `${agent.currentActivity}…` : 'çalışıyor…'}</span>
-            <button className="cli-link danger" onClick={() => api.interrupt(id)}>
-              esc ile durdur
-            </button>
-          </div>
-        )}
+        <SkinnedTranscript events={visible} skin={skin} agent={agent} />
       </div>
 
-      {agent.pendingPermissions.map((p) => (
-        <div key={p.id} className="permission-banner">
-          <div>
-            <strong>İzin isteği:</strong> {p.title ?? `${p.toolName} çalıştırılsın mı?`}
-            {p.description && <div className="muted">{p.description}</div>}
-            <code className="perm-input">{JSON.stringify(p.input).slice(0, 300)}</code>
-          </div>
-          <div className="perm-actions">
-            <button className="primary" onClick={() => api.permission(id, p.id, true)}>
-              İzin ver
-            </button>
-            <button className="danger" onClick={() => api.permission(id, p.id, false)}>
-              Reddet
-            </button>
-          </div>
+      {agent.pendingPermissions.length > 0 && (
+        <div className="perm-wrap" data-cli={skin}>
+          {agent.pendingPermissions.map((p) => (
+            <SkinnedPermission key={p.id} agentId={id} req={p} skin={skin} />
+          ))}
         </div>
-      ))}
+      )}
 
       <div className="terminal-input">
         {showMenu && (
@@ -305,7 +220,7 @@ export function Terminal({ agent, events, projectDir, agentCount, onCleared }: P
             ))}
           </div>
         )}
-        <span className="prompt-mark">&gt;</span>
+        <span className="prompt-mark">{marks.user}</span>
         <textarea
           ref={inputRef}
           rows={1}

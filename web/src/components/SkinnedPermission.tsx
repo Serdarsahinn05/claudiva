@@ -1,0 +1,64 @@
+import { useRef } from 'react';
+import type { CliSkin } from '../cliSkins';
+import type { PermissionRequestInfo } from '../types';
+import { api } from '../api';
+import { ClaudePermission } from './brainless/claude/claude-permission';
+import { CodexPermissions } from './brainless/codex/codex-permissions';
+import { GrokPermission } from './brainless/grok/grok-permission';
+
+/**
+ * İzin istekleri skin'e göre gerçek brainless permission bileşenleriyle çizilir.
+ * Üçü de `onChoose(index)` callback'i verir; tutarlı sıra kullanıyoruz:
+ *   0 → izin ver · 1 → izin ver + bu ajanda bir daha sorma (autoApprove) · 2 → reddet
+ * (Grok'un doğal sırası farklıdır ama öngörülebilirlik için kendi sıramızı
+ *  dayatıyoruz.) CodexPermissions aslında `/permissions` mod seçicisidir; görsel
+ *  Codex olduğu için kendi 3 seçeneğimizle onaya çeviriyoruz.
+ */
+const OPTIONS = ['Evet', 'Evet, bu ajanda bir daha sorma', 'Hayır'];
+
+export function SkinnedPermission({
+  agentId,
+  req,
+  skin,
+}: {
+  agentId: string;
+  req: PermissionRequestInfo;
+  skin: CliSkin;
+}) {
+  const done = useRef(false);
+  const title = req.title ?? `${req.toolName} çalıştırılsın mı?`;
+  const command = JSON.stringify(req.input).slice(0, 300);
+
+  async function choose(i: number) {
+    if (done.current) return;
+    done.current = true;
+    if (i === 1) await api.updateAgent(agentId, { autoApprove: true }).catch(() => {});
+    await api.permission(agentId, req.id, i !== 2).catch(() => {});
+  }
+
+  if (skin === 'codex') {
+    return (
+      <CodexPermissions
+        title={title}
+        options={[
+          { label: OPTIONS[0], description: command },
+          { label: OPTIONS[1], description: 'Bu ajanda otomatik onayı açar.' },
+          { label: OPTIONS[2], description: 'İsteği reddeder.' },
+        ]}
+        onChoose={choose}
+      />
+    );
+  }
+  if (skin === 'grok') {
+    return <GrokPermission title={title} command={command} options={OPTIONS} onChoose={choose} />;
+  }
+  return (
+    <ClaudePermission
+      title={req.toolName}
+      command={command}
+      question={title}
+      options={OPTIONS}
+      onChoose={choose}
+    />
+  );
+}

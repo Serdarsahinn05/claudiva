@@ -878,3 +878,101 @@
   --cam-filter: saturate(0.9) brightness(0.9);
   --cam-scanline: 0;
 }
+
+/* Codex CLI — grayscale gövde, model durumu için kehribar, cwd için yeşil.
+   İmza: sıfır glow, keskin köşe, baştan sona monospace, sayfalayıcı hissi
+   veren çok belli belirsiz diyagonal tarama dokusu ("~" dolgu satırlarının
+   soyutlanmış hâli). */
+:root[data-theme='codex'], [data-theme='codex'] {
+  --bg-rgb:        10 10 10;
+  --surface-rgb:   17 17 17;
+  --surface-2-rgb: 23 23 23;
+  --surface-3-rgb: 31 31 31;
+  --void-rgb:      4 4 4;
+  --edge-rgb:      42 42 42;
+  --edge-lit-rgb:  76 76 76;
+  --fg-rgb:        230 230 228;
+  --muted-rgb:     158 158 155;
+  --dim-rgb:       110 110 108;
+  --accent-rgb:    214 168 74;
+  --accent-2-rgb:  235 235 232;
+  --ok-rgb:        88 196 118;
+  --warn-rgb:      224 176 64;
+  --err-rgb:       226 92 92;
+  --aux-rgb:       150 150 220;
+  --inert-rgb:     96 96 94;
+
+  --radius: 2px; --radius-lg: 4px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 0.2; --wash-a: 1.1; --glass-blur: 0px;
+  --shadow-card: none;
+  --shadow-pop: 0 10px 28px rgb(0 0 0 / 0.6);
+  --surface-grad: rgb(var(--surface-rgb));
+  /* İmza doku: sayfalayıcının "~" dolgu satırlarının soyutlanmış hâli */
+  --texture:
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.02) 0 2px, transparent 2px 10px),
+    rgb(var(--bg-rgb));
+  --texture-blend: normal;
+
+  --font-display: 'JetBrains Mono', Consolas, monospace;
+  --font-ui: 'JetBrains Mono', Consolas, monospace;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 600;
+  --track: 0px; --track-tight: -0.1px;
+  --upper: none;
+
+  --btn-primary-bg: rgb(var(--accent-rgb));
+  --btn-primary-fg: rgb(var(--bg-rgb));
+  --btn-primary-border: rgb(var(--accent-rgb));
+  --cam-filter: saturate(0.55) brightness(0.9) contrast(1.08);
+  --cam-scanline: 0.05;
+}
+
+/* Grok — kehribar/altın vurgu, sıcak kömür zemin. İmza: nokta-matris
+   (braille) doku, yuvarlak köşe (terminalin geri kalanından farklı olarak
+   composer'ı andırır), güçlü bloom — başlıktaki braille işaretinin ışıması. */
+:root[data-theme='grok'], [data-theme='grok'] {
+  --bg-rgb:        24 18 8;
+  --surface-rgb:   34 26 13;
+  --surface-2-rgb: 42 33 17;
+  --surface-3-rgb: 54 43 23;
+  --void-rgb:      14 10 4;
+  --edge-rgb:      60 48 30;
+  --edge-lit-rgb:  110 88 50;
+  --fg-rgb:        248 240 224;
+  --muted-rgb:     196 180 150;
+  --dim-rgb:        150 134 106;
+  --accent-rgb:    255 176 59;
+  --accent-2-rgb:  255 200 110;
+  --ok-rgb:        130 214 138;
+  --warn-rgb:      255 196 80;
+  --err-rgb:       255 120 110;
+  --aux-rgb:       190 168 255;
+  --inert-rgb:     120 100 70;
+
+  --radius: 12px; --radius-lg: 18px; --border-w: 1px;
+  --clip-panel: none;
+  --glow-a: 1.6; --wash-a: 1.3; --glass-blur: 0px;
+  --shadow-card: 0 6px 24px rgb(255 176 59 / 0.12);
+  --shadow-pop: 0 14px 40px rgb(255 176 59 / 0.18);
+  --shadow-modal: 0 24px 70px rgb(255 176 59 / 0.15);
+  --surface-grad: linear-gradient(160deg, rgb(255 176 59 / 0.08), transparent);
+  /* İmza doku: braille başlığının nokta-matrisi, tüm zemine yayılmış */
+  --texture:
+    radial-gradient(rgb(255 176 59 / 0.16) 1px, transparent 1.4px) 0 0 / 10px 10px,
+    rgb(var(--bg-rgb));
+  --texture-blend: normal;
+
+  --font-display: 'IBM Plex Serif', Georgia, serif;
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+  --weight-display: 600;
+  --track: 0.3px; --track-tight: 0;
+  --upper: none;
+
+  --btn-primary-bg: rgb(var(--accent-rgb));
+  --btn-primary-fg: rgb(var(--void-rgb));
+  --btn-primary-border: rgb(var(--accent-rgb));
+  --cam-filter: saturate(1.15) brightness(0.92) contrast(1.06) hue-rotate(-5deg);
+  --cam-scanline: 0.05;
+}

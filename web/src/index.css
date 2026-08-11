@@ -945,6 +945,69 @@ label.check.small { font-size: 12px; color: var(--muted); }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* ============================================================
+   CLI SKİNLERİ — terminal-kapsamlı görünüm (TEMA'dan AYRI eksen)
+   brainless.swerdlow.dev/components'taki üç CLI (Claude/Codex/Grok)
+   referans alınarak token sistemine uyarlandı. `data-cli` .terminal'e
+   biner ve YALNIZCA terminal token rollerini ezer (renk gömülü DEĞİL):
+   Codex temanın nötrlerini, Grok temanın kehribar/uyarı tonunu kullanır,
+   böylece skin × tema serbestçe birleşir. Registry kayıt: cliSkins.ts
+   ============================================================ */
+
+/* Terminal tipi önizleme rozeti (Tema seçicideki kartlarda) */
+.cli-skin-swatch {
+  display: block; font-family: var(--font-mono); font-size: 20px;
+  letter-spacing: 6px; line-height: 1.4; height: 28px;
+}
+.cli-skin-swatch-claude { color: #cd694a; }
+.cli-skin-swatch-codex { color: #e0af68; }
+.cli-skin-swatch-grok { color: #00ff00; }
+
+/* Brainless bileşenleri aktifken terminal, kendi SABİT paletli bir adadır:
+   bileşenlerin renkleri gömülü (site birebir), o yüzden terminal panel
+   temasını TAKİP ETMEZ — her CLI kendi zemininde, gerçek CLI gibi okunur.
+   Buradaki token ezmeleri terminal kabuğunu (karşılama, ipucu, composer)
+   transcript bileşenleriyle aynı palete getirir. */
+.terminal[data-cli='claude'] {
+  --void: #0d0d0f; --fg: #c0caf5; --muted: #8b8fa3; --dim: #565f89;
+  --cli: #cd694a; --cli-dim: #b0563c;
+  --edge: #2a2a2a; --edge-lit: #3a3f52; --border: #202022;
+  --radius: 6px; --radius-lg: 8px;
+}
+.terminal[data-cli='codex'] {
+  --void: #0a0a0a; --fg: #ededed; --muted: #7a7a7a; --dim: #565656;
+  --cli: #e0af68; --cli-dim: #b8863f;
+  --edge: #2a2a2a; --edge-lit: #3a3a3a; --border: #202020;
+  --radius: 2px; --radius-lg: 3px;
+}
+.terminal[data-cli='grok'] {
+  --void: #0a0a0a; --fg: #e8e8e8; --muted: #8b8b90; --dim: #6c6c6c;
+  --cli: #00ff00; --cli-dim: #3a8a3a;
+  --edge: #2f2f33; --edge-lit: #454549; --border: #2a2a2a;
+  --radius: 6px; --radius-lg: 10px;
+}
+
+/* Transcript kabı: brainless bileşenleri dikey aralıkla dizer */
+.skin-transcript { display: flex; flex-direction: column; gap: 8px; }
+/* thinking/system gibi bileşeni olmayan düz satırlar */
+.skin-dim { color: var(--muted); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; }
+
+/* İzin isteği sarmalayıcı (gövde ile giriş satırı arasında) */
+.perm-wrap {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px 16px; background: var(--void);
+  border-top: var(--border-w) solid var(--border);
+}
+
+/* Composer: Grok yuvarlak kutu (Claude/Codex çizgi biçimini korur) */
+.terminal[data-cli='grok'] .terminal-input {
+  border: var(--border-w) solid var(--edge-lit);
+  border-radius: 8px; margin: 8px; padding: 8px 12px;
+}
+.terminal[data-cli='grok'] .terminal-input:focus-within {
+  border-color: var(--cli-dim); border-top-color: var(--cli-dim); border-bottom-color: var(--cli-dim);
+}
+
 /* ---------- komut paleti (Ctrl/⌘+K) ---------- */
 /* Satırlar terminalin slash menüsüyle aynı sınıfları kullanır (.cmd-row /
    .cmd-name / .cmd-desc); burada yalnızca kabuk tanımlanır. */
