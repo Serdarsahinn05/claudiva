@@ -6,6 +6,7 @@ import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
 import { systemInfo } from './system.js';
 import type { ChangeLog } from '../changes.js';
 import { changedFiles, diffFile, headSha, isRepo, revertFile, safeResolve } from '../git.js';
+import { readMemoryGraph } from '../memory.js';
 
 function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>) {
   return async (req: Request, res: Response) => {
@@ -25,6 +26,10 @@ export function createRoutes(
   changes: ChangeLog,
 ): Router {
   const r = Router();
+
+  // ------------------------------------------------------------- memory
+  // Ajan hafıza haritası (Memory paneli): düğümler; kenarlar istemcide türetilir.
+  r.get('/memory', handle(() => readMemoryGraph()));
 
   // ------------------------------------------------------------- agents
   r.get('/agents', handle(() => manager.list()));

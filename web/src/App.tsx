@@ -10,6 +10,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { PromptLibrary } from './components/PromptLibrary';
 import { Office } from './components/Office';
 import { Changes } from './components/Changes';
+import { Memory } from './components/Memory';
 import { ThemePicker } from './components/ThemePicker';
 import { Settings } from './components/Settings';
 import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
@@ -18,7 +19,7 @@ import { dismissBoot } from './boot';
 import { fmtCost, fmtNum, totalTokens } from './format';
 import type { AgentSnapshot } from './types';
 
-type Tab = 'bridge' | 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts' | 'changes';
+type Tab = 'bridge' | 'office' | 'dashboard' | 'terminal' | 'tasks' | 'prompts' | 'changes' | 'memory';
 
 const TAB_TITLE: Record<Tab, string> = {
   bridge: 'Köprü',
@@ -28,6 +29,7 @@ const TAB_TITLE: Record<Tab, string> = {
   tasks: 'Görevler',
   prompts: 'Promptlar',
   changes: 'Değişiklikler',
+  memory: 'Hafıza',
 };
 
 /** Mürettebat listesinin görüneceği bölümler — diğerlerinde yer kaplamasın. */
@@ -237,6 +239,7 @@ export default function App() {
             { id: 'tasks', label: 'Görevler', icon: ICONS.tasks },
             { id: 'prompts', label: 'Promptlar', icon: ICONS.prompts },
             { id: 'changes', label: 'Değişim', icon: ICONS.changes },
+            { id: 'memory', label: 'Hafıza', icon: ICONS.memory },
           ]}
         />
 
@@ -379,6 +382,8 @@ export default function App() {
           {tab === 'tasks' && <TaskBoard tasks={store.tasks} agents={store.agents} />}
 
           {tab === 'changes' && <Changes agents={store.agents} />}
+
+          {tab === 'memory' && <Memory />}
 
           {tab === 'prompts' && (
             <PromptLibrary

@@ -3,6 +3,7 @@ import type {
   BudgetSettings,
   BudgetState,
   ChangesResponse,
+  MemoryNode,
   PromptTemplate,
   SystemInfo,
   Task,
@@ -34,6 +35,7 @@ export const api = {
   interrupt: (id: string) => req('POST', `/api/agents/${id}/interrupt`),
   permission: (id: string, requestId: string, allow: boolean, message?: string) =>
     req('POST', `/api/agents/${id}/permission`, { requestId, allow, message }),
+  getMemory: () => req<{ nodes: MemoryNode[] }>('GET', '/api/memory'),
   listTasks: () => req<Task[]>('GET', '/api/tasks'),
   createTask: (input: { title: string; prompt: string; assignedTo: string }) => req<Task>('POST', '/api/tasks', input),
   createChain: (steps: { title: string; prompt: string; assignedTo: string }[]) =>
