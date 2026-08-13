@@ -114,6 +114,22 @@ Rules:
 - `cleanup()` sonuçlanmamış görev turları için `turn_abandoned` yayar — yoksa oturum
   ölünce görevler sonsuza dek `running` asılı kalırdı.
 
+## Paralel delegasyon
+
+- **`delegate_task` tek ajanlıktır ve `wait=true` (varsayılan) çağıran turu
+  `waitFor` ile 15dk'ya kadar BLOKLAR.** Altyapı paraleli destekler (her ajan ayrı
+  `AgentSession` + ayrı SDK döngüsü; `dispatch()`→`launch()`→`send()` bloklamadan
+  döner), ama boss tek tek `delegate_task` çağırınca doğal olarak seri çalışır:
+  delege et → sonucu bekle → oku → sıradakini delege et. Kullanıcı "boss aynı anda
+  tek ajana iş veriyor" diye bunu fark etti.
+- **Çözüm `delegate_tasks` (çoğul)**: bir dizi `{agent_id,title,task}` alır, HEPSİNİ
+  senkron `dispatch()` eder (hepsi anında başlar), sonra `Promise.all(waitFor)` ile
+  birlikte bekler. Duvar-saati = en uzun görev, görevlerin toplamı değil. Ajan
+  sayısı/kimlikleri serbest — iki de olur altı da. Doğrulama önce yapılır: bir hedef
+  geçersizse HİÇBİRİ dağıtılmaz (kısmi dağıtım "N ajana verdim" beklentisini
+  sessizce bozardı). `personality.md` (boss + patron) bağımsız işler için bunu
+  emreder; tek tek `delegate_task` yalnızca bağımlı/sıralı iş içindir.
+
 ## Görev zincirleri
 
 - Zincir adımı `pending` doğar (`chainId`/`stepIndex`/`dependsOn`/`passResult`).
