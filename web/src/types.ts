@@ -2,6 +2,18 @@ export type AgentRole = 'boss' | 'manager' | 'team-leader' | 'worker';
 export type AgentStatus = 'offline' | 'idle' | 'working' | 'waiting';
 export type MemoryMode = 'shared' | 'private' | 'both' | 'none';
 
+/** Bir ajan hafızası (memory/<ajanId|shared>/*.md). Kenarlar `links`'ten türetilir. */
+export interface MemoryNode {
+  id: string;
+  agentId: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: string;
+  content: string;
+  links: string[];
+}
+
 export interface McpServerDef {
   type: 'stdio' | 'http' | 'sse';
   command?: string;

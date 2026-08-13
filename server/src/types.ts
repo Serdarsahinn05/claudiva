@@ -4,6 +4,21 @@ export type AgentStatus = 'offline' | 'idle' | 'working' | 'waiting';
 
 export type MemoryMode = 'shared' | 'private' | 'both' | 'none';
 
+/** Bir ajan hafızası (memory/<ajanId|shared>/*.md). Kenarlar `links`'ten türetilir. */
+export interface MemoryNode {
+  /** `${agentId}/${slug}` — tekil. */
+  id: string;
+  /** Sahibi: bir ajan id'si ya da 'shared'. */
+  agentId: string;
+  slug: string;
+  name: string;
+  description: string;
+  type: string;
+  content: string;
+  /** Gövdedeki `[[hedef]]` bağlantıları (slug/ad). */
+  links: string[];
+}
+
 /** Short aliases mapped to real model IDs in session.ts; full IDs pass through. */
 export type ModelChoice = 'haiku' | 'sonnet' | 'opus' | string;
 
