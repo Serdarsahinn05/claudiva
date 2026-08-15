@@ -12,6 +12,27 @@ ekranda gösterir.
 Panelin ilk işi rapor vermek değil **durum bildirmektir**: açıldığı anda
 projenin hangi aşamada olduğu okunabilir.
 
+![Claude Manager paneli](web/public/claude-manager.png)
+
+---
+
+## Kullanılan teknolojiler
+
+| Katman | Ne kullanılıyor |
+|---|---|
+| **Ajan çalıştırma** | [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) — ajanlar sizin Claude Code aboneliğinizle çalışır |
+| **Ajan araçları** | [MCP SDK](https://modelcontextprotocol.io) — delegasyon, görev bildirimi, model seçimi ve tarayıcı araçları süreç içi MCP sunucularıdır |
+| **Sunucu** | Node.js + Express + `ws` (WebSocket yayını), TypeScript |
+| **Panel** | React 19 + Vite + TypeScript |
+| **Stil** | Elle yazılmış CSS; UI kütüphanesi yok. Renkler kanal token'ıdır (`rgb(var(--x-rgb) / a)`), tema bir token bloğundan ibarettir |
+| **Yazı tipleri** | Bodoni Moda, Archivo, JetBrains Mono — [Fontsource](https://fontsource.org) ile paketten servis edilir, çevrimdışı da aynı görünür |
+| **Sözdizimi renklendirme** | [Prism](https://prismjs.com), tembel yüklenir |
+| **Dosya ikonları** | [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme), sunucudan tek tek servis edilir |
+| **Tarayıcı paneli** | `playwright-core` + Chromium (ayrıca indirilir) |
+| **Doğrulama** | `zod` (araç şemaları), `oxlint`, ve palet için kendi kontrast ölçüm betiği |
+
+Depo bir npm workspace'idir: `server/` ve `web/`.
+
 ---
 
 ## Kurulum
@@ -212,6 +233,22 @@ npm run dev       # panel http://localhost:5173, API http://localhost:4600
 npm run build     # doğrulamanın tek geçerli yolu
 ```
 
+Depo düzeni:
+
+| Yol | İçerik |
+|---|---|
+| `server/src/agents/` | Oturum, sağlayıcı arkayüzü (`AgentBackend`), kullanım geçmişi |
+| `server/src/tasks/` | Görev kuyruğu, zincirler, `complete_task` aracı |
+| `server/src/api/` | HTTP uçları (`routes.ts`) |
+| `server/src/ws.ts` | Tek yönlü WebSocket yayını — panel buradan canlı kalır |
+| `web/src/components/` | Paneller (her biri bir dosya) |
+| `web/src/workspace.ts` | Yerleşimin şekli; `useLayout.ts` onu değiştiren tek yer |
+| `agents/` | İlk çalıştırmada kopyalanan varsayılan ekip |
+| `bin/claude-manager.js` | CLI — `server/dist`i çalıştırır |
+
+Yeni panel eklemek iki satırdır: `workspace.ts` içindeki kayda bir giriş,
+`App.tsx` içindeki `renderPanel()`e bir `case`.
+
 Birkaç not, hepsi ölçülerek öğrenildi:
 
 - **Doğrulama daima `npm run build`.** CLI kaynağı değil `server/dist`i
@@ -233,6 +270,18 @@ otorite `web/DESIGN.md` içinde.
 - Browser paneli için Chromium'u ayrıca indirmeniz gerekir (yukarıya bakın).
 - Ajan `complete_task` aracını çağırmadan önce `ToolSearch` ile yüklemek zorunda
   kalıyor; fazladan bir tur maliyeti var, işlevi bozmuyor.
+
+## Nasıl yazıldı
+
+Bu proje **vibe coding** ile yazıldı: kod büyük ölçüde Claude ile, konuşarak
+üretildi — istenen davranış tarif edildi, çıkan sonuç panelde denendi, tutmayan
+yer yeniden yazıldı.
+
+Bunun bir sonucu var ve gizlemeye çalışmıyorum: kararların gerekçesi koda değil
+belgelere yazıldı. `CLAUDE.md` içindeki notların çoğu bir tahmin değil, yanlış
+çıkmış bir varsayımın ölçülerek düzeltilmiş hâlidir — hangi yaklaşımın denenip
+neden elendiği de orada durur. Bir şeyi değiştirmeden önce ilgili notu okumak,
+aynı tuzağa ikinci kez düşmemenin en kısa yolu.
 
 ## Teşekkür
 
