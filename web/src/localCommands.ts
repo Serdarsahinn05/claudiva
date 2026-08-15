@@ -26,7 +26,7 @@ import type {
  *
  * Taşınabilirlik: burada projeye özel hiçbir şey yok. Komut seti oturumun
  * kendisinden (SDK) ve panelin kendi defterinden okunuyor, dolayısıyla
- * claude-manager hangi projeye kurulursa kurulsun aynı set geliyor.
+ * claudiva hangi projeye kurulursa kurulsun aynı set geliyor.
  */
 export interface LocalCommand {
   name: string;
@@ -120,7 +120,7 @@ async function usageOutput(ctx: LocalContext): Promise<string> {
   const lines: string[] = [];
 
   const t = tracked.total;
-  lines.push('Bu projedeki kullanım (claude-manager sayımı)');
+  lines.push('Bu projedeki kullanım (claudiva sayımı)');
   lines.push(
     `  ${fmtTokens(t.inputTokens + t.outputTokens)} token · ${fmtUSD(t.costUSD)} · ${t.requests} istek`,
   );

@@ -1,11 +1,29 @@
 {
-  "name": "claude-manager",
+  "name": "claudiva",
   "version": "0.1.0",
-  "private": true,
-  "description": "Multi-agent Claude management system and panel",
+  "description": "Multi-agent orchestration panel for Claude Code — run, watch and coordinate several agents in one project",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "agent",
+    "multi-agent",
+    "orchestration",
+    "dashboard",
+    "cli"
+  ],
+  "license": "MIT",
+  "author": "Serdarsahinn05",
+  "homepage": "https://github.com/Serdarsahinn05/claudiva#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Serdarsahinn05/claudiva.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Serdarsahinn05/claudiva/issues"
+  },
   "type": "module",
   "bin": {
-    "claude-manager": "bin/claude-manager.js"
+    "claudiva": "bin/claudiva.js"
   },
   "files": [
     "bin",
@@ -13,6 +31,9 @@
     "server/dist",
     "web/dist"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "server",
     "web"
@@ -22,12 +43,23 @@
     "dev:server": "npm run dev -w server",
     "dev:web": "npm run dev -w web",
     "build": "npm run build -w server && npm run build -w web",
-    "start": "npm run start -w server"
+    "start": "npm run start -w server",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "latest",
+    "@anthropic-ai/sdk": "^0.111.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "material-icon-theme": "^5.37.0",
+    "ws": "^8.18.0",
+    "zod": "^4.4.3"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1.62.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
-  },
-  "dependencies": {
-    "claude-manager": "file:"
   }
 }

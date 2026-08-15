@@ -9,17 +9,7 @@
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "latest",
-    "@anthropic-ai/sdk": "^0.111.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "material-icon-theme": "^5.37.0",
-    "playwright-core": "^1.62.1",
-    "ws": "^8.18.0",
-    "zod": "^4.4.3"
-  },
+  "//": "Çalışma zamanı bağımlılıkları bilerek KÖK package.json'da. Yayınlanan paket kök pakettir; buraya yazılan bir bağımlılık tarball'a girmez ve kullanıcıda 'Cannot find module express' olur. Geliştirmede fark yok: workspace kurulumu hepsini kök node_modules'a koyar, server/dist oradan çözer.",
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

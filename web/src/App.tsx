@@ -385,7 +385,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>claude-manager</h1>
+        <h1>claudiva</h1>
 
         <TeamTabs agents={store.agents} value={team} onChange={setTeam} />
 

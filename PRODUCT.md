@@ -43,7 +43,7 @@ Komşu bir ürünün dürüstçe kopyalayamayacağı mekanizmalar:
 
 ## Operating Context
 
-- CLI olarak başlatılır: `claude-manager` → `server/dist`i çalıştırır, varsa `web/dist`i
+- CLI olarak başlatılır: `claudiva` → `server/dist`i çalıştırır, varsa `web/dist`i
   servis eder. Varsayılan port 4600. Panel tarayıcıda açılır.
 - Geliştirme: `npm run dev` (sunucu `tsx --watch` + vite). Vite `/api`yi sabit
   `localhost:4600`e proxy'ler.
@@ -75,7 +75,7 @@ Komşu bir ürünün dürüstçe kopyalayamayacağı mekanizmalar:
 
 ## Brand Commitments
 
-Ad: **claude-manager**. Depo: github.com/Serdarsahinn05/claude-manager.
+Ad: **claudiva**. Depo: github.com/Serdarsahinn05/claudiva.
 
 Bağlayıcı bir görsel kimlik **yok.** Mevcut görünüm kullanıcı tarafından açıkça
 reddedilmiştir: yerleşim ve temalar değiştirilecek. Depodaki

@@ -152,7 +152,7 @@ interface TreeResponse {
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'claude-manager' },
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'claudiva' },
   });
   if (res.status === 403 || res.status === 429) {
     // Kota mesajı özel: kullanıcı "bozuk" ile "biraz bekle"yi ayırabilmeli.
@@ -174,7 +174,7 @@ async function readHead(repo: string, filePath: string): Promise<{ name?: string
   try {
     const res = await fetch(
       `https://raw.githubusercontent.com/${repo}/HEAD/${filePath.split('/').map(encodeURIComponent).join('/')}`,
-      { headers: { 'User-Agent': 'claude-manager', Range: `bytes=0-${HEAD_BYTES - 1}` } },
+      { headers: { 'User-Agent': 'claudiva', Range: `bytes=0-${HEAD_BYTES - 1}` } },
     );
     if (!res.ok && res.status !== 206) return {};
     return parseFrontmatter(await res.text());

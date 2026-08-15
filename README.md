@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🔭 Claude Manager
+# 🔭 Claudiva
 
 ### Birden fazla Claude ajanını tek panelden çalıştır, izle ve koordine et
 
 Terminalde iki ayrı `claude` açtığınızda ikisi de kendi başınadır: ne
 yaptıklarını göremez, birbirlerine iş veremez, ne harcadıklarını bilemezsiniz.
-**Claude Manager** hepsini tek ekrana toplar — ajanlar sizin proje klasörünüzde
+**Claudiva** hepsini tek ekrana toplar — ajanlar sizin proje klasörünüzde
 çalışır, panel kim ne yaptı, neye dokundu, ne harcadı hepsini gösterir.
 
 ![Node.js](https://img.shields.io/badge/Node.js_20+-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)
@@ -22,7 +22,7 @@ yaptıklarını göremez, birbirlerine iş veremez, ne harcadıklarını bilemez
 
 </div>
 
-![Claude Manager paneli](web/public/claude-manager.png)
+![Claudiva paneli](docs/claudiva.png)
 
 ---
 
@@ -95,11 +95,11 @@ Gerekenler:
 - Git
 
 ```bash
-git clone https://github.com/Serdarsahinn05/claude-manager.git
-cd claude-manager
+git clone https://github.com/Serdarsahinn05/claudiva.git
+cd claudiva
 npm install
 npm run build
-npm link          # `claude-manager` komutunu global olarak kaydeder
+npm link          # `claudiva` komutunu global olarak kaydeder
 ```
 
 Ayrı bir installer yok; `npm link` bunun karşılığı.
@@ -110,7 +110,7 @@ Hangi projede çalışacaksanız **o klasörde** çalıştırın:
 
 ```bash
 cd D:/YeniProjem
-claude-manager
+claudiva
 ```
 
 Panel tarayıcıda açılır (varsayılan http://localhost:4600) ve ajanlar doğrudan o
@@ -233,6 +233,10 @@ Ekip **global**, veri **proje başına**. Aynı ajan ekibi her projede hazır ge
 ama görevler ve hafıza projelere karışmaz; aynı ajan iki projede ayrı oturum
 yürütür.
 
+> Disk üzerindeki klasör adı `.claude-manager` olarak kaldı (projenin eski adı).
+> Adı değiştirmek mevcut kurulumlardaki ajanları, görevleri ve hafızayı görünmez
+> yapardı; bu bir yeniden adlandırma değil taşıma işi olurdu.
+
 **`~/.claude-manager/`** — bütün projelerde ortak
 
 | Dizin | İçerik |
@@ -293,7 +297,7 @@ Depo düzeni:
 | `web/src/components/` | Paneller (her biri bir dosya) |
 | `web/src/workspace.ts` | Yerleşimin şekli; `useLayout.ts` onu değiştiren tek yer |
 | `agents/` | İlk çalıştırmada kopyalanan varsayılan ekip |
-| `bin/claude-manager.js` | CLI — `server/dist`i çalıştırır |
+| `bin/claudiva.js` | CLI — `server/dist`i çalıştırır |
 
 Yeni panel eklemek iki satırdır: `workspace.ts` içindeki kayda bir giriş,
 `App.tsx` içindeki `renderPanel()`e bir `case`.
@@ -339,3 +343,11 @@ Ofis panelinin görselleri [pixel-agents](https://github.com/pixel-agents-hq/pix
 paketi tabanlıdır. Dosya türü ikonları
 [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme)
 (MIT). Sözdizimi renklendirme [Prism](https://prismjs.com) ile yapılır.
+
+## 📄 Lisans
+
+[MIT](LICENSE)
+
+Claudiva bağımsız bir açık kaynak projedir; Anthropic ile bir bağı yoktur,
+Anthropic tarafından desteklenmez veya onaylanmaz. "Claude" ve "Claude Code",
+Anthropic PBC'ye aittir ve burada yalnızca uyumluluğu tarif etmek için geçer.

@@ -70,7 +70,7 @@ app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', createRoutes(manager, tasks, prompts, changes, browser));
 
-// Derlenmiş panel varsa aynı porttan servis edilir; `claude-manager` komutu
+// Derlenmiş panel varsa aynı porttan servis edilir; `claudiva` komutu
 // böylece tek süreçle çalışır (vite dev sunucusu gerekmez).
 const webDist = path.join(INSTALL_ROOT, 'web', 'dist');
 if (fs.existsSync(path.join(webDist, 'index.html'))) {
@@ -118,8 +118,8 @@ browser.onChange = (state) => hub.broadcast({ type: 'browser_state', state });
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
     console.error(
-      `\n  Port ${PORT} kullanımda — muhtemelen kapanmamış bir claude-manager süreci var.\n` +
-        `  Başka port için: claude-manager --port 4700\n`
+      `\n  Port ${PORT} kullanımda — muhtemelen kapanmamış bir claudiva süreci var.\n` +
+        `  Başka port için: claudiva --port 4700\n`
     );
     process.exit(1);
   }
@@ -127,7 +127,7 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\n  Claude Manager  →  http://localhost:${PORT}`);
+  console.log(`\n  Claudiva  →  http://localhost:${PORT}`);
   console.log(`  Proje:  ${PROJECT_DIR}`);
   console.log(`  Ekip:   ${path.join(HOME_DIR, 'agents')}\n`);
 });

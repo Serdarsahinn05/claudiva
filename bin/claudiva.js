@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Claude Manager CLI.
+ * Claudiva CLI.
  *
  *   cd D:/YeniProjem
- *   claude-manager
+ *   claudiva
  *
  * Ajanlar komutun çalıştırıldığı dizinde çalışır; ekip ~/.claude-manager/agents
  * altından gelir. Ortam değişkenleri sunucu import edilmeden ÖNCE ayarlanmalı,
@@ -29,10 +29,10 @@ function flag(name, fallback) {
 
 if (argv.includes('--help') || argv.includes('-h')) {
   console.log(`
-  Claude Manager — çok ajanlı Claude yönetim paneli
+  Claudiva — çok ajanlı Claude Code yönetim paneli
 
   Kullanım:
-    claude-manager [seçenekler]
+    claudiva [seçenekler]
 
   Seçenekler:
     --dir <yol>     Ajanların çalışacağı proje dizini (varsayılan: bulunduğun dizin)
@@ -76,7 +76,7 @@ if (!(await portFree(port))) {
     process.exit(1);
   }
   // Port belirtilmediyse sessizce bir sonraki boş porta kay — çoğu zaman bu,
-  // kapanmamış eski bir claude-manager süreci demek.
+  // kapanmamış eski bir claudiva süreci demek.
   let next = port;
   while (next < wantedPort + 20 && !(await portFree(next))) next++;
   if (next >= wantedPort + 20) {

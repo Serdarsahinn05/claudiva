@@ -17,7 +17,7 @@ export const INSTALL_ROOT = path.resolve(here, '..', '..');
  * Ajanların çalışma dizini (cwd) projenin kökü olur; yani dosyaları doğrudan
  * senin projende yönetirler.
  *
- * Yollar modül yüklenirken çözülür, bu yüzden `bin/claude-manager.js` ortam
+ * Yollar modül yüklenirken çözülür, bu yüzden `bin/claudiva.js` ortam
  * değişkenlerini sunucuyu import etmeden ÖNCE ayarlar.
  */
 export const HOME_DIR =
@@ -26,7 +26,7 @@ export const HOME_DIR =
 /**
  * Ajanların üzerinde çalıştığı proje kökü.
  *
- * Öncelik: `claude-manager` CLI'ının ayarladığı değişken > npm'in INIT_CWD'si
+ * Öncelik: `claudiva` CLI'ının ayarladığı değişken > npm'in INIT_CWD'si
  * (npm script'leri cwd'yi workspace klasörüne çevirdiği için `npm run dev`de
  * proje kökünü bu verir) > içinde bulunulan dizin.
  */

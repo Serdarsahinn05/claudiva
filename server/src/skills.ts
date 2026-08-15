@@ -273,7 +273,7 @@ interface GhEntry {
 
 async function gh<T>(url: string): Promise<T> {
   const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'claude-manager' },
+    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'claudiva' },
   });
   if (!res.ok) throw new Error(`GitHub ${res.status}: ${url.replace('https://api.github.com', '')}`);
   return (await res.json()) as T;
@@ -347,7 +347,7 @@ export async function installFromGitHub(opts: {
         await pull(e.path, dest);
       } else if (e.type === 'file' && e.download_url) {
         if (e.size > MAX_ASSET_BYTES) continue;
-        const res = await fetch(e.download_url, { headers: { 'User-Agent': 'claude-manager' } });
+        const res = await fetch(e.download_url, { headers: { 'User-Agent': 'claudiva' } });
         if (!res.ok) throw new Error(`İndirilemedi: ${e.path} (${res.status})`);
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.byteLength > MAX_ASSET_BYTES) continue;
