@@ -1,41 +1,90 @@
-# Claude Manager
+<div align="center">
 
-Bir projede aynı anda birden fazla Claude ajanı çalıştırmak, izlemek ve
-koordine etmek için tek bir yer.
+# 🔭 Claude Manager
 
-Terminalde iki ayrı `claude` açtığınızda her ikisi de kendi başınadır: ne
+### Birden fazla Claude ajanını tek panelden çalıştır, izle ve koordine et
+
+Terminalde iki ayrı `claude` açtığınızda ikisi de kendi başınadır: ne
 yaptıklarını göremez, birbirlerine iş veremez, ne harcadıklarını bilemezsiniz.
-Claude Manager bu boşluğu doldurur — ajanlar **sizin proje klasörünüzde**
-çalışır, panel de hepsinin ne yaptığını, neye dokunduğunu ve ne harcadığını tek
-ekranda gösterir.
+**Claude Manager** hepsini tek ekrana toplar — ajanlar sizin proje klasörünüzde
+çalışır, panel kim ne yaptı, neye dokundu, ne harcadı hepsini gösterir.
 
-Panelin ilk işi rapor vermek değil **durum bildirmektir**: açıldığı anda
-projenin hangi aşamada olduğu okunabilir.
+![Node.js](https://img.shields.io/badge/Node.js_20+-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![Claude Agent SDK](https://img.shields.io/badge/Claude_Agent_SDK-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-000000?style=for-the-badge&logo=modelcontextprotocol&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge)
+
+[Teknolojiler](#-teknolojiler) · [Kurulum](#-kurulum) · [Kullanım](#-kullanım) · [Panel](#-panel) · [Ekip](#-ekip-ve-delegasyon) · [Temalar](#-temalar) · [Geliştirme](#-geliştirme)
+
+</div>
 
 ![Claude Manager paneli](web/public/claude-manager.png)
 
 ---
 
-## Kullanılan teknolojiler
+## 🧰 Teknolojiler
 
-| Katman | Ne kullanılıyor |
-|---|---|
-| **Ajan çalıştırma** | [Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) — ajanlar sizin Claude Code aboneliğinizle çalışır |
-| **Ajan araçları** | [MCP SDK](https://modelcontextprotocol.io) — delegasyon, görev bildirimi, model seçimi ve tarayıcı araçları süreç içi MCP sunucularıdır |
-| **Sunucu** | Node.js + Express + `ws` (WebSocket yayını), TypeScript |
-| **Panel** | React 19 + Vite + TypeScript |
-| **Stil** | Elle yazılmış CSS; UI kütüphanesi yok. Renkler kanal token'ıdır (`rgb(var(--x-rgb) / a)`), tema bir token bloğundan ibarettir |
-| **Yazı tipleri** | Bodoni Moda, Archivo, JetBrains Mono — [Fontsource](https://fontsource.org) ile paketten servis edilir, çevrimdışı da aynı görünür |
-| **Sözdizimi renklendirme** | [Prism](https://prismjs.com), tembel yüklenir |
-| **Dosya ikonları** | [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme), sunucudan tek tek servis edilir |
-| **Tarayıcı paneli** | `playwright-core` + Chromium (ayrıca indirilir) |
-| **Doğrulama** | `zod` (araç şemaları), `oxlint`, ve palet için kendi kontrast ölçüm betiği |
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🤖 Ajan katmanı
+
+![Agent SDK](https://img.shields.io/badge/Claude_Agent_SDK-D97757?style=flat-square&logo=anthropic&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP_SDK-000000?style=flat-square&logo=modelcontextprotocol&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white)
+
+Ajanlar **Agent SDK** ile, sizin Claude Code aboneliğinizle koşar.
+Delegasyon, görev bildirimi, model seçimi ve tarayıcı araçları
+süreç içi **MCP** sunucularıdır — şemaları `zod` ile.
+
+</td>
+<td width="33%" valign="top">
+
+### ⚙️ Sunucu
+
+![Node.js](https://img.shields.io/badge/Node.js-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)
+![ws](https://img.shields.io/badge/ws_·_WebSocket-1A1A1A?style=flat-square)
+![Playwright](https://img.shields.io/badge/playwright--core-2EAD33?style=flat-square)
+
+**Express** HTTP uçlarını, tek yönlü bir **WebSocket** yayını paneli canlı
+tutar. Browser paneli için **playwright-core** + Chromium.
+
+</td>
+<td width="33%" valign="top">
+
+### 🖥 Arayüz
+
+![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![CSS](https://img.shields.io/badge/El_yazımı_CSS-1572B6?style=flat-square&logo=css&logoColor=white)
+![Prism](https://img.shields.io/badge/Prism-CC99CD?style=flat-square)
+
+**React 19 + Vite.** UI kütüphanesi yok: stil elle yazılmış CSS, renkler kanal
+token'ı. Sözdizimi renklendirme **Prism** ile ve tembel yüklenir.
+
+</td>
+</tr>
+</table>
+
+<div align="center">
+
+**Yazı tipleri** [Fontsource](https://fontsource.org) ile paketten gelir (çevrimdışı da aynı görünür) ·
+**Dosya ikonları** [Material Icon Theme](https://github.com/material-extensions/vscode-material-icon-theme) ·
+**Denetim** `oxlint` + kendi kontrast ölçüm betiğimiz
 
 Depo bir npm workspace'idir: `server/` ve `web/`.
 
+</div>
+
 ---
 
-## Kurulum
+## 📦 Kurulum
 
 Gerekenler:
 
@@ -55,7 +104,7 @@ npm link          # `claude-manager` komutunu global olarak kaydeder
 
 Ayrı bir installer yok; `npm link` bunun karşılığı.
 
-## Kullanım
+## ▶️ Kullanım
 
 Hangi projede çalışacaksanız **o klasörde** çalıştırın:
 
@@ -87,7 +136,7 @@ Port doluysa ve `--port` vermediyseniz bir sonraki boş porta kayar.
 
 ---
 
-## Panel
+## 🖥 Panel
 
 Sekme yoktur; **üç yuva** vardır — solda ve sağda birer sütun, ortada döşenmiş
 bir çalışma alanı. Panelleri sürükleyerek istediğiniz yuvaya taşırsınız,
@@ -150,7 +199,7 @@ Kurmazsanız sunucu yine çalışır, yalnız bu panel "kurulu değil" der.
 
 ---
 
-## Ekip ve delegasyon
+## 👥 Ekip ve delegasyon
 
 Dört rol vardır: `boss`, `manager`, `team-leader`, `worker`. İlk üçü iş
 dağıtabilir; `worker` dağıtamaz — bu bir ayar değil, o role delegasyon araçları
@@ -178,7 +227,7 @@ gösterdiğini değiştirir.
 
 ---
 
-## Dizinler
+## 📁 Dizinler
 
 Ekip **global**, veri **proje başına**. Aynı ajan ekibi her projede hazır gelir
 ama görevler ve hafıza projelere karışmaz; aynı ajan iki projede ayrı oturum
@@ -202,7 +251,7 @@ yaptığınız düzenlemeler güncellemelerde korunur.
 | `data/` | Token sayımı, görev geçmişi, oturumlar, döküm, değişiklikler |
 | `prompts/` | Prompt kütüphanesi |
 
-## Skill'ler
+## 🧩 Skill'ler
 
 Her ajan dizini aynı zamanda yerel bir Claude Code plugin'idir; içindeki
 `skills/<ad>/SKILL.md` dosyaları terminalde `/<ad>` olarak çağrılır. Kendi
@@ -214,7 +263,7 @@ Panelin terminali gerçek CLI'ın komut setini kullanır. `/status`, `/context`,
 kendi yüzeyleriyle çizilir; geri kalan her şey olduğu gibi ajana gider. Panel
 hiçbir komutu reddetmez.
 
-## Temalar
+## 🎨 Temalar
 
 Altı tema iki aileden gelir. **Plakalar** bir gözlem koşulunu taklit eder:
 *Gece*, *Kırmızı Fener* (gece görüşünü bozmaz — mavi yoktur, durumlar renkle
@@ -226,7 +275,7 @@ altı plakayı da eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çı
 
 ---
 
-## Geliştirme
+## 🛠 Geliştirme
 
 ```bash
 npm run dev       # panel http://localhost:5173, API http://localhost:4600
@@ -263,7 +312,7 @@ Birkaç not, hepsi ölçülerek öğrenildi:
 Mimari kararlar ve tuzaklar `CLAUDE.md`, ürün kararları `PRODUCT.md`, görsel
 otorite `web/DESIGN.md` içinde.
 
-## Bilinen sınırlar
+## ⚠️ Bilinen sınırlar
 
 - Sağlayıcı katmanı soyutlanmıştır (`AgentBackend`) ama **şu an tek sağlayıcı
   vardır**: Claude. Bu bir eksiklik değil, kayıtlı bir durumdur.
@@ -271,7 +320,7 @@ otorite `web/DESIGN.md` içinde.
 - Ajan `complete_task` aracını çağırmadan önce `ToolSearch` ile yüklemek zorunda
   kalıyor; fazladan bir tur maliyeti var, işlevi bozmuyor.
 
-## Nasıl yazıldı
+## ✨ Nasıl yazıldı
 
 Bu proje **vibe coding** ile yazıldı: kod büyük ölçüde Claude ile, konuşarak
 üretildi — istenen davranış tarif edildi, çıkan sonuç panelde denendi, tutmayan
@@ -283,7 +332,7 @@ belgelere yazıldı. `CLAUDE.md` içindeki notların çoğu bir tahmin değil, y
 neden elendiği de orada durur. Bir şeyi değiştirmeden önce ilgili notu okumak,
 aynı tuzağa ikinci kez düşmemenin en kısa yolu.
 
-## Teşekkür
+## 🙏 Teşekkür
 
 Ofis panelinin görselleri [pixel-agents](https://github.com/pixel-agents-hq/pixel-agents)
 (MIT) projesinden; karakterler [JIK-A-4 "MetroCity"](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack)
