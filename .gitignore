@@ -16,3 +16,16 @@ memory/
 graphify-out/
 *.log
 .env
+
+# impeccable tasarım denetçisi. `design.json` (tasarım sistemi anlık görüntüsü)
+# SÜRÜMLENİR — hook onu okuyor ve DESIGN.md ile birlikte gitmesi gerekiyor.
+# Yalnızca oturum başına üretilen önbellek ve soru kayıtları dışarıda kalır.
+.impeccable/hook.cache.json
+.impeccable/questions/
+
+# TypeScript artımlı derleme bilgisi (`tsc -b`)
+*.tsbuildinfo
+
+# işletim sistemi artıkları — depoyu başka platformdan klonlayanlar için
+.DS_Store
+Thumbs.db
