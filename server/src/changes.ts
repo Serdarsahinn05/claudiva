@@ -96,6 +96,27 @@ export class ChangeLog {
     return this.data.touches[relPath] ?? [];
   }
 
+  /**
+   * Bir görev sırasında yazılan dosyalar — Raporlar panelinin KANITI.
+   *
+   * `Touch.taskId` en baştan kaydediliyordu ama hiçbir yerde okunmuyordu; bu
+   * ters arama onu kullanılır kılıyor. Rapor metni ajanın kendi anlatısıdır,
+   * bu liste ise ölçülmüş olan: gerçekten hangi dosyalara dokunuldu. İkisi
+   * yan yana durunca "yaptım" iddiası doğrulanabilir hâle geliyor.
+   *
+   * Defter dosya→dokunuş yönünde tutulduğu için tarama tam; dosya sayısı
+   * (yüzler mertebesi) bu tarama için fazlasıyla küçük.
+   */
+  filesForTask(taskId: string): { path: string; ts: number; tool: string; agentId: string }[] {
+    const out: { path: string; ts: number; tool: string; agentId: string }[] = [];
+    for (const [p, list] of Object.entries(this.data.touches)) {
+      for (const t of list) {
+        if (t.taskId === taskId) out.push({ path: p, ts: t.ts, tool: t.tool, agentId: t.agentId });
+      }
+    }
+    return out.sort((a, b) => b.ts - a.ts);
+  }
+
   /** Geri alınan dosyanın geçmişi de anlamını yitirir. */
   forget(relPath: string): void {
     delete this.data.touches[relPath];

@@ -40,6 +40,14 @@ export const PROJECT_DATA_DIR = path.join(PROJECT_DIR, '.claude-manager');
 /** Ajan tanımları global; ekip her projede hazır gelir. */
 export const AGENTS_DIR = path.join(HOME_DIR, 'agents');
 
+/**
+ * Claude Code'un KENDİ kullanıcı dizini (`~/.claude`) — bu paketin
+ * `~/.claude-manager`'ı ile ilgisi YOKTUR ve ondan türetilemez:
+ * `CLAUDE_MANAGER_HOME` başka bir yere ayarlandığında ikisi tamamen ayrışır.
+ * Global skill'ler, kullanıcı ayarları ve eklentiler burada durur.
+ */
+export const CLAUDE_USER_DIR = path.join(os.homedir(), '.claude');
+
 export const MEMORY_DIR = path.join(PROJECT_DATA_DIR, 'memory');
 export const SHARED_MEMORY_DIR = path.join(MEMORY_DIR, 'shared');
 export const PROMPTS_DIR = path.join(PROJECT_DATA_DIR, 'prompts');

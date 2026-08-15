@@ -1,5 +1,6 @@
 import type { AgentSnapshot, TranscriptEvent } from '../types';
 import type { CliSkin } from '../cliSkins';
+import { CLI_MARKS } from '../cliSkins';
 import { parseTool, diffCounts } from '../toolParse';
 // Claude
 import { ClaudeMessage } from './brainless/claude/claude-message';
@@ -29,8 +30,27 @@ interface ToolItem {
   isError?: boolean;
 }
 type Item =
-  | { kind: 'user' | 'assistant' | 'thinking' | 'error' | 'system'; id: string; text: string }
+  | { kind: 'user' | 'assistant' | 'thinking' | 'error' | 'system' | 'local'; id: string; text: string }
   | ToolItem;
+
+/**
+ * Panelin kendi komut çıktısı (`/usage`, `/context`, `/status`…).
+ *
+ * `<pre>` ZORUNLU: bu çıktılar `padEnd` ile sütun hizalar ve blok karakterle
+ * çubuk çizer. Diğer öğeler gibi normal bir kapta çizildiğinde boşluklar
+ * daraltılıyor ve tablo/çubuk hizası bozuluyordu — döküm skinlere taşınırken
+ * kaybolan tek şey buydu.
+ */
+function LocalOut({ text, mark }: { text: string; mark: string }) {
+  return (
+    <div className="ev ev-local">
+      <span className="ev-mark">{mark}</span>
+      <div className="ev-content">
+        <pre>{text}</pre>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Düz olay akışını render öğelerine çevirir: tool_use, kendisini izleyen ilk
@@ -71,6 +91,9 @@ function buildItems(events: TranscriptEvent[]): Item[] {
         break;
       case 'result':
         // Tur sonu satırı skinlerde ayrıca gösterilmiyor (fake süre üretmemek için).
+        break;
+      case 'local':
+        items.push({ kind: 'local', id: ev.id, text: ev.text ?? '' });
         break;
       default:
         items.push({ kind: 'system', id: ev.id, text: ev.text ?? '' });
@@ -176,9 +199,15 @@ export function SkinnedTranscript({
   const working = agent.status === 'working';
   return (
     <div className="skin-transcript" data-cli={skin}>
-      {items.map((it) => (
-        <Item key={it.id} item={it} />
-      ))}
+      {items.map((it) =>
+        // Panel çıktısı skinden bağımsız çizilir (yalnızca işareti skine ait):
+        // hizalı sütunları her üç skinde de aynı `<pre>` korumak zorunda.
+        it.kind === 'local' ? (
+          <LocalOut key={it.id} text={it.text} mark={CLI_MARKS[skin].local} />
+        ) : (
+          <Item key={it.id} item={it} />
+        ),
+      )}
       {working && skin === 'claude' && <ClaudeThinking />}
       {working && skin === 'codex' && <CodexWorking />}
       {working && skin === 'grok' && (

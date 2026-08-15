@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import type { SessionStore } from './sessionStore.js';
-import type { AgentBackend, BackendEvent } from './backend.js';
+import type { AgentBackend, BackendEvent, InspectPart, SessionInspect } from './backend.js';
 import { createBackend } from './backends/index.js';
 import {
   addUsage,
@@ -64,6 +64,13 @@ export class AgentSession extends EventEmitter {
   readonly config: AgentConfig;
   status: AgentStatus = 'offline';
   usage: TokenUsage = zeroUsage();
+  /**
+   * YALNIZCA son turun payı. `usage` tümel toplam (diskten geri yükleniyor) ve
+   * ondan tur payı türetilemez; panelin "bu tur ne kadara mal oldu" okuması
+   * bunu ister. Oturum kapanınca sıfırlanmaz: kapalı bir ajanın son turu da
+   * okunabilir kalmalı (`cleanup()` bu alana dokunmaz).
+   */
+  lastTurn: TokenUsage | null = null;
   transcript: TranscriptEvent[] = [];
   sessionId?: string;
   currentActivity?: string;
@@ -386,14 +393,16 @@ export class AgentSession extends EventEmitter {
         this.pushEvent({ kind: 'error', text: e.text });
         break;
       case 'result': {
-        addUsage(this.usage, {
+        const turn: TokenUsage = {
           inputTokens: e.usage?.inputTokens ?? 0,
           outputTokens: e.usage?.outputTokens ?? 0,
           cacheReadTokens: e.usage?.cacheReadTokens ?? 0,
           cacheCreationTokens: e.usage?.cacheCreationTokens ?? 0,
           costUSD: e.costUSD ?? 0,
           requests: 1,
-        });
+        };
+        this.lastTurn = turn;
+        addUsage(this.usage, turn);
         // Bağlam doluluğu ≈ son isteğin girdi tarafı (taze + cache'ten okunan)
         this.contextTokens =
           (e.usage?.inputTokens ?? 0) + (e.usage?.cacheReadTokens ?? 0) + (e.usage?.cacheCreationTokens ?? 0);
@@ -452,6 +461,16 @@ export class AgentSession extends EventEmitter {
   /** Yalnızca Claude backend'inde anlamlı deneysel plan-kotası verisi. */
   async planUsage(): Promise<unknown | null> {
     return (await this.backend?.planUsage()) ?? null;
+  }
+
+  /**
+   * Yerleşik slash komutlarının okuduğu oturum iç görüsü (`/context`, `/model`,
+   * `/mcp`, `/agents`, `/status`). Oturum kapalıysa backend yok — istenen her
+   * parça "okunamadı" (null) döner ki panel "kapalı" ile "boş"u ayırabilsin.
+   */
+  async inspect(parts: InspectPart[]): Promise<SessionInspect> {
+    if (!this.backend) return Object.fromEntries(parts.map((p) => [p, null]));
+    return await this.backend.inspect(parts);
   }
 
   private setCommands(commands: SlashCommand[]): void {

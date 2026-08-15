@@ -34,11 +34,17 @@ export interface AgentConfig {
   /** Tanımsızsa 'claude' sayılır. */
   provider?: ProviderId;
   memoryMode: MemoryMode;
+  /** Takım adı (serbest metin). Takımlar ajanlardan türetilir — bkz. teams.ts. */
+  team?: string;
   autoApprove: boolean;
   /** Göreve göre otomatik model seçimi (set_model aracı). Varsayılan: açık. */
   autoModel?: boolean;
   description?: string;
   mcpServers?: Record<string, McpServerDef>;
+  /** Paneldeki sıra. Küçük olan üstte; tanımsızsa listenin sonuna düşer. */
+  order?: number;
+  /** Bu ajanın günlük harcama tavanı (USD). 0/tanımsız = yalnızca genel sınır. */
+  dailyLimitUSD?: number;
   createdAt: string;
 }
 
@@ -106,6 +112,9 @@ export interface Task {
   dependsOn?: string;
   /** Önceki adımın sonucu prompt'un başına eklensin mi (varsayılan: evet). */
   passResult?: boolean;
+  /** Bu görev hangi görevin içinde doğdu (delegasyon zinciri). Raporun kanıt
+   *  ağacı bunu izler; olmadan delege edilen işin kanıtı kayboluyordu. */
+  parentTaskId?: string;
 }
 
 export interface PromptTemplate {
@@ -128,6 +137,9 @@ export interface AgentSnapshot {
   config: AgentConfig;
   status: AgentStatus;
   usage: TokenUsage;
+  /** Yalnızca son turun payı. `usage` tümel toplamdır (açılışta diskten geri
+   *  yüklenir), ondan tur payı türetilemez — ayrıca taşınır. */
+  lastTurn?: TokenUsage | null;
   currentActivity?: string;
   pendingPermissions: PermissionRequestInfo[];
   sessionId?: string;
@@ -173,6 +185,80 @@ export interface UsageSummary {
   perAgent: Record<string, TokenUsage>;
 }
 
+// ------------------------------------------------------------ oturum iç görüsü
+/** Sunucudaki karşılıklarının aynısı (server/src/agents/backend.ts) — proje
+ *  kuralı gereği elle çoğaltılmış. Yerleşik slash komutları bunları okur. */
+export interface ContextUsageInfo {
+  totalTokens: number;
+  maxTokens: number;
+  percentage: number;
+  model: string;
+  categories: { name: string; tokens: number }[];
+  /** Bağlama yüklenmiş dosyalar, yol + token. "Hangi dosya kaç token" sorusunun
+   *  TEK gerçek kaynağı — araç sonuçları token'a atfedilmiyor. */
+  memoryFiles: { path: string; type: string; tokens: number }[];
+  mcpTools: { name: string; serverName: string; tokens: number }[];
+  systemTools: { name: string; tokens: number }[];
+}
+
+/** Bir turun zaman damgalı kaydı (GET /api/usage/history). */
+export interface UsageTurn {
+  ts: number;
+  agentId: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  costUSD: number;
+  taskId?: string;
+}
+
+export interface UsageHistoryResponse {
+  /** Kaydın başladığı an; öncesi tur tur bölünemez. */
+  since: number;
+  turns: UsageTurn[];
+}
+
+export interface ModelOption {
+  value: string;
+  displayName: string;
+  description?: string;
+}
+
+export interface SubagentInfo {
+  name: string;
+  description: string;
+  model?: string;
+}
+
+export interface McpStatusInfo {
+  name: string;
+  status: string;
+  toolCount: number;
+  error?: string;
+  scope?: string;
+}
+
+export interface AccountInfoLite {
+  email?: string;
+  organization?: string;
+  subscriptionType?: string;
+  apiProvider?: string;
+}
+
+export type InspectPart = 'context' | 'models' | 'agents' | 'mcp' | 'account';
+
+/** `null` = istendi ama okunamadı (oturum kapalı/desteklenmiyor);
+ *  `undefined` = hiç istenmedi. Komutlar ikisini ayrı yazdırır. */
+export interface SessionInspect {
+  context?: ContextUsageInfo | null;
+  models?: ModelOption[] | null;
+  agents?: SubagentInfo[] | null;
+  mcp?: McpStatusInfo[] | null;
+  account?: AccountInfoLite | null;
+}
+
 // ------------------------------------------------------------------ bütçe
 export interface BudgetSettings {
   /** Günlük toplam harcama tavanı (USD). 0/tanımsız = sınırsız. */
@@ -213,6 +299,128 @@ export interface ChangedFile {
   touches: Touch[];
 }
 
+// ------------------------------------------------------------------- kod
+export interface TreeEntry {
+  path: string;
+  name: string;
+  kind: 'dir' | 'file';
+  size?: number;
+  /**
+   * Sunucunun çözdüğü ikon adı; panel `/api/file-icon/<ad>.svg` ister.
+   * Eşleme tablosu 450 KB olduğu için sunucuda kalıyor (bkz. fileIcons.ts).
+   * Paket kurulu değilse tanımsız gelir ve ağaç ikonsuz çizilir.
+   */
+  icon?: string;
+  iconOpen?: string;
+}
+
+export interface FileContent {
+  path: string;
+  size: number;
+  text: string;
+  /** İkili dosya — içerik gelmez. */
+  binary: boolean;
+  /** Boyut sınırını aştı — içerik gelmez. */
+  tooLarge: boolean;
+  lines: number;
+  /** Bu dosyaya dokunan ajanlar (git listesinden düşmüş olsa da). */
+  touches: Touch[];
+}
+
+// --------------------------------------------------------------- browser
+/** Sunucudaki tarayıcının durumu (GET /api/browser/state). */
+export interface BrowserState {
+  running: boolean;
+  url: string;
+  title: string;
+  /** Playwright ya da indirilmiş tarayıcı yoksa dolu gelir. */
+  unavailable?: string;
+  viewport: { width: number; height: number };
+}
+
+export type BrowserAction =
+  | { action: 'click'; x: number; y: number }
+  | { action: 'type'; text: string; submit?: boolean }
+  | { action: 'scroll'; dy: number }
+  | { action: 'back' }
+  | { action: 'reload' };
+
+// ---------------------------------------------------------------- skills
+export type SkillScope = 'global' | 'project' | 'agent';
+
+export interface SkillInfo {
+  id: string;
+  name: string;
+  description: string;
+  scope: SkillScope;
+  agentId?: string;
+  dir: string;
+  /** `SKILL.md` var mı (yoksa `.disabled` soneki taşıyor). */
+  enabled: boolean;
+  size: number;
+  extras: string[];
+}
+
+/**
+ * Skill katalogu — KURULABİLECEK olanlar (diskteki `SkillInfo`dan ayrı).
+ * Sunucu karşılığı `server/src/skillCatalog.ts`; şema iki yerde elle
+ * çoğaltılıyor (bkz. CLAUDE.md), birini değiştirirken diğerini de değiştir.
+ */
+export interface CatalogSource {
+  repo: string;
+  label: string;
+  /** Yerleşik kaynaklar silinmez, gizlenir. */
+  builtin: boolean;
+  count?: number;
+  error?: string;
+}
+
+export interface CatalogSkill {
+  id: string;
+  name: string;
+  description: string;
+  repo: string;
+  skillPath: string;
+  /** Kurulunca oluşacak dizin adı. */
+  folder: string;
+  /** Bu ad hangi kapsamlarda zaten kurulu (boş = kurulu değil). */
+  installedScopes: SkillScope[];
+}
+
+export interface CatalogView {
+  /** Son tarama zamanı; hiç taranmadıysa null. */
+  fetchedAt: number | null;
+  sources: CatalogSource[];
+  skills: CatalogSkill[];
+}
+
+/** Toplu kurulumda satır başına sonuç — bir hata diğerlerini iptal etmez. */
+export interface BulkResult {
+  id: string;
+  name: string;
+  ok: boolean;
+  error?: string;
+}
+
+// -------------------------------------------------------------- raporlar
+/**
+ * Sonuçlanmış bir KÖK görev + kanıtı.
+ *
+ * `files` alt ağacın tamamından toplanır (delege edilen iş dosyayı alt görevde
+ * yazar), `subtasks` ise işin kimlere bölündüğünü gösterir.
+ */
+export interface Report {
+  task: Task;
+  files: { path: string; ts: number; tool: string; agentId: string }[];
+  subtasks: {
+    id: string;
+    title: string;
+    assignedTo: string;
+    status: TaskStatus;
+    result?: string;
+  }[];
+}
+
 export interface ChangesResponse {
   /** false ise geri alma yapılamaz; panel düğmeleri kapanır. */
   isRepo: boolean;
@@ -225,7 +433,14 @@ export type WsPayload =
   | { type: 'agent_event'; agentId: string; event: TranscriptEvent }
   | { type: 'permission_request'; request: PermissionRequestInfo }
   | { type: 'permission_resolved'; agentId: string; requestId: string }
-  | { type: 'usage'; usage: UsageSummary; context?: Record<string, number>; budget?: BudgetState }
+  | {
+      type: 'usage';
+      usage: UsageSummary;
+      context?: Record<string, number>;
+      /** Ajan başına son turun payı (bkz. AgentSnapshot.lastTurn). */
+      turns?: Record<string, TokenUsage | null>;
+      budget?: BudgetState;
+    }
   | { type: 'agents_changed' }
   | { type: 'commands_changed'; agentId: string; commands: SlashCommand[] }
   | { type: 'task_update'; task: Task };

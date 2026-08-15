@@ -4,6 +4,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AgentSession } from './session.js';
 import { SessionStore } from './sessionStore.js';
+import { UsageHistory } from './usageHistory.js';
 import { SettingsStore } from '../settings.js';
 import {
   addUsage,
@@ -58,6 +59,8 @@ export class AgentManager extends EventEmitter {
   /** sessionId + transcript kalıcılığı; oturumlara aktarılır. */
   readonly store = new SessionStore();
   readonly settings = new SettingsStore();
+  /** Tur tur harcama geçmişi — panelin zaman eksenli grafikleri bunu okur. */
+  readonly history = new UsageHistory();
   /** Sınır aşımı her turda tekrar duyurulmasın. */
   private budgetAnnounced = false;
   private usage: UsageFile = { total: zeroUsage(), perAgent: {} };
@@ -73,6 +76,7 @@ export class AgentManager extends EventEmitter {
   init(): void {
     this.store.init();
     this.settings.init();
+    this.history.init();
     if (fs.existsSync(USAGE_FILE)) {
       try {
         this.usage = JSON.parse(fs.readFileSync(USAGE_FILE, 'utf-8'));
@@ -180,6 +184,13 @@ export class AgentManager extends EventEmitter {
       this.usage.perAgent[config.id] = structuredClone(session.usage);
       this.recomputeTotal();
       this.addDaily(config.id, delta);
+      // Geçmişe `lastTurn` yazılır, `delta` DEĞİL: ikisi normalde aynı, ama
+      // delta negatife düşmemek için kırpılıyor ve ajan silinip yeniden
+      // yaratıldığında (perAgent sıfırlanır) turu olduğundan büyük gösterirdi.
+      // `lastTurn` turun kendi raporudur, karşılaştırmadan gelmez.
+      if (session.lastTurn) {
+        this.history.append(config.id, session.currentModel, session.lastTurn, session.currentTaskId);
+      }
       this.persistUsage();
       this.emit('usage', this.usageSummary());
 
@@ -329,6 +340,7 @@ export class AgentManager extends EventEmitter {
       config: s.config,
       status: s.status,
       usage: s.usage,
+      lastTurn: s.lastTurn,
       currentActivity: s.currentActivity,
       pendingPermissions: s.pendingPermissions,
       sessionId: s.sessionId,
@@ -364,11 +376,22 @@ export class AgentManager extends EventEmitter {
     return out;
   }
 
+  /**
+   * Ajan başına SON TURUN payı. Kullanım yayınıyla birlikte gider: tur payı
+   * `usageSummary()`den (tümel toplam) türetilemez, ayrıca taşınmak zorunda.
+   */
+  turnSnapshot(): Record<string, TokenUsage | null> {
+    const out: Record<string, TokenUsage | null> = {};
+    for (const [id, s] of this.sessions) out[id] = s.lastTurn;
+    return out;
+  }
+
   create(input: {
     name: string;
     role: AgentConfig['role'];
     model: string;
     provider?: AgentConfig['provider'];
+    team?: string;
     memoryMode: AgentConfig['memoryMode'];
     autoApprove: boolean;
     autoModel?: boolean;
@@ -388,6 +411,8 @@ export class AgentManager extends EventEmitter {
       role: input.role,
       model: input.model,
       provider: input.provider ?? 'claude',
+      // Boş metin takımsızlıktır; "" yazıp bir takım var etmesin.
+      team: input.team?.trim() || undefined,
       memoryMode: input.memoryMode,
       autoApprove: input.autoApprove,
       autoModel: input.autoModel ?? true,
@@ -403,13 +428,15 @@ export class AgentManager extends EventEmitter {
 
   async update(
     id: string,
-    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'provider' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
+    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'provider' | 'team' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
       personality?: string;
     },
   ): Promise<AgentSnapshot> {
     const session = this.sessions.get(id);
     if (!session) throw new Error('Ajan bulunamadı.');
     const { personality, ...configPatch } = patch;
+    // create() ile aynı kural: boş metin takımsızlık demektir, "" bir takım değil.
+    if ('team' in configPatch) configPatch.team = configPatch.team?.trim() || undefined;
     Object.assign(session.config, configPatch);
     const newPersonality = personality ?? this.readPersonality(id);
     this.writeAgentFiles(session.config, newPersonality);

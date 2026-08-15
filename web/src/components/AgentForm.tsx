@@ -5,6 +5,10 @@ import { Modal } from './Modal';
 
 interface Props {
   existing?: AgentSnapshot;
+  /** Mevcut takım adları — öneri listesi. Takım kayıt defteri yok, bunlar
+   *  ajanlardan türetilir (bkz. teams.ts), yani liste yalnızca yazmayı
+   *  kolaylaştırır; buraya yeni bir ad yazmak takımı var eder. */
+  teams?: string[];
   onClose: () => void;
   onSaved: () => void;
 }
@@ -58,9 +62,10 @@ function Choice({
   );
 }
 
-export function AgentForm({ existing, onClose, onSaved }: Props) {
+export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
   const [section, setSection] = useState<Section>('kimlik');
   const [name, setName] = useState(existing?.config.name ?? '');
+  const [team, setTeam] = useState(existing?.config.team ?? '');
   const [role, setRole] = useState(existing?.config.role ?? 'worker');
   const [model, setModel] = useState(existing?.config.model ?? 'sonnet');
   const [memoryMode, setMemoryMode] = useState(existing?.config.memoryMode ?? 'both');
@@ -84,13 +89,13 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
       if (mcpJson.trim()) mcpServers = JSON.parse(mcpJson);
       if (existing) {
         const patch: Record<string, unknown> = {
-          name, role, model, memoryMode, autoApprove, autoModel, description, mcpServers,
+          name, team, role, model, memoryMode, autoApprove, autoModel, description, mcpServers,
         };
         if (personality.trim() || personalityLoaded) patch.personality = personality;
         await api.updateAgent(existing.config.id, patch);
       } else {
         await api.createAgent({
-          name, role, model, memoryMode, autoApprove, autoModel, description, personality, mcpServers,
+          name, team, role, model, memoryMode, autoApprove, autoModel, description, personality, mcpServers,
         });
       }
       onSaved();
@@ -131,6 +136,25 @@ export function AgentForm({ existing, onClose, onSaved }: Props) {
                 <label className="tb-field">
                   <span className="tb-field-label">İsim</span>
                   <input value={name} onChange={(e) => setName(e.target.value)} placeholder="örn. Araştırmacı" />
+                </label>
+                {/* Takım serbest metindir ve datalist bir KISITLAMA DEĞİL öneri:
+                    yeni bir ad yazmak yeni takımı var eder (bkz. teams.ts). */}
+                <label className="tb-field">
+                  <span className="tb-field-label">
+                    Takım<span className="tb-hint">boş bırakılırsa GENEL · üstteki sekmeleri bu belirler</span>
+                  </span>
+                  <input
+                    value={team}
+                    onChange={(e) => setTeam(e.target.value)}
+                    placeholder="örn. PRODUCT"
+                    list="cm-teams"
+                    autoComplete="off"
+                  />
+                  <datalist id="cm-teams">
+                    {teams.map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
                 </label>
                 <label className="tb-field">
                   <span className="tb-field-label">

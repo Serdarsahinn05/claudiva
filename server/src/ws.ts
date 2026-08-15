@@ -6,7 +6,14 @@ export type WsPayload =
   | { type: 'agent_event'; agentId: string; event: unknown }
   | { type: 'permission_request'; request: unknown }
   | { type: 'permission_resolved'; agentId: string; requestId: string }
-  | { type: 'usage'; usage: unknown; context?: Record<string, number>; budget?: unknown }
+  | {
+      type: 'usage';
+      usage: unknown;
+      context?: Record<string, number>;
+      /** Ajan başına SON TURUN payı; tümel toplamdan türetilemediği için ayrı taşınır. */
+      turns?: Record<string, unknown>;
+      budget?: unknown;
+    }
   | { type: 'agents_changed' }
   | { type: 'commands_changed'; agentId: string; commands: unknown }
   | { type: 'task_update'; task: unknown };

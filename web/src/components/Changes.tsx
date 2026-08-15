@@ -110,9 +110,7 @@ export function Changes({ agents }: Props) {
     <div className="changes">
       <section className="pl-head">
         <div>
-          <span className="bridge-mod-label" style={{ position: 'static' }}>
-            Değişiklikler
-          </span>
+          <h2 className="plate-title">Değişiklikler</h2>
           <p className="pl-head-desc">
             {data.isRepo
               ? 'Çalışma ağacında son commit’e göre farklı olan dosyalar. Ajanların dokunduğu dosyalar işaretli.'

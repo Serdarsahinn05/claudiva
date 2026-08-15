@@ -1,62 +1,147 @@
 /**
- * Sol gezinme rayı. Üstteki sekme dizisinin yerini alır: ikonlar dikey durur,
- * dar kalır ve içerik alanına yer bırakır. Rozet (badge) bekleyen izin gibi
- * dikkat isteyen durumları ilgili bölümün üzerinde gösterir.
+ * Sol kenar şeridi: panel fırlatıcı + ekip listesi.
+ *
+ * Eskiden burası SEKME İNDEKSİYDİ — bir ad seçince ekranın tamamı değişirdi.
+ * Artık öyle değil: bu şerit hiçbir şeyi değiştirmez, GÖSTERİR ve GİZLER.
+ * Bir panel adına basmak onu görünür kılar, ikinci basış kapatır; ekranın
+ * geri kalanı yerinde durur.
+ *
+ * Ekip listesi buraya taşındı ve kalıcılaştı. Önceden yalnızca Terminal
+ * plakasında görünüyordu, çünkü tek terminal vardı ve "hangi ajan" bir
+ * seçimdi. Artık terminaller döşeli: bir ada basmak SEÇMEZ, ORTAYA BİR GÖZ
+ * AÇAR — liste bir seçici değil, bir açma aracı. Bu yüzden hep elin altında.
  */
-export interface RailItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  disabled?: boolean;
-  badge?: number;
-}
+import { fmtNum, totalTokens } from '../format';
+import type { AgentSnapshot } from '../types';
+import { PANEL_IDS, PANELS, type PanelId } from '../workspace';
 
 interface Props {
-  items: RailItem[];
-  active: string;
-  onSelect: (id: string) => void;
+  /** Şu an ekranda görünen paneller. */
+  visible: Set<PanelId>;
+  onTogglePanel: (id: PanelId) => void;
+  /** Panel başına rozet (ör. bekleyen izin). */
+  panelBadge?: (id: PanelId) => number | undefined;
+
+  agents: AgentSnapshot[];
+  /** Terminali orta yuvada açık olan ajanlar. */
+  openTerminals: Set<string>;
+  onOpenTerminal: (agentId: string) => void;
+
+  /** Sürükleyerek sıralama — sunucuya yazılır. */
+  onReorder: (id: string, delta: number) => void;
+  dragId: string | null;
+  dropIndex: number | null;
+  onDragState: (dragId: string | null, dropIndex: number | null) => void;
+  onCommitReorder: (toIndex: number) => void;
+
+  foot?: string;
 }
 
-export function Rail({ items, active, onSelect }: Props) {
+export function Rail({
+  visible, onTogglePanel, panelBadge,
+  agents, openTerminals, onOpenTerminal,
+  onReorder, dragId, dropIndex, onDragState, onCommitReorder,
+  foot,
+}: Props) {
   return (
-    <nav className="rail" aria-label="Bölümler">
-      {items.map((it) => (
-        <button
-          key={it.id}
-          className={`rail-btn${active === it.id ? ' active' : ''}`}
-          onClick={() => onSelect(it.id)}
-          disabled={it.disabled}
-          title={it.label}
-          aria-current={active === it.id ? 'page' : undefined}
-        >
-          <span className="rail-icon">{it.icon}</span>
-          <span className="rail-label">{it.label}</span>
-          {it.badge ? <span className="rail-badge">{it.badge}</span> : null}
-        </button>
-      ))}
+    <nav className="rail" aria-label="Paneller ve ekip">
+      <div className="rail-sec">Paneller</div>
+      {PANEL_IDS.map((id) => {
+        const on = visible.has(id);
+        const badge = panelBadge?.(id);
+        return (
+          <button
+            key={id}
+            className={`rail-btn${on ? ' active' : ''}`}
+            onClick={() => onTogglePanel(id)}
+            title={`${PANELS[id].title} — ${PANELS[id].hint}`}
+            aria-pressed={on}
+          >
+            <span className="rail-label">{PANELS[id].title}</span>
+            {badge ? <span className="rail-badge">{badge}</span> : null}
+          </button>
+        );
+      })}
+
+      <div className="rail-sec rail-sec-2">
+        Ekip
+        <span className="rail-sec-hint">{agents.length}</span>
+      </div>
+
+      <div className="agent-list">
+        {agents.map((a, i) => {
+          const open = openTerminals.has(a.config.id);
+          return (
+            <div
+              key={a.config.id}
+              className={
+                `agent-row${open ? ' selected' : ''}` +
+                (dragId === a.config.id ? ' dragging' : '') +
+                (dropIndex === i && dragId && dragId !== a.config.id ? ' drop-target' : '')
+              }
+              onClick={() => onOpenTerminal(a.config.id)}
+              role="button"
+              tabIndex={0}
+              title={open ? `${a.config.name} terminali açık` : `${a.config.name} terminalini aç`}
+              draggable
+              onDragStart={(e) => {
+                onDragState(a.config.id, null);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                onDragState(dragId, i);
+              }}
+              onDragEnd={() => onDragState(null, null)}
+              onDrop={(e) => {
+                e.preventDefault();
+                onCommitReorder(i);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onOpenTerminal(a.config.id);
+                  return;
+                }
+                if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                  e.preventDefault();
+                  onReorder(a.config.id, e.key === 'ArrowUp' ? -1 : 1);
+                }
+              }}
+            >
+              <span className="agent-grip" aria-hidden="true">⋮⋮</span>
+              <span className={`led led-${a.status}`} />
+              <span className="agent-row-name">{a.config.name}</span>
+              {a.pendingPermissions.length > 0 && <span className="badge warn">!</span>}
+              <span className="agent-row-tokens">{fmtNum(totalTokens(a.usage))}</span>
+            </div>
+          );
+        })}
+        {agents.length === 0 && <div className="muted center rail-empty">Bu takımda ajan yok.</div>}
+      </div>
+
+      {foot && (
+        <div className="rail-foot" title={foot}>
+          {foot.split(/[\\/]/).filter(Boolean).slice(-1)[0] ?? foot}
+        </div>
+      )}
     </nav>
   );
 }
 
-/* --- ikonlar: tek renk, 1.5px çizgi, 20x20 --- */
+/* --- ikonlar: tek renk, 1.5px çizgi. Yalnızca başlık çubuğunda kullanılır. --- */
 const svg = (d: React.ReactNode) => (
-  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6"
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {d}
   </svg>
 );
 
 export const ICONS = {
-  bridge: svg(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18" /></>),
-  office: svg(<><rect x="3" y="8" width="18" height="12" rx="1.5" /><path d="M7 8V5h10v3M7 20v-4h4v4" /></>),
-  panel: svg(<><rect x="3" y="3" width="7.5" height="7.5" rx="1" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1" /></>),
-  terminal: svg(<><rect x="3" y="4" width="18" height="16" rx="1.5" /><path d="M7 9l3 3-3 3M13 15h4" /></>),
-  tasks: svg(<><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6l1.2 1.2L7.5 4.8M4 12l1.2 1.2L7.5 10.8M4 18l1.2 1.2L7.5 16.8" /></>),
-  prompts: svg(<><path d="M4 5h16v11H8l-4 4V5Z" /><path d="M8 9h8M8 12.5h5" /></>),
-  changes: svg(<><path d="M4 5h9l3 3v11H4V5Z" /><path d="M13 5v3h3" /><path d="M7 12h6M7 15.5h4" /><path d="M17.5 3.5v5M20 6h-5" /></>),
-  /* hafıza — düğüm/kenar grafiği */
-  memory: svg(<><circle cx="6" cy="18" r="2.2" /><circle cx="18" cy="16" r="2.2" /><circle cx="12" cy="6" r="2.4" /><path d="M11 8l-4 8M13 8l4 6.2" /></>),
   settings: svg(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z" /></>),
-  /* boya paleti — rayda değil, komuta çubuğundaki tema düğmesinde kullanılır */
-  theme: svg(<><path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.3-9-7.3Z" /><circle cx="7.5" cy="11.5" r="1.1" /><circle cx="11" cy="7.5" r="1.1" /><circle cx="15.5" cy="9.5" r="1.1" /></>),
+  /* baskı plakası: köşeleri registrasyon artılı çerçeve + üç kadir noktası */
+  plate: svg(<><rect x="3.5" y="4.5" width="17" height="15" rx="0.5" /><path d="M3.5 8h17M7 4.5v15" /><circle cx="13" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="17" cy="15.5" r="1" fill="currentColor" stroke="none" /><circle cx="16" cy="10" r="0.7" fill="currentColor" stroke="none" /></>),
+  /* yerleşimi varsayılana döndür: üç yuvalı ızgara + geri oku */
+  layout: svg(<><rect x="3" y="4" width="18" height="16" rx="1" /><path d="M8 4v16M16 4v16" /></>),
 };

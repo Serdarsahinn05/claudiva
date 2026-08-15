@@ -98,6 +98,7 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
               prompt: args.task,
               assignedTo: args.agent_id,
               assignedBy: selfId,
+              parentTaskId: tasks.currentTaskFor(selfId),
             });
             return text(
               `Adım zincire eklendi. task_id: ${step.id} — "${prev.title}" (${prev.id}) bittikten ` +
@@ -110,6 +111,10 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
             prompt: args.task,
             assignedTo: args.agent_id,
             assignedBy: selfId,
+            // Delege eden ajanın O AN çalıştığı görev bu işin ebeveyni olur.
+            // Kanıt zinciri bunu izliyor: alt görevde yazılan dosya üst görevin
+            // raporunda da görünsün (bkz. TaskInput.parentTaskId).
+            parentTaskId: tasks.currentTaskFor(selfId),
           });
           if (args.wait === false) {
             return text(`Görev atandı. task_id: ${task.id} (durumu check_task ile sorgula)`);
@@ -159,12 +164,17 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
             return text(`HATA: hiçbir görev dağıtılmadı. Sorunlar:\n${errors.join('\n')}\nlist_agents ile kontrol et.`);
           }
 
+          // Ebeveyn TEK KEZ okunur: dağıtım senkron ama `currentTaskFor` canlı
+          // oturumdan okuyor; döngü içinde çağırmak, ilk görev araya girip
+          // turu değiştirirse kardeşleri farklı ebeveynlere bağlayabilirdi.
+          const parentTaskId = tasks.currentTaskFor(selfId);
           const dispatched = args.tasks.map((t) =>
             tasks.dispatch({
               title: t.title,
               prompt: t.task,
               assignedTo: t.agent_id,
               assignedBy: selfId,
+              parentTaskId,
             }),
           );
 

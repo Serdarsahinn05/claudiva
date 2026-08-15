@@ -15,6 +15,8 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "material-icon-theme": "^5.37.0",
+    "playwright-core": "^1.62.1",
     "ws": "^8.18.0",
     "zod": "^4.4.3"
   },
