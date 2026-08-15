@@ -92,17 +92,39 @@ Gerekenler:
 - [Claude Code](https://claude.com/product/claude-code) kurulu ve giriş yapılmış
   (`claude login`). Agent SDK aboneliğinizi kullanır; ayrı bir API anahtarı
   gerekmez.
-- Git
+
+**Denemek için** — hiçbir şey kurmaz, doğrudan çalıştırır:
+
+```bash
+npx claudiva
+```
+
+**Sürekli kullanacaksanız** — `claudiva` komutu her yerde tanınır:
+
+```bash
+npm install -g claudiva
+```
+
+Güncelleme: `npm install -g claudiva@latest` (npx kullanıyorsanız
+`npx claudiva@latest`, yoksa npx önbellekteki eski sürümü çalıştırabilir).
+
+<details>
+<summary><b>Kaynaktan kurulum</b> (geliştirme için)</summary>
 
 ```bash
 git clone https://github.com/Serdarsahinn05/claudiva.git
 cd claudiva
 npm install
 npm run build
-npm link          # `claudiva` komutunu global olarak kaydeder
+npm link          # `claudiva` komutunu yerel klasöre bağlar
 ```
 
-Ayrı bir installer yok; `npm link` bunun karşılığı.
+`npm link`, `claudiva` komutunu yayınlanan sürüme değil bu klasöre bağlar — yani
+kodda yaptığınız değişiklik (`npm run build` sonrası) doğrudan çalışır. Global
+kurulum ile aynı anda kullanmayın, ikisi aynı komut adını ister; geri dönmek için
+`npm rm -g claudiva` sonra `npm install -g claudiva`.
+
+</details>
 
 ## ▶️ Kullanım
 
@@ -314,7 +336,8 @@ Birkaç not, hepsi ölçülerek öğrenildi:
   yaramaz; store'lar dosyayı yalnızca açılışta okur.
 
 Mimari kararlar ve tuzaklar `CLAUDE.md`, ürün kararları `PRODUCT.md`, görsel
-otorite `web/DESIGN.md` içinde.
+otorite `web/DESIGN.md` içinde. npm'e yayınlama, sürüm yükseltme ve
+`npx` / global kurulum / `npm link` farkı: [`docs/YAYIN.md`](docs/YAYIN.md).
 
 ## ⚠️ Bilinen sınırlar
 
