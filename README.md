@@ -9,6 +9,7 @@ yaptıklarını göremez, birbirlerine iş veremez, ne harcadıklarını bilemez
 **Claudiva** hepsini tek ekrana toplar — ajanlar sizin proje klasörünüzde
 çalışır, panel kim ne yaptı, neye dokundu, ne harcadı hepsini gösterir.
 
+[![npm](https://img.shields.io/npm/v/claudiva?style=for-the-badge&logo=npm&logoColor=white&label=npm&color=CB3837)](https://www.npmjs.com/package/claudiva)
 ![Node.js](https://img.shields.io/badge/Node.js_20+-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
