@@ -1,5 +1,5 @@
 {
   "name": "boss",
-  "description": "Patron skill'leri",
+  "description": "Boss ajanının skill'leri: işi parçalara bölme, iş başlatma, yeni özellik akışı, durum özeti ve hafızaya yazma.",
   "version": "1.0.0"
 }
