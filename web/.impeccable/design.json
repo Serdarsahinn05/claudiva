@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-14T00:00:00.000Z",
+  "title": "Design System: claude-manager",
+  "extensions": {
+    "colorMeta": {
+      "vermilion": {
+        "role": "primary",
+        "displayName": "Vermilion",
+        "canonical": "rgb(255 77 46)",
+        "tonalRamp": ["rgb(67 0 0)", "rgb(107 0 0)", "rgb(146 0 0)", "rgb(186 0 0)", "rgb(226 45 6)", "rgb(255 88 57)", "rgb(255 133 100)", "rgb(255 175 139)"]
+      },
+      "vermilion-deep": {
+        "role": "primary",
+        "displayName": "Vermilion Deep",
+        "canonical": "rgb(214 62 34)",
+        "tonalRamp": ["rgb(62 0 0)", "rgb(100 0 0)", "rgb(138 0 0)", "rgb(177 13 0)", "rgb(216 64 36)", "rgb(255 101 73)", "rgb(255 145 114)", "rgb(255 185 152)"]
+      },
+      "aux": {
+        "role": "secondary",
+        "displayName": "Aux Blue-White",
+        "canonical": "rgb(159 198 255)",
+        "tonalRamp": ["rgb(0 5 48)", "rgb(2 34 79)", "rgb(30 63 111)", "rgb(60 94 144)", "rgb(90 126 179)", "rgb(123 160 215)", "rgb(162 202 255)", "rgb(201 241 255)"]
+      },
+      "nominal": {
+        "role": "tertiary",
+        "displayName": "Nominal Green",
+        "canonical": "rgb(95 199 155)",
+        "tonalRamp": ["rgb(0 22 0)", "rgb(0 51 18)", "rgb(0 81 46)", "rgb(0 113 75)", "rgb(32 147 106)", "rgb(76 181 138)", "rgb(120 223 178)", "rgb(160 255 217)"]
+      },
+      "caution": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "rgb(255 193 94)",
+        "tonalRamp": ["rgb(38 0 0)", "rgb(69 16 0)", "rgb(102 48 0)", "rgb(135 79 0)", "rgb(170 112 0)", "rgb(205 146 38)", "rgb(249 187 87)", "rgb(255 226 128)"]
+      },
+      "alarm": {
+        "role": "tertiary",
+        "displayName": "Alarm Rose",
+        "canonical": "rgb(255 107 138)",
+        "tonalRamp": ["rgb(57 0 0)", "rgb(95 0 15)", "rgb(132 0 41)", "rgb(170 20 70)", "rgb(209 64 100)", "rgb(248 101 132)", "rgb(255 143 172)", "rgb(255 183 211)"]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "rgb(10 16 33)",
+        "tonalRamp": ["rgb(5 10 26)", "rgb(28 35 54)", "rgb(55 63 83)", "rgb(85 93 115)", "rgb(116 125 148)", "rgb(148 158 182)", "rgb(189 199 224)", "rgb(228 238 255)"]
+      },
+      "plate-body": {
+        "role": "neutral",
+        "displayName": "Plate Body",
+        "canonical": "rgb(19 28 51)",
+        "tonalRamp": ["rgb(4 9 31)", "rgb(26 35 59)", "rgb(52 63 89)", "rgb(82 93 121)", "rgb(113 125 154)", "rgb(145 158 188)", "rgb(185 199 231)", "rgb(224 238 255)"]
+      },
+      "plate-raised": {
+        "role": "neutral",
+        "displayName": "Plate Raised",
+        "canonical": "rgb(27 39 67)",
+        "tonalRamp": ["rgb(3 9 34)", "rgb(23 35 62)", "rgb(50 63 93)", "rgb(79 93 125)", "rgb(110 125 159)", "rgb(142 158 193)", "rgb(182 199 236)", "rgb(221 239 255)"]
+      },
+      "plate-active": {
+        "role": "neutral",
+        "displayName": "Plate Active",
+        "canonical": "rgb(36 49 79)",
+        "tonalRamp": ["rgb(2 8 35)", "rgb(23 35 63)", "rgb(49 63 94)", "rgb(78 93 126)", "rgb(109 125 160)", "rgb(142 158 195)", "rgb(182 199 237)", "rgb(220 239 255)"]
+      },
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "rgb(7 11 22)",
+        "tonalRamp": ["rgb(7 11 22)", "rgb(31 36 48)", "rgb(58 64 77)", "rgb(87 93 108)", "rgb(119 125 141)", "rgb(151 158 174)", "rgb(192 199 216)", "rgb(231 238 255)"]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "Hairline Edge",
+        "canonical": "rgb(36 55 79)",
+        "tonalRamp": ["rgb(0 11 31)", "rgb(18 37 59)", "rgb(46 65 90)", "rgb(75 95 121)", "rgb(106 127 155)", "rgb(138 160 189)", "rgb(178 202 232)", "rgb(217 241 255)"]
+      },
+      "edge-lit": {
+        "role": "neutral",
+        "displayName": "Lit Edge",
+        "canonical": "rgb(61 85 115)",
+        "tonalRamp": ["rgb(0 10 34)", "rgb(14 37 63)", "rgb(42 65 94)", "rgb(71 95 126)", "rgb(102 127 159)", "rgb(134 161 194)", "rgb(174 202 237)", "rgb(213 241 255)"]
+      },
+      "stardust": {
+        "role": "neutral",
+        "displayName": "Stardust",
+        "canonical": "rgb(242 242 233)",
+        "tonalRamp": ["rgb(12 12 6)", "rgb(37 36 30)", "rgb(64 64 57)", "rgb(94 94 87)", "rgb(126 126 118)", "rgb(159 159 151)", "rgb(200 200 191)", "rgb(239 239 230)"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "rgb(151 163 184)",
+        "tonalRamp": ["rgb(4 11 25)", "rgb(27 36 52)", "rgb(54 64 82)", "rgb(83 94 113)", "rgb(114 126 146)", "rgb(147 159 180)", "rgb(187 200 222)", "rgb(226 239 255)"]
+      },
+      "dim": {
+        "role": "neutral",
+        "displayName": "Dim Ink",
+        "canonical": "rgb(118 131 152)",
+        "tonalRamp": ["rgb(4 11 26)", "rgb(26 36 53)", "rgb(53 64 83)", "rgb(82 94 114)", "rgb(113 126 147)", "rgb(146 159 181)", "rgb(186 200 223)", "rgb(225 240 255)"]
+      },
+      "inert": {
+        "role": "neutral",
+        "displayName": "Inert (unplotted)",
+        "canonical": "rgb(74 86 112)",
+        "tonalRamp": ["rgb(4 10 30)", "rgb(25 35 58)", "rgb(52 63 88)", "rgb(81 93 120)", "rgb(112 125 153)", "rgb(145 158 187)", "rgb(185 199 230)", "rgb(224 239 255)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Status Sentence", "purpose": "The single largest type in the product: the first-viewport status sentence. Vermilion <em> on the number, max 46ch, text-wrap: balance." },
+      "headline": { "displayName": "Plate Title", "purpose": "App title, plate titles, empty-state headings, boot wordmark. Bodoni italic 26px." },
+      "title": { "displayName": "Object Name", "purpose": "Agent names in the catalogue, modal headings, card titles. Names only, never data." },
+      "body": { "displayName": "Working Text", "purpose": "Rows, descriptions, help. Archivo 12-13px, prose capped at 44-72ch." },
+      "label": { "displayName": "Annotation Label", "purpose": "Small-caps vermilion annotation: section heads, field labels, column heads, badges, chips." },
+      "readout": { "displayName": "Coordinate", "purpose": "Every number and path. JetBrains Mono with tabular-nums; body disables tnum so this stays a signal." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px rgb(0 0 0 / 0.35)", "purpose": "Plates, prompt cards, diff panes. Just enough that the plate sits on paper instead of being cut out of it." },
+      { "name": "pop", "value": "0 10px 30px rgb(0 0 0 / 0.55)", "purpose": "Slash-command menu and the office viewscreen." },
+      { "name": "modal", "value": "0 24px 70px rgb(0 0 0 / 0.6)", "purpose": "The only genuinely lifted surface in the system." },
+      { "name": "screen", "value": "none", "purpose": "Terminals are recessed, not raised. Anything on --void gets no shadow." },
+      { "name": "card-day", "value": "0 1px 2px rgb(40 36 28 / 0.14)", "purpose": "Paper edition re-tint: ink on paper does not throw a neutral shadow." },
+      { "name": "scrim", "value": "rgb(4 7 16 / 0.72)", "purpose": "Modal backdrop, paired with a 3px backdrop blur." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for entrances and state settles." },
+      { "name": "ease-in-out", "value": "cubic-bezier(0.77, 0, 0.175, 1)", "purpose": "Symmetric moves." },
+      { "name": "ease-spring", "value": "linear(0, 0.061, 0.221, 0.44, 0.667, 0.847, 0.955, 1.008, 1.024, 1.022, 1.013, 1.005, 1)", "purpose": "Hover lift and release; wrapped in @supports with the ease-out curve as fallback." },
+      { "name": "t-press", "value": "90ms", "purpose": "Press-down (translateY(0) scale(0.97))." },
+      { "name": "t-release", "value": "200ms", "purpose": "Transform release on the spring curve." },
+      { "name": "t-fast", "value": "150ms", "purpose": "Colour and opacity." },
+      { "name": "t-ui", "value": "220ms", "purpose": "Background, border, shadow; disclosure and menu entrances." },
+      { "name": "t-modal", "value": "280ms", "purpose": "Modal entrance." },
+      { "name": "t-pane", "value": "420ms", "purpose": "plate-in — the one authored entrance, on main > *." },
+      { "name": "t-theme", "value": "320ms", "purpose": "Plate change; applied by a temporary .theme-shifting class and removed after, so hover never feels laggy." },
+      { "name": "sidereal", "value": "240s linear infinite", "purpose": "Starfield drift on .app::before — the world's own continuous motion." },
+      { "name": "reticle-turn", "value": "32s linear infinite", "purpose": "The observation reticle around the focused star." },
+      { "name": "star-pulse", "value": "2.4s / 1.6s ease-in-out infinite", "purpose": "Working and waiting status stars; preserved (slowed to 2.6s) under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "survey", "value": "1180px" },
+      { "name": "catalog", "value": "1100px" },
+      { "name": "changes", "value": "1000px" },
+      { "name": "stack", "value": "900px" },
+      { "name": "shell", "value": "860px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Stamp",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The vermilion stamp. One per view; hover brightens rather than recolours.",
+      "html": "<button class=\"ds-btn-primary\">GÖREV VER</button>",
+      "css": ".ds-btn-primary { background: var(--hud, rgb(255 77 46)); border: 1px solid var(--hud, rgb(255 77 46)); color: rgb(var(--bg-rgb, 10 16 33)); font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; padding: 7px 16px; border-radius: 2px; cursor: pointer; transition: transform 200ms cubic-bezier(0.16,1,0.3,1), filter 220ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--hud, rgb(255 77 46)); outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(0) scale(0.97); transition-duration: 90ms; }"
+    },
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Hairline button. Hover shifts the border to vermilion and lays a 7% wash behind it; the fill never becomes solid.",
+      "html": "<button class=\"ds-btn\">Düzenle</button>",
+      "css": ".ds-btn { background: transparent; border: 1px solid var(--edge-lit, rgb(61 85 115)); color: var(--fg, rgb(242 242 233)); font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-size: 12px; letter-spacing: 0.01em; padding: 6px 12px; border-radius: 2px; cursor: pointer; transition: transform 200ms cubic-bezier(0.16,1,0.3,1), background-color 220ms, border-color 220ms, color 150ms; } .ds-btn:hover { border-color: var(--hud, rgb(255 77 46)); background: rgb(var(--accent-rgb, 255 77 46) / 0.07); transform: translateY(-1px); } .ds-btn:focus-visible { outline: 2px solid var(--hud, rgb(255 77 46)); outline-offset: 2px; } .ds-btn:active { transform: translateY(0) scale(0.97); transition-duration: 90ms; } .ds-btn:disabled { opacity: 0.35; cursor: default; }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Inputs are screens: they sit on --void, not on the plate. Focus turns the border vermilion and adds a 1px wash ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Görev başlığı\" />",
+      "css": ".ds-input { background: var(--void, rgb(7 11 22)); color: var(--fg, rgb(242 242 233)); border: 1px solid var(--edge, rgb(36 55 79)); border-radius: 2px; padding: 7px 9px; font-size: 13px; font-family: var(--font-ui, Archivo, system-ui, sans-serif); width: 100%; transition: border-color 220ms cubic-bezier(0.16,1,0.3,1), box-shadow 220ms cubic-bezier(0.16,1,0.3,1); } .ds-input::placeholder { color: var(--dim, rgb(118 131 152)); } .ds-input:focus { outline: none; border-color: var(--hud, rgb(255 77 46)); box-shadow: 0 0 0 1px rgb(var(--accent-rgb, 255 77 46) / 0.14); }"
+    },
+    {
+      "name": "Terminated Rule Heading",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The system's section heading: a 10px vermilion small-caps label followed by a 1px vermilion rule that ends in a filled dot. This is what marks a heading as a heading — there are almost no boxed section titles.",
+      "html": "<div class=\"ds-rule\"><span>Günlük bütçe</span></div>",
+      "css": ".ds-rule { display: flex; align-items: center; gap: 8px; font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-weight: 500; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hud, rgb(255 77 46)); } .ds-rule::after { content: ''; flex: 1; height: 1px; min-width: 24px; background: linear-gradient(90deg, rgb(var(--accent-rgb, 255 77 46) / 0.45), rgb(var(--accent-rgb, 255 77 46) / 0.45)) left center / calc(100% - 5px) 1px no-repeat, radial-gradient(2.5px 2.5px at calc(100% - 2.5px) 50%, rgb(var(--accent-rgb, 255 77 46) / 0.9), transparent 100%); }"
+    },
+    {
+      "name": "Status Star",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Agent status as colour AND form: idle = solid stardust, working = aux with halo and pulse, waiting = amber with a variable-star ring, offline = hollow inert circle. The ring is what keeps the state readable on the red-lamp plate and for colour-blind readers.",
+      "html": "<span class=\"ds-led ds-led-idle\"></span><span class=\"ds-led ds-led-working\"></span><span class=\"ds-led ds-led-waiting\"></span><span class=\"ds-led ds-led-offline\"></span>",
+      "css": ".ds-led { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; margin-right: 12px; background: var(--inert, rgb(74 86 112)); box-shadow: 0 0 0 1px rgb(var(--bg-rgb, 10 16 33) / 0.8); } .ds-led-idle { background: var(--fg, rgb(242 242 233)); box-shadow: 0 0 6px rgb(var(--fg-rgb, 242 242 233) / 0.55); } .ds-led-working { background: var(--aux, rgb(159 198 255)); box-shadow: 0 0 8px rgb(var(--aux-rgb, 159 198 255) / 0.7); animation: ds-star-pulse 2.4s ease-in-out infinite; } .ds-led-waiting { background: var(--caution, rgb(255 193 94)); box-shadow: 0 0 0 1px rgb(var(--bg-rgb, 10 16 33) / 0.9), 0 0 0 3px rgb(var(--warn-rgb, 255 193 94) / 0.55), 0 0 9px rgb(var(--warn-rgb, 255 193 94) / 0.5); animation: ds-star-pulse 1.6s ease-in-out infinite; } .ds-led-offline { background: transparent; box-shadow: inset 0 0 0 1px var(--inert, rgb(74 86 112)); } @keyframes ds-star-pulse { 50% { opacity: 0.45; } }"
+    },
+    {
+      "name": "Catalogue Row",
+      "kind": "card",
+      "refersTo": "catalog-row",
+      "description": "The replacement for a card grid: one hairline row per agent on a shared column ruler, engraved italic name, mono figures right-aligned, detail behind a disclosure chevron.",
+      "html": "<div class=\"ds-cat\"><div class=\"ds-cat-row\"><span class=\"ds-led ds-led-working\"></span><span class=\"ds-cat-name\">Mimar</span><span class=\"ds-cat-role\">PATRON</span><span class=\"ds-cat-status\">çalışıyor</span><span class=\"ds-cat-num\">184.2K</span><span class=\"ds-cat-num\">$1.94</span></div></div>",
+      "css": ".ds-cat-row { display: grid; grid-template-columns: 16px minmax(150px, 0.9fr) 90px minmax(120px, 1.25fr) 84px 78px; align-items: center; gap: 16px; padding: 12px 8px; border-bottom: 1px solid rgb(var(--edge-rgb, 36 55 79) / 0.55); cursor: pointer; transition: background-color 220ms cubic-bezier(0.16,1,0.3,1); } .ds-cat-row:hover { background: rgb(var(--surface-2-rgb, 27 39 67) / 0.55); } .ds-cat-name { font-family: var(--font-display, 'Bodoni Moda', Georgia, serif); font-style: italic; font-weight: 400; font-size: 19px; color: var(--fg, rgb(242 242 233)); } .ds-cat-role { font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-weight: 500; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--aux, rgb(159 198 255)); } .ds-cat-status { font-size: 12px; color: var(--muted, rgb(151 163 184)); } .ds-cat-num { font-family: var(--font-mono, 'JetBrains Mono', Consolas, monospace); font-size: 11px; color: var(--muted, rgb(151 163 184)); font-variant-numeric: tabular-nums; text-align: right; }"
+    },
+    {
+      "name": "Plate Index Item",
+      "kind": "nav",
+      "refersTo": "rail-item",
+      "description": "An atlas index carries names, not icons. Bullet is inert at rest, muted on hover, vermilion with a 22% halo when active.",
+      "html": "<nav class=\"ds-rail\"><button class=\"ds-rail-btn ds-active\"><span>Genel durum</span></button><button class=\"ds-rail-btn\"><span>Ajanlar</span><span class=\"ds-rail-badge\">2</span></button></nav>",
+      "css": ".ds-rail { display: flex; flex-direction: column; width: 168px; } .ds-rail-btn { position: relative; display: flex; align-items: center; gap: 8px; background: transparent; border: none; border-radius: 0; padding: 7px 12px 7px 0; cursor: pointer; color: var(--muted, rgb(151 163 184)); text-align: left; font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-size: 12.5px; letter-spacing: 0.01em; transition: color 150ms cubic-bezier(0.16,1,0.3,1), transform 200ms cubic-bezier(0.16,1,0.3,1); } .ds-rail-btn::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; background: var(--inert, rgb(74 86 112)); transition: background-color 220ms, box-shadow 220ms; } .ds-rail-btn:hover { color: var(--fg, rgb(242 242 233)); transform: translateY(-1px); } .ds-rail-btn:hover::before { background: var(--muted, rgb(151 163 184)); } .ds-rail-btn.ds-active { color: var(--fg, rgb(242 242 233)); font-weight: 500; } .ds-rail-btn.ds-active::before { background: var(--hud, rgb(255 77 46)); box-shadow: 0 0 0 3px rgb(var(--accent-rgb, 255 77 46) / 0.22); } .ds-rail-btn:focus-visible { outline: 2px solid var(--hud, rgb(255 77 46)); outline-offset: 2px; } .ds-rail-badge { margin-left: auto; min-width: 16px; height: 16px; padding: 0 4px; display: flex; align-items: center; justify-content: center; background: var(--caution, rgb(255 193 94)); color: rgb(var(--bg-rgb, 10 16 33)); border-radius: 8px; font-family: var(--font-mono, 'JetBrains Mono', Consolas, monospace); font-size: 9px; font-weight: 700; }"
+    },
+    {
+      "name": "Task Chip",
+      "kind": "chip",
+      "refersTo": "chip-running",
+      "description": "Task status chip. running = aux, done = nominal, failed = alarm — each ~10% fill with a 35-40% border. pending is deliberately colourless.",
+      "html": "<span class=\"ds-chip ds-chip-running\">çalışıyor</span><span class=\"ds-chip ds-chip-pending\">sırada</span><span class=\"ds-chip ds-chip-done\">bitti</span><span class=\"ds-chip ds-chip-failed\">başarısız</span>",
+      "css": ".ds-chip { display: inline-block; font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-weight: 500; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 7px; border-radius: 2px; border: 1px solid transparent; margin-right: 6px; } .ds-chip-running { background: rgb(var(--aux-rgb, 159 198 255) / 0.12); color: var(--aux, rgb(159 198 255)); border-color: rgb(var(--aux-rgb, 159 198 255) / 0.4); } .ds-chip-pending { background: transparent; color: var(--muted, rgb(151 163 184)); border-color: var(--edge, rgb(36 55 79)); } .ds-chip-done { background: rgb(var(--ok-rgb, 95 199 155) / 0.1); color: var(--nominal, rgb(95 199 155)); border-color: rgb(var(--ok-rgb, 95 199 155) / 0.35); } .ds-chip-failed { background: rgb(var(--err-rgb, 255 107 138) / 0.1); color: var(--alarm, rgb(255 107 138)); border-color: rgb(var(--err-rgb, 255 107 138) / 0.4); }"
+    },
+    {
+      "name": "Plate Panel",
+      "kind": "card",
+      "refersTo": null,
+      "description": "The bounded container: flat ink field, 1px hairline, 2px corner, barely-there card shadow. Most sections are NOT plates — they are transparent groups under a terminated rule.",
+      "html": "<div class=\"ds-plate\"><h2 class=\"ds-plate-title\">Değişiklikler</h2><p class=\"ds-plate-body\">Ajanların bu oturumda dokunduğu dosyalar.</p></div>",
+      "css": ".ds-plate { background: var(--hull-1, rgb(19 28 51)); border: 1px solid var(--edge, rgb(36 55 79)); border-radius: 2px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.35); padding: 16px; } .ds-plate-title { margin: 0 0 8px; font-family: var(--font-display, 'Bodoni Moda', Georgia, serif); font-style: italic; font-weight: 400; font-size: 26px; line-height: 1.1; letter-spacing: 0; color: var(--fg, rgb(242 242 233)); } .ds-plate-body { margin: 0; font-family: var(--font-ui, Archivo, system-ui, sans-serif); font-size: 12.5px; line-height: 1.7; color: var(--muted, rgb(151 163 184)); max-width: 62ch; }"
+    },
+    {
+      "name": "Theme Swatch",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Miniature plate preview in the theme picker. It carries its own data-theme, which is why every derived colour name must be declared in the ':root, [data-theme]' block rather than ':root' alone.",
+      "html": "<span class=\"ds-swatch\"><span class=\"ds-swatch-panel\"><span class=\"ds-swatch-bar ds-w1 ds-t-fg\"></span><span class=\"ds-swatch-bar ds-w2 ds-t-muted\"></span><span class=\"ds-swatch-btn\"></span></span></span>",
+      "css": ".ds-swatch { display: block; width: 180px; height: 84px; padding: 10px; overflow: hidden; border-radius: 2px; background: var(--hull-0, rgb(10 16 33)); border: 1px solid rgb(0 0 0 / 0.3); } .ds-swatch-panel { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 8px 9px; background: var(--surface-grad, rgb(19 28 51)); border: 1px solid var(--edge, rgb(36 55 79)); border-radius: 2px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.35); } .ds-swatch-bar { height: 5px; border-radius: 0; flex-shrink: 0; } .ds-w1 { width: 52%; } .ds-w2 { width: 76%; } .ds-t-fg { background: var(--fg, rgb(242 242 233)); } .ds-t-muted { background: var(--muted, rgb(151 163 184)); } .ds-swatch-btn { margin-top: auto; width: 44px; height: 11px; border-radius: 2px; background: var(--btn-primary-bg, rgb(255 77 46)); border: 1px solid var(--btn-primary-border, rgb(255 77 46)); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Gök Plakası",
+    "overview": "Project state is not a dashboard; it is an astronomical plate. Agents are stars, their token weight is magnitude (dot diameter), their status is colour and form, and a delegation is a real constellation line drawn between two of them. Everything the plate draws comes from live data — the mapping is documented in src/components/Sky.tsx and there is no decorative geometry anywhere in it. The system deliberately refuses the category default it grew out of: card grid, status pills, sparkline row.\n\nThe surface is print, not glass. Ground is night ink carrying a real grain tile and a 128px graticule; plates are flat ink fields with hairline frames and a 2px corner; type is engraved Bodoni italic for names and the status sentence, Archivo for the interface, JetBrains Mono for every number. There is exactly one accent — vermilion — and it behaves like annotation ink written on the plate rather than a brand fill. Density is high (this is a tool for someone running eight agents at once) but the first viewport spends its space on a single sentence, because the product's first job is to report state, not to report data.\n\nThree editions exist, and each answers a real observing condition rather than a colour preference: Gece (night ink, the default for a panel left open for hours), Kırmızı Fener (observer's red lamp — no blue at all, so status separates by brightness and form), Gündüz (printed plate on paper for a lit room; print does not glow, so the halo token goes to 0). Interface language is Turkish throughout.",
+    "keyCharacteristics": [
+      "Data-true diagram: magnitude = tokens, colour + form = status, line = delegation",
+      "One accent (vermilion), used as annotation, never as a large fill",
+      "Hairline separation (1px) and space instead of cards and shadows",
+      "Print materials: grain tile, graticule, engraved italic; no glass, no gradients-as-decor",
+      "Contrast is measured by a script, not judged by eye",
+      "One authored entrance animation for the whole app"
+    ],
+    "rules": [
+      { "name": "The Channel Rule", "body": "Every colour is stored as an R G B channel triple (--accent-rgb: 255 77 46) and consumed as rgb(var(--accent-rgb) / a). Raw colour literals are forbidden in component CSS; the only exception is pure-black shadow. A theme that cannot be expressed as channel overrides is not a theme.", "section": "colors" },
+      { "name": "The Twice-Derived Rule", "body": "Named colours (--fg, --hud, --nominal…) are declared in a separate block whose selector is ':root, [data-theme]' — never ':root' alone. Custom properties inherit as computed values, so a ':root'-only derivation resolves once at the root and cannot be re-derived by a nested container. The theme picker's miniature preview is exactly such a container; before the split, all three previews rendered identically.", "section": "colors" },
+      { "name": "The Measured Contrast Rule", "body": "Contrast is never judged by eye. 'node scripts/contrast.mjs' measures every role against both the plate surface and the outer ground and exits 1 on any failure: fg ≥ 7, muted ≥ 4.5, dim / accent / ok / warn / err / aux ≥ 3. All three editions currently pass. A new plate is not done until the script is green.", "section": "colors" },
+      { "name": "The Annotation Rule", "body": "Vermilion annotates, it does not upholster. It appears as 1px rules, 5px bullets, 10px labels, a focus ring, and one filled stamp per view. Wide vermilion fills belong to no surface in this system.", "section": "colors" },
+      { "name": "The Engraved Name Rule", "body": "Bodoni italic is reserved for names and one sentence: titles, agent names, the status line. A number, a path, or a status word never gets the display face.", "section": "typography" },
+      { "name": "The Coordinate Rule", "body": "Anything measured is mono with font-variant-numeric: tabular-nums, right-aligned in tabular columns. body explicitly disables tnum so proportional text stays proportional — the tabular figure is a deliberate signal, not a global default.", "section": "typography" },
+      { "name": "The Shared Ruler Rule", "body": "A tabular surface declares its grid-template-columns once and both the header row and every data row use it (.cat-head, .cat-row). If a column is dropped at a breakpoint, it is dropped from the shared declaration — never by patching one side.", "section": "layout" },
+      { "name": "The Card-Grid Refusal", "body": "Repeating entities are hairline rows on a shared ruler with an expanding detail, not a grid of equally weighted boxes. The agent catalogue was a nine-card grid; it became nine rows because nine identical cards say nothing about which agent matters.", "section": "layout" },
+      { "name": "The Recessed Screen Rule", "body": "Anything that is a screen — terminal, diff body, input, code block — sits on void with no shadow. Anything that is a page sits on a plate with the card shadow. Nothing sits on both.", "section": "elevation" },
+      { "name": "The Hairline Rule", "body": "One weight (1px), one radius (2px). If a boundary needs more emphasis, brighten it (--edge → --edge-lit → --hud); never thicken it.", "section": "shapes" },
+      { "name": "The Terminated Rule", "body": "A section rule is a 1px vermilion line ending in a small filled dot, not a plain divider. It reads as a plate annotation and it is what marks a heading as a heading (.rule, .eph-mod-head::after, .panel h3::after).", "section": "shapes" }
+    ],
+    "dos": [
+      "Do define every new colour as an R G B channel token and consume it as rgb(var(--x-rgb) / a).",
+      "Do add derived colour names to the ':root, [data-theme]' block, never to ':root' alone — otherwise the theme-preview swatch silently stops working.",
+      "Do run 'node scripts/contrast.mjs' before accepting any palette change; all thresholds must pass against both --surface-rgb and --bg-rgb.",
+      "Do register a new plate in exactly two places: a token-only block in themes.css and one row in themes.ts.",
+      "Do put every transition for interactive elements in the motion layer's shared selector list near the top of index.css. A transition written inside a component rule lands after the motion layer and overrides it, and the interaction snaps.",
+      "Do use animation-fill-mode: backwards. 'both' permanently applies transform: none at the end and kills hover motion entirely.",
+      "Do keep spacing on the --s1…--s6 scale and numbers in mono with tabular figures.",
+      "Do encode status with colour AND form (ring, hollow, fill), so the red-lamp plate and colour-blind readers still separate the states.",
+      "Do keep interface copy in Turkish, including empty states and aria labels."
+    ],
+    "donts": [
+      "Don't write a raw colour literal in component CSS. The only exception is black in a shadow — and the day plate proves even that gets re-tinted per edition.",
+      "Don't write selectors in themes.css. A plate overrides tokens; if a plate needs a new structural behaviour, the token for it goes in index.css first.",
+      "Don't add a second entrance animation. plate-in on 'main > *' is the only authored entrance in the app; the world's continuous motion is sidereal drift, reticle turn and star pulse. Genuine appearance events — modal, slash menu, permission banner, a new transcript line, a disclosure panel — are separate and allowed; a section that merely re-renders is not one of them.",
+      "Don't disable feedback under prefers-reduced-motion. Positional motion is removed and durations are cut, but the working/waiting pulses and the CLI spinner are explicitly preserved — with them gone, 'is it running?' has no visual answer.",
+      "Don't thicken a border or round a corner for emphasis. Brighten the edge instead.",
+      "Don't introduce glass, ring shadows, or glow on plate chrome. --glass-blur is 0 and the day plate sets --glow-a: 0; anything that reads as luminous will look broken on paper.",
+      "Don't let the CLI skin palettes escape .terminal[data-cli], and don't add plate tokens to them — they are fixed-palette islands by design.",
+      "Don't draw geometry the data does not support. No invented coordinates, no unlabelled grid, no decorative constellation. Every mark on the sky maps to a field.",
+      "Don't rebuild a repeating list as a card grid."
+    ]
+  }
+}

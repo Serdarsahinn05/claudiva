@@ -1,22 +1,65 @@
-import { useState } from 'react';
+/**
+ * Ayarlar.
+ *
+ * Eski hali iki sayı kutusuydu ve asıl soruyu yanıtsız bırakıyordu: sınır
+ * neye göre konacak? Bugün ne harcandığı yazıyordu ama KİMİN harcadığı
+ * yazmıyordu — oysa sunucu bunu zaten biliyor (`budget.perAgentUSD`) ve
+ * sınır kararını belirleyen tek şey o dağılım. Ekran artık önce ölçümü
+ * gösterir, sonra ayarı sorar.
+ *
+ * Üç bölüm var ve üçü de farklı bir şeye ait:
+ *   · Bütçe        — bu projeye (sunucudaki settings.json)
+ *   · Çalışma alanı — bu tarayıcıya (localStorage; sunucuya hiç gitmez)
+ *   · Sistem       — makineye ve projeye (salt okunur)
+ * Ayrım görünür durmalı, yoksa "yerleşimi sıfırla"nın ekibi etkileyeceği
+ * sanılır.
+ */
+import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { api } from '../api';
-import type { BudgetState } from '../types';
+import { fmtCost } from '../format';
+import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
 
 interface Props {
   budget: BudgetState | null;
+  agents: AgentSnapshot[];
+  /** Yerleşimi varsayılana döndürür (yalnızca bu tarayıcı). */
+  onResetLayout: () => void;
   onClose: () => void;
   onSaved: () => void;
 }
 
+type Section = 'butce' | 'alan' | 'sistem';
+
+const SECTIONS: { id: Section; label: string; hint: string }[] = [
+  { id: 'butce', label: 'Bütçe', hint: 'günlük sınır' },
+  { id: 'alan', label: 'Çalışma alanı', hint: 'yerleşim, bu tarayıcı' },
+  { id: 'sistem', label: 'Sistem', hint: 'proje ve makine' },
+];
+
+function fmtBytes(n: number): string {
+  if (n >= 1 << 30) return `${(n / (1 << 30)).toFixed(1)} GB`;
+  if (n >= 1 << 20) return `${(n / (1 << 20)).toFixed(0)} MB`;
+  return `${(n / 1024).toFixed(0)} KB`;
+}
+
 /** Boş bırakılırsa sınır kaldırılır; kutuya 0 yazmak da aynı anlama gelir. */
-export function Settings({ budget, onClose, onSaved }: Props) {
+export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Props) {
+  const [section, setSection] = useState<Section>('butce');
   const [limit, setLimit] = useState(
     budget?.limitUSD && budget.limitUSD > 0 ? String(budget.limitUSD) : '',
   );
   const [warnAt, setWarnAt] = useState(String(budget?.settings?.warnAtPercent ?? 80));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [sys, setSys] = useState<SystemInfo | null>(null);
+
+  // Sistem bilgisi yalnızca o bölüm açılınca istenir: ayarları açmak
+  // her seferinde bir dosya sayımı tetiklemesin.
+  useEffect(() => {
+    if (section !== 'sistem' || sys) return;
+    void api.system().then(setSys).catch(() => {});
+  }, [section, sys]);
 
   async function save() {
     setBusy(true);
@@ -35,61 +78,201 @@ export function Settings({ budget, onClose, onSaved }: Props) {
     }
   }
 
+  // Harcayan ajanlar, çoktan aza. Hiç harcamamış ajan listeye girmez —
+  // sıfırlarla dolu bir liste dağılımı okunmaz yapardı.
+  const spenders = Object.entries(budget?.perAgentUSD ?? {})
+    .filter(([, usd]) => usd > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const nameOf = (id: string) => agents.find((a) => a.config.id === id)?.config.name ?? id;
+  const topSpend = spenders[0]?.[1] ?? 0;
+
+  const pct = budget?.pct ?? null;
+  const meterClass = budget?.exceeded ? ' crit' : budget?.warn ? ' warn' : '';
+
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} wide>
       <div className="modal-head">
         <h2>Ayarlar</h2>
         <span className="modal-sub">bu projeye özel</span>
       </div>
 
-      <div className="modal-pane">
-        <label className="tb-field">
-          <span className="tb-field-label">
-            Günlük harcama sınırı
-            <span className="tb-hint">USD · boş bırakırsan sınırsız</span>
-          </span>
-          <input
-            type="number"
-            min="0"
-            step="0.5"
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
-            placeholder="örn. 5"
-          />
-        </label>
+      <div className="modal-body">
+        <nav className="modal-nav">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`modal-nav-btn${section === s.id ? ' sel' : ''}`}
+              onClick={() => setSection(s.id)}
+            >
+              <span className="modal-nav-label">{s.label}</span>
+              <span className="modal-nav-hint">{s.hint}</span>
+            </button>
+          ))}
+        </nav>
 
-        <label className="tb-field">
-          <span className="tb-field-label">
-            Uyarı eşiği<span className="tb-hint">yüzde · bu orana gelince panel uyarır</span>
-          </span>
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={warnAt}
-            onChange={(e) => setWarnAt(e.target.value)}
-          />
-        </label>
+        <div className="modal-pane">
+          {section === 'butce' && (
+            <>
+              {/* Önce ÖLÇÜM, sonra ayar: sınırın ne olacağına bugünkü
+                  dağılıma bakmadan karar verilemiyor. */}
+              {budget && (
+                <div className="set-meter">
+                  <div className="set-meter-head">
+                    <span className="label">Bugün · {budget.date}</span>
+                    <span className="set-meter-val">
+                      {fmtCost(budget.spentUSD)}
+                      {budget.limitUSD ? <span className="dim"> / {fmtCost(budget.limitUSD)}</span> : null}
+                    </span>
+                  </div>
+                  {pct !== null ? (
+                    <>
+                      <div className={`gauge${meterClass}`}>
+                        <span style={{ width: `${Math.min(100, pct)}%` }} />
+                      </div>
+                      <div className="set-meter-sub">
+                        %{pct.toFixed(0)} ·{' '}
+                        {budget.exceeded
+                          ? 'sınır aşıldı, yeni iş kabul edilmiyor'
+                          : budget.warn
+                            ? 'uyarı eşiğinin üstünde'
+                            : 'sınır içinde'}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="set-meter-sub">Sınır tanımlı değil — harcama serbest.</div>
+                  )}
 
-        {budget && (
-          <div className="set-note">
-            Bugün ({budget.date}) harcanan: <strong>${budget.spentUSD.toFixed(4)}</strong>
-            {budget.limitUSD ? ` / $${budget.limitUSD.toFixed(2)}` : ' (sınırsız)'}
-          </div>
-        )}
+                  {spenders.length > 0 && (
+                    <div className="set-spenders">
+                      {spenders.map(([id, usd]) => (
+                        <div key={id} className="set-spender">
+                          <span className="set-spender-name">{nameOf(id)}</span>
+                          <span className="set-spender-bar">
+                            <span style={{ width: `${topSpend ? (usd / topSpend) * 100 : 0}%` }} />
+                          </span>
+                          <span className="set-spender-val">{fmtCost(usd)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-        <div className="set-note dim">
-          Sınır aşıldığında süren tur kesilmez — yarım iş bırakmamak için tamamlanır.
-          Yeni mesaj ve yeni görev reddedilir. Sayaç her gün yerel gece yarısı sıfırlanır.
+              <label className="tb-field">
+                <span className="tb-field-label">
+                  Günlük harcama sınırı
+                  <span className="tb-hint">USD · boş bırakırsan sınırsız</span>
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={limit}
+                  onChange={(e) => setLimit(e.target.value)}
+                  placeholder="örn. 5"
+                />
+              </label>
+
+              <label className="tb-field">
+                <span className="tb-field-label">
+                  Uyarı eşiği<span className="tb-hint">yüzde · bu orana gelince panel uyarır</span>
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={warnAt}
+                  onChange={(e) => setWarnAt(e.target.value)}
+                />
+              </label>
+
+              <div className="set-note dim">
+                Sınır aşıldığında süren tur kesilmez — yarım iş bırakmamak için tamamlanır.
+                Yeni mesaj ve yeni görev reddedilir. Sayaç her gün yerel gece yarısı sıfırlanır.
+                Ajan başına ayrı sınır, ajanın kendi tanımında tutulur.
+              </div>
+            </>
+          )}
+
+          {section === 'alan' && (
+            <>
+              <div className="set-note">
+                Panel yerleşimi (hangi panel hangi yuvada, yuva genişlikleri, açık
+                terminaller) <strong>yalnızca bu tarayıcıda</strong> saklanır. Sunucuya
+                gitmez, ekibi ya da başka bir makineyi etkilemez.
+              </div>
+              <div className="tb-field">
+                <span className="tb-field-label">
+                  Yerleşimi sıfırla<span className="tb-hint">panelleri varsayılan yuvalarına döndürür</span>
+                </span>
+                <div className="row">
+                  <button
+                    onClick={() => {
+                      onResetLayout();
+                      onClose();
+                    }}
+                  >
+                    Varsayılana döndür
+                  </button>
+                </div>
+              </div>
+              <div className="set-note dim">
+                Açık terminaller kapanır, panel konumları ve yuva genişlikleri
+                başlangıç düzenine döner. Ajanlar, görevler ve hafıza etkilenmez.
+              </div>
+            </>
+          )}
+
+          {section === 'sistem' && (
+            <>
+              {sys ? (
+                <div className="set-facts">
+                  <div className="set-fact">
+                    <span className="label">Proje</span>
+                    <span className="set-fact-val">{sys.project.name}</span>
+                    <span className="set-fact-sub">{sys.project.dir}</span>
+                  </div>
+                  <div className="set-fact">
+                    <span className="label">Depo</span>
+                    <span className="set-fact-val">{sys.project.gitBranch ?? 'git deposu değil'}</span>
+                    <span className="set-fact-sub">
+                      {sys.project.fileCount.toLocaleString('tr-TR')} dosya ·{' '}
+                      {fmtBytes(sys.project.sizeBytes)}
+                      {sys.project.truncated ? ' (kısmi sayım)' : ''}
+                    </span>
+                  </div>
+                  <div className="set-fact">
+                    <span className="label">Ekip tanımları</span>
+                    <span className="set-fact-val">{agents.length} ajan</span>
+                    <span className="set-fact-sub">{sys.claude.teamDir}</span>
+                  </div>
+                  <div className="set-fact">
+                    <span className="label">Çalışma zamanı</span>
+                    <span className="set-fact-val">
+                      Node {sys.host.nodeVersion} · SDK {sys.claude.sdkVersion}
+                    </span>
+                    <span className="set-fact-sub">
+                      {sys.host.platform} {sys.host.release} · {sys.host.cpuCount} çekirdek
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="set-note dim">Sistem bilgisi okunuyor…</div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       {error && <div className="error">{error}</div>}
       <div className="modal-actions">
-        <button onClick={onClose}>Vazgeç</button>
-        <button className="primary" disabled={busy} onClick={() => void save()}>
-          {busy ? 'Kaydediliyor…' : 'Kaydet'}
-        </button>
+        <button onClick={onClose}>{section === 'butce' ? 'Vazgeç' : 'Kapat'}</button>
+        {section === 'butce' && (
+          <button className="primary" disabled={busy} onClick={() => void save()}>
+            {busy ? 'Kaydediliyor…' : 'Kaydet'}
+          </button>
+        )}
       </div>
     </Modal>
   );

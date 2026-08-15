@@ -46,6 +46,14 @@ export interface AgentConfig {
   /** Tanımsızsa 'claude' sayılır (bkz. AgentManager.readConfigs/create). */
   provider?: ProviderId;
   memoryMode: MemoryMode;
+  /**
+   * Ajanın bağlı olduğu takım (ör. "PRODUCT", "MARKETING"). Serbest metin:
+   * takım listesi ayrı bir kayıt defterinde değil, ajanlardan TÜRETİLİR —
+   * takım ekleme/silme diye bir işlem yok, bir ajana yeni bir ad yazmak
+   * takımı var eder, son ajanı da taşımak yok eder. Tanımsız/boş olan ajanlar
+   * panelde `DEFAULT_TEAM` altında toplanır.
+   */
+  team?: string;
   /** When true, tool permission requests are auto-approved. */
   autoApprove: boolean;
   /** Extra description shown on the dashboard card. */
@@ -140,6 +148,9 @@ export interface Task {
   dependsOn?: string;
   /** Önceki adımın sonucu prompt'un başına eklensin mi (varsayılan: evet). */
   passResult?: boolean;
+  /** Bu görev hangi görevin içinde doğdu (delegasyon). Raporun kanıt ağacı
+   *  bunu izler — bkz. TaskInput.parentTaskId. */
+  parentTaskId?: string;
 }
 
 export interface PromptTemplate {
@@ -163,6 +174,9 @@ export interface AgentSnapshot {
   config: AgentConfig;
   status: AgentStatus;
   usage: TokenUsage;
+  /** Yalnızca son turun payı — `usage` tümel toplam olduğu için ondan
+   *  türetilemez (bkz. AgentSession.lastTurn). Hiç tur olmadıysa null. */
+  lastTurn?: TokenUsage | null;
   currentActivity?: string;
   pendingPermissions: PermissionRequestInfo[];
   sessionId?: string;

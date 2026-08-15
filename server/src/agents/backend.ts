@@ -20,6 +20,80 @@ export interface BackendCapabilities {
   mcpTools: boolean;
   /** Gerçek $ maliyeti raporlar mı (yoksa yalnızca ham token sayısı). */
   costUSD: boolean;
+  /** Oturum iç görüsü (bağlam dökümü, model listesi, MCP durumu…) sunar mı. */
+  introspect: boolean;
+}
+
+// --------------------------------------------------------------- iç görü
+/**
+ * Yerleşik slash komutlarının (`/context`, `/model`, `/mcp`, `/agents`,
+ * `/status`) beslendiği NORMALLEŞTİRİLMİŞ oturum iç görüsü.
+ *
+ * Şekil bilerek SDK'nınkinden küçük ve sağlayıcıdan bağımsız: panelin
+ * gösterdiği alanların tamamı burada, SDK'ya özel her alan (renk kodları,
+ * ızgara satırları, effort seviyeleri) backend'de bırakılır. Böylece ikinci
+ * bir sağlayıcı eklendiğinde komut katmanı hiç değişmez.
+ */
+export interface ContextUsageInfo {
+  totalTokens: number;
+  maxTokens: number;
+  percentage: number;
+  model: string;
+  /** Bağlamın nereye gittiği (sistem prompt'u, araçlar, mesajlar, MCP…). */
+  categories: { name: string; tokens: number }[];
+  /**
+   * TEK GERÇEK "hangi dosya kaç token" kaynağı: bağlama yüklenmiş hafıza/kural
+   * dosyaları, tek tek yol ve token'la. Araç sonuçları (bir Read'in kaç token
+   * götürdüğü) hiçbir yerde token'a atfedilmiyor — o sayı UYDURULAMAZ, bu
+   * yüzden panel yalnızca burayı "dosya" diye gösterir.
+   */
+  memoryFiles: { path: string; type: string; tokens: number }[];
+  /** MCP araçlarının şema maliyeti (sunucu başına toplanabilir). */
+  mcpTools: { name: string; serverName: string; tokens: number }[];
+  /** Yerleşik araç şemalarının maliyeti. */
+  systemTools: { name: string; tokens: number }[];
+}
+
+export interface ModelOption {
+  value: string;
+  displayName: string;
+  description?: string;
+}
+
+export interface SubagentInfo {
+  name: string;
+  description: string;
+  model?: string;
+}
+
+export interface McpStatusInfo {
+  name: string;
+  status: string;
+  toolCount: number;
+  error?: string;
+  scope?: string;
+}
+
+export interface AccountInfoLite {
+  email?: string;
+  organization?: string;
+  subscriptionType?: string;
+  apiProvider?: string;
+}
+
+export type InspectPart = 'context' | 'models' | 'agents' | 'mcp' | 'account';
+
+/**
+ * İstenen parçalar. Bir parça DESTEKLENMİYORSA ya da okunamazsa `null` gelir —
+ * `undefined` "istenmedi" demektir. Panel ikisini ayırabilmeli: birincide
+ * "okunamadı" yazar, ikincide hiç göstermez.
+ */
+export interface SessionInspect {
+  context?: ContextUsageInfo | null;
+  models?: ModelOption[] | null;
+  agents?: SubagentInfo[] | null;
+  mcp?: McpStatusInfo[] | null;
+  account?: AccountInfoLite | null;
 }
 
 export interface BackendUsage {
@@ -90,6 +164,13 @@ export interface AgentBackend extends EventEmitter {
   setModel(model: string): Promise<void>;
   /** Desteklenmiyorsa/oturum kapalıysa boş dizi döner; gerçek bir hata olursa reddeder. */
   refreshCommands(): Promise<SlashCommand[]>;
+  /**
+   * Yerleşik komutların okuduğu oturum iç görüsü. Parça başına EN İYİ ÇABA:
+   * biri okunamazsa `null` konur, diğerleri yine döner — tek bir kırık kontrol
+   * isteği `/status` gibi çok parçalı bir komutu tümüyle boş bırakmasın diye.
+   * Hiç desteklenmiyorsa (capabilities.introspect false) her parça `null`.
+   */
+  inspect(parts: InspectPart[]): Promise<SessionInspect>;
   /** Yalnızca Claude'da anlamlı deneysel plan-kotası verisi; diğerleri null döner. */
   planUsage(): Promise<unknown | null>;
 

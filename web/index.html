@@ -10,12 +10,19 @@
       boyunca varsayılan temayla çizilir ve tema sıçraması görünür.
       Bilinmeyen/bozuk değerler CSS tarafında sessizce varsayılana düşer.
     -->
+    <!--
+      DİKKAT: buradaki yedek ad varsayılan temayı GERÇEKTEN belirler.
+      Açılışta `setTheme()` çağıran hiçbir yer yok — `themes.ts` içindeki
+      DEFAULT_THEME yalnızca seçicinin ve `getTheme()`in bildiği değer.
+      Yani ikisi ayrışırsa panel bir temayla boyanır, seçici başka bir temayı
+      işaretli gösterir. İkisi birlikte değiştirilmeli.
+    -->
     <script>
       try {
         var t = localStorage.getItem('claude-manager.theme');
-        document.documentElement.dataset.theme = t || 'spaceship';
+        document.documentElement.dataset.theme = t || 'obsidian';
       } catch (e) {
-        document.documentElement.dataset.theme = 'spaceship';
+        document.documentElement.dataset.theme = 'obsidian';
       }
     </script>
     <!--
@@ -33,7 +40,7 @@
       #boot {
         position: fixed; inset: 0; z-index: 999;
         display: grid; place-items: center;
-        background: var(--void, #05080c);
+        background: var(--void, #030406);
         /* Perde ANINDA opak: fade-in koysaydık örttüğü boş sayfa görünürdü. */
       }
       /* İçerik gecikmeli girer: hızlı açılışta (< ~140ms) hiç görünmez, yani
@@ -47,35 +54,33 @@
         from { opacity: 0; transform: translateY(6px) scale(0.98); }
         to   { opacity: 1; transform: none; }
       }
-      /* Başlıktaki logoyla AYNI font: perde kalkınca aynı kelime aynı
-         biçimde yerinde kalsın (süreklilik). Farklı bir yazı tipi seçmek
-         perdeyi ayrı bir ekran gibi gösterirdi. */
+      /* Başlıktaki adla AYNI font ve AYNI biçim: perde kalkınca aynı kelime
+         yerinde kalsın (süreklilik). Font henüz inmemişken Georgia italiği
+         devralır — aynı karakter, aynı eğim. */
       #boot .boot-mark {
-        font-family: var(--font-display, 'Audiowide', 'Segoe UI', system-ui, sans-serif);
-        font-size: 20px; letter-spacing: 0.06em;
-        color: rgb(var(--fg-rgb, 219 228 238));
-        text-transform: uppercase;
-        text-shadow: 0 0 14px rgb(var(--hud-rgb, 92 225 230) / 0.25);
+        font-family: var(--font-display, 'Bodoni Moda', Georgia, serif);
+        font-style: italic; font-size: 26px; letter-spacing: 0;
+        color: rgb(var(--fg-rgb, 233 240 246));
       }
       /* Belirsiz ilerleme: sahte yüzde göstermek yalan olurdu — yalnızca
          "çalışıyor" bilgisi veriyor. Sadece transform animasyonu. */
       #boot .boot-scan {
-        width: 190px; height: 2px; overflow: hidden;
-        background: rgb(var(--fg-rgb, 219 228 238) / 0.12);
+        width: 190px; height: 1px; overflow: hidden;
+        background: rgb(var(--fg-rgb, 233 240 246) / 0.14);
       }
       #boot .boot-scan::after {
-        content: ''; display: block; width: 40%; height: 100%;
-        background: rgb(var(--hud-rgb, 92 225 230));
-        animation: boot-scan 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        content: ''; display: block; width: 34%; height: 100%;
+        background: rgb(var(--accent-rgb, 34 211 238));
+        animation: boot-scan 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
       @keyframes boot-scan {
         from { transform: translateX(-100%); }
         to   { transform: translateX(350%); }
       }
       #boot .boot-status {
-        font-family: ui-monospace, monospace; font-size: 11px;
-        letter-spacing: 0.08em;
-        color: rgb(var(--fg-rgb, 219 228 238) / 0.45);
+        font-family: ui-monospace, monospace; font-size: 10px;
+        letter-spacing: 0.14em; text-transform: uppercase;
+        color: rgb(var(--fg-rgb, 233 240 246) / 0.42);
       }
       /* Çıkış: panel altta hazır, perde önden çekiliyor. Blur geçişi iki
          durumu birbirine bağlar (sert kesme yerine). */
@@ -105,10 +110,29 @@
     </style>
   </head>
   <body>
+    <!--
+      YÖN SÖZLEŞMESİ — gök plakası · anahtar 7d9cf4fa
+
+      THESIS: Proje durumu bir gösterge tablosu değil, bir GÖK PLAKASIDIR.
+      Kategorinin kart ızgarası + durum hapları + sparkline düzenini reddeder.
+      OWN-WORLD: Gece mürekkebi zemin, yıldız tozu metin, tek vermilyon ek
+      açıklama; hairline cetveller, gravür italiği (Bodoni) + Archivo + mono
+      koordinatlar; hale ve pah yok, kadir noktası var.
+      STORY: Kullanıcı açar açmaz kimin çalıştığını, kimin onay beklediğini ve
+      neyin durduğunu tek cümle + tek bakışta görür; yıldıza tıklar, terminaline
+      düşer.
+      FIRST VIEWPORT: Üstte durum cümlesi (en büyük tipografi), altında
+      gökyüzü — ajanlar kadire göre yıldız, delegasyon takımyıldız çizgisi,
+      kapalı ajanlar ufkun altında; sağ kenarda bütçe/kota/token okumaları.
+      FORM: Yıldız atlası — kullanıcının seçtiği meydan okuyan (atış 7. adayı
+      vermişti; kullanıcı seçimi atışı ezer). Anahtar 7d9cf4fa.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with
+      the finish review, the verdict, and DESIGN.md
+    -->
     <div id="root"></div>
     <div id="boot">
       <div class="boot-in">
-        <div class="boot-mark">Claude Manager</div>
+        <div class="boot-mark">claude-manager</div>
         <div class="boot-scan"></div>
         <div class="boot-status" id="boot-status">sunucuya bağlanılıyor</div>
       </div>

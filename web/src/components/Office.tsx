@@ -19,8 +19,6 @@ interface Props {
   agents: AgentSnapshot[];
   tasks: Task[];
   onOpen: (agentId: string) => void;
-  /** Köprüdeki küçük önizleme: çerçeve etiketi, açıklama satırı ve tıklama kapalı. */
-  compact?: boolean;
 }
 
 /** Ajan anlık görüntülerini motor çağrılarına çevirir */
@@ -62,7 +60,7 @@ function syncAgents(state: OfficeState, agents: AgentSnapshot[], firstSync: bool
   }
 }
 
-export function Office({ agents, tasks, onOpen, compact }: Props) {
+export function Office({ agents, tasks, onOpen }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [assets, setAssets] = useState<OfficeAssets | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
@@ -182,11 +180,7 @@ export function Office({ agents, tasks, onOpen, compact }: Props) {
     canvas.style.cursor = id ? 'pointer' : 'default';
   }
 
-  // Köprüdeki küçük önizlemede tam sayfalık boş/hata durumları yerine tek satır.
   if (assetError || agents.length === 0) {
-    if (compact) {
-      return <div className="bridge-cam-empty">{assetError ? 'Kamera yayını yok' : 'Ofis boş'}</div>;
-    }
     return assetError ? (
       <div className="empty">
         <h2>Ofis yüklenemedi</h2>
@@ -194,29 +188,17 @@ export function Office({ agents, tasks, onOpen, compact }: Props) {
       </div>
     ) : (
       <div className="empty">
-        <h2>Ofis boş 🏢</h2>
-        <p>"+ Yeni Ajan" ile ilk çalışanı işe al — masasına oturup seni bekleyecek.</p>
-      </div>
-    );
-  }
-
-  // Köprüdeki önizlemede tuval yalnızca görüntüdür; tıklama dış modüle aittir.
-  if (compact) {
-    return (
-      <div className="viewscreen compact">
-        <canvas
-          ref={canvasRef}
-          style={{ imageRendering: 'pixelated', maxWidth: '100%', pointerEvents: 'none' }}
-        />
+        <h2>Ofis boş</h2>
+        <p>"Yeni ajan" ile ilk çalışanı işe al — masasına oturup seni bekleyecek.</p>
       </div>
     );
   }
 
   return (
     <div className="office-wrap">
-      {/* Tuval köprü ekranı gibi sunulur: hafif renk uyumu + tarama çizgisi katmanı */}
+      {/* Tuval plakaya oturtulur: hafif renk uyumu + tarama çizgisi katmanı */}
       <div className="viewscreen">
-        <span className="viewscreen-label">Mürettebat Kamerası</span>
+        <span className="viewscreen-label">Canlı ofis</span>
         <canvas
           ref={canvasRef}
           onClick={handleClick}
@@ -225,9 +207,13 @@ export function Office({ agents, tasks, onOpen, compact }: Props) {
           title="Bir karaktere tıklayınca terminali açılır"
         />
       </div>
-      <div className="office-legend muted">
-        💻 çalışıyor · 📖 okuyor · <span style={{ color: 'var(--yellow)' }}>…</span> onay bekliyor ·
-        ✓ tur bitti · gri = kapalı · karaktere tıkla → terminal
+      {/* Efsane: durum işaretleri gökyüzündekiyle aynı dili konuşur */}
+      <div className="office-legend">
+        <span><span className="led led-working" />çalışıyor</span>
+        <span><span className="led led-idle" />boşta</span>
+        <span><span className="led led-waiting" />onay bekliyor</span>
+        <span><span className="led led-offline" />kapalı</span>
+        <span className="muted">karaktere tıkla → terminal</span>
       </div>
     </div>
   );

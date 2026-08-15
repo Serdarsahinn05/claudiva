@@ -75,9 +75,7 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
     <div className="prompt-library">
       <section className="pl-head">
         <div>
-          <span className="bridge-mod-label" style={{ position: 'static' }}>
-            Prompt Kütüphanesi
-          </span>
+          <h2 className="plate-title">Prompt kütüphanesi</h2>
           <p className="pl-head-desc">
             Ajana olduğu gibi gönderilen hazır metinler. Davranış kuralı yazacaksan skill daha uygun.
           </p>

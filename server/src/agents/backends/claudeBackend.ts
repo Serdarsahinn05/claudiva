@@ -13,7 +13,14 @@ import {
 import { AsyncQueue } from '../asyncQueue.js';
 import type { AgentConfig, SlashCommand } from '../../types.js';
 import { agentDir, agentMemoryDir, SHARED_MEMORY_DIR } from '../../paths.js';
-import type { AgentBackend, BackendCapabilities, BackendEvent, BackendStartOptions } from '../backend.js';
+import type {
+  AgentBackend,
+  BackendCapabilities,
+  BackendEvent,
+  BackendStartOptions,
+  InspectPart,
+  SessionInspect,
+} from '../backend.js';
 
 const MODEL_ALIASES: Record<string, string> = {
   haiku: 'claude-haiku-4-5',
@@ -22,6 +29,16 @@ const MODEL_ALIASES: Record<string, string> = {
 };
 
 const TRUNCATE_INPUT = 2000;
+
+/**
+ * Mesaj CLI'a bir slash komutu olarak mı gidiyor? Kural CLI'ın kendi kuralı:
+ * ilk karakter "/" olmalı ve ardından bir komut adı gelmeli ("/" tek başına ya
+ * da "/ " komut değildir). Yol adları ("/usr/bin/x") boşluk barındırmadan
+ * gelebildiği için ad karakter kümesi dar tutuldu.
+ */
+function isSlashCommand(text: string): boolean {
+  return /^\/[a-z0-9][a-z0-9:_-]*(\s|$)/i.test(text.trimStart());
+}
 
 /**
  * Claude Agent SDK'nın `query()`'sini `AgentBackend`'e uyarlar.
@@ -38,6 +55,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     slashCommands: true,
     mcpTools: true,
     costUSD: true,
+    introspect: true,
   };
 
   private config!: AgentConfig;
@@ -85,8 +103,13 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     // Transcript'e orijinal metin AgentSession tarafından yazılır, bu
     // hatırlatma yalnız modele gider — mcp__self__set_model'e referans verdiği
     // için Claude'a özel, bu yüzden AgentSession'da değil burada.
+    //
+    // SLASH KOMUTLARI HATIRLATMA ALMAZ. CLI bir mesajı ancak İLK KARAKTERİ "/"
+    // ise komut olarak ayrıştırır; önüne bir satır eklemek "/compact"i düz
+    // metne çevirir ve komut sessizce hiç çalışmaz (yalnızca model onu okur).
+    // Panelin yerleşik komutları bu yüzden karşılıksız kalıyordu.
     const wrapped =
-      this.config.autoModel !== false
+      this.config.autoModel !== false && !isSlashCommand(text)
         ? `[Hatırlatma: yanıtlamadan önce görevin zorluğunu değerlendir; mevcut model (${this.resolveModel()}) uygun değilse önce mcp__self__set_model ile değiştir: basit→haiku, orta→sonnet, zor→opus.]\n\n${text}`
         : text;
     this.queue?.push({
@@ -147,6 +170,92 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * SDK'nın kontrol isteklerini normalleştirilmiş iç görüye çevirir.
+   *
+   * Her parça KENDİ try/catch'inde: bunlar ayrı ayrı kontrol istekleri ve biri
+   * (ör. oturum akış durumunda değilken `getContextUsage`) reddedince diğerleri
+   * hâlâ geçerli. Tek bir try bloğu olsaydı `/status` gibi çok parçalı bir
+   * komut tek bir kırık istek yüzünden tümüyle boşalırdı.
+   */
+  async inspect(parts: InspectPart[]): Promise<SessionInspect> {
+    const q = this.q;
+    const out: SessionInspect = {};
+    if (!q) {
+      // Oturum kapalı: istenen her parça "okunamadı" (null) — hiç istenmemiş
+      // (undefined) ile karıştırılmasın.
+      for (const p of parts) out[p] = null;
+      return out;
+    }
+
+    const read = async <K extends InspectPart>(key: K, fn: () => Promise<SessionInspect[K]>) => {
+      if (!parts.includes(key)) return;
+      try {
+        out[key] = await fn();
+      } catch {
+        out[key] = null;
+      }
+    };
+
+    await Promise.all([
+      read('context', async () => {
+        const c = await q.getContextUsage();
+        return {
+          totalTokens: c.totalTokens,
+          maxTokens: c.maxTokens,
+          percentage: c.percentage,
+          model: c.model,
+          categories: c.categories.map((x) => ({ name: x.name, tokens: x.tokens })),
+          memoryFiles: (c.memoryFiles ?? []).map((f) => ({
+            path: f.path,
+            type: f.type,
+            tokens: f.tokens,
+          })),
+          mcpTools: (c.mcpTools ?? []).map((t) => ({
+            name: t.name,
+            serverName: t.serverName,
+            tokens: t.tokens,
+          })),
+          systemTools: (c.systemTools ?? []).map((t) => ({ name: t.name, tokens: t.tokens })),
+        };
+      }),
+      read('models', async () =>
+        (await q.supportedModels()).map((m) => ({
+          value: m.value,
+          displayName: m.displayName,
+          description: m.description,
+        })),
+      ),
+      read('agents', async () =>
+        (await q.supportedAgents()).map((a) => ({
+          name: a.name,
+          description: a.description,
+          model: a.model,
+        })),
+      ),
+      read('mcp', async () =>
+        (await q.mcpServerStatus()).map((s) => ({
+          name: s.name,
+          status: s.status,
+          toolCount: s.tools?.length ?? 0,
+          error: s.error,
+          scope: s.scope,
+        })),
+      ),
+      read('account', async () => {
+        const a = await q.accountInfo();
+        return {
+          email: a.email,
+          organization: a.organization,
+          subscriptionType: a.subscriptionType,
+          apiProvider: a.apiProvider,
+        };
+      }),
+    ]);
+
+    return out;
   }
 
   // ------------------------------------------------------------------

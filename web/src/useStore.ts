@@ -152,6 +152,7 @@ export function useStore(): Store {
                 ...a,
                 usage: msg.usage.perAgent[a.config.id] ?? a.usage,
                 contextTokens: msg.context?.[a.config.id] ?? a.contextTokens,
+                lastTurn: msg.turns?.[a.config.id] ?? a.lastTurn,
               })),
             );
             break;

@@ -46,6 +46,12 @@ export function TaskBoard({ tasks, agents }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  /**
+   * Atama formu KAPALI doğar. Açıkken görüntünün yarısını kaplıyordu ve
+   * plaka açıldığında ilk söylediği şey "doldur" oluyordu; oysa bu panelin
+   * ilk işi durum bildirmek. Önce pano, iş vermek isteyen düğmeye basar.
+   */
+  const [composeOpen, setComposeOpen] = useState(false);
   /** Zincir kipi: form tek görev yerine sıraya adım ekler. */
   const [chainMode, setChainMode] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -168,10 +174,40 @@ export function TaskBoard({ tasks, agents }: Props) {
 
   return (
     <div className="taskboard">
-      {/* ---------- görev oluşturma ---------- */}
+      {/* ---------- pano başlığı: önce durum, sonra eylem ---------- */}
+      <div className="tb-board-head">
+        <h2 className="plate-title">Görevler</h2>
+        <div className="tb-filters">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              className={`tb-filter${filter === f.id ? ' sel' : ''}`}
+              onClick={() => setFilter(f.id)}
+              type="button"
+            >
+              {f.label}
+              <span className="tb-filter-count">{counts[f.id] ?? 0}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          className={composeOpen ? '' : 'primary'}
+          type="button"
+          onClick={() => {
+            setComposeOpen((v) => !v);
+            setError('');
+          }}
+          aria-expanded={composeOpen}
+        >
+          {composeOpen ? 'Kapat' : 'Görev ata'}
+        </button>
+      </div>
+
+      {/* ---------- görev oluşturma (kapalı doğar) ---------- */}
+      {composeOpen && (
       <section className="tb-compose">
         <div className="tb-compose-head">
-          <span className="bridge-mod-label">{chainMode ? 'Zincir Kur' : 'Görev Ata'}</span>
+          <span className="eph-mod-head">{chainMode ? 'Zincir kur' : 'Görev ata'}</span>
           <button
             type="button"
             className={`tb-filter${chainMode ? ' sel' : ''}`}
@@ -199,9 +235,13 @@ export function TaskBoard({ tasks, agents }: Props) {
                   type="button"
                   className="icon-btn"
                   title="Adımı çıkar"
+                  aria-label="Adımı çıkar"
                   onClick={() => setSteps((list) => list.filter((_, k) => k !== i))}
                 >
-                  ×
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                       strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
                 </button>
               </li>
             ))}
@@ -292,28 +332,27 @@ export function TaskBoard({ tasks, agents }: Props) {
           )}
         </div>
       </section>
+      )}
 
       {/* ---------- görev listesi ---------- */}
       <section className="tb-list-wrap">
-        <div className="tb-filters">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              className={`tb-filter${filter === f.id ? ' sel' : ''}`}
-              onClick={() => setFilter(f.id)}
-              type="button"
-            >
-              {f.label}
-              <span className="tb-filter-count">{counts[f.id] ?? 0}</span>
-            </button>
+        {shown.length === 0 &&
+          (tasks.length === 0 ? (
+            <div className="empty">
+              <h2>Pano boş</h2>
+              <p>
+                Henüz kimseye iş verilmedi. <strong>Görev ata</strong> ile bir ajana tek bir iş
+                verebilirsin; <strong>Zincir</strong> ile birbirine bağlı adımlar kurarsın — her adım
+                bir öncekinin sonucunu girdi olarak alır.
+              </p>
+              <p>
+                Patrona iş verirsen bağımsız parçaları kendisi ekibe dağıtır; burada onların hepsini
+                tek pano üzerinde görürsün.
+              </p>
+            </div>
+          ) : (
+            <div className="muted small tb-empty">Bu filtrede görev yok.</div>
           ))}
-        </div>
-
-        {shown.length === 0 && (
-          <div className="muted small tb-empty">
-            {tasks.length === 0 ? 'Henüz görev yok.' : 'Bu filtrede görev yok.'}
-          </div>
-        )}
 
         <div className="task-list">
           {rows.map((row) =>

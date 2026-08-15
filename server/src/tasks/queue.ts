@@ -18,6 +18,16 @@ export interface TaskInput {
   assignedBy: string;
   /** Zincirde: önceki adımın sonucu prompt'a eklensin mi (varsayılan: evet). */
   passResult?: boolean;
+  /**
+   * Bu görev hangi görevin İÇİNDE doğdu (delegasyon zinciri).
+   *
+   * `assignedBy` "kim verdi"yi söylüyor ama HANGİ İŞ İÇİN sorusunu değil.
+   * Kanıt bu ayrımda kayboluyordu: kullanıcı boss'a iş verir, boss onu
+   * çalışana delege eder, dosyayı çalışan yazar — dosya dokunuşu ALT görevin
+   * kimliğini taşır ve üst görevin raporu "hiçbir dosyaya dokunulmadı" der.
+   * Ölçüldü (Faz 3): rapor "FAZ3-TEST.md oluşturuldu" diyordu, kanıt boştu.
+   */
+  parentTaskId?: string;
 }
 
 /**
@@ -197,6 +207,7 @@ export class TaskQueue extends EventEmitter {
       ...(input.chainId ? { chainId: input.chainId, stepIndex: input.stepIndex } : {}),
       ...(input.dependsOn ? { dependsOn: input.dependsOn } : {}),
       ...(input.passResult === false ? { passResult: false } : {}),
+      ...(input.parentTaskId ? { parentTaskId: input.parentTaskId } : {}),
     };
     this.tasks.set(task.id, task);
     this.emit('task_update', task);
