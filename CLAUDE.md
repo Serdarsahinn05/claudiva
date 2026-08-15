@@ -189,6 +189,14 @@ Rules:
   zaten o); ajan MCP ile sürerken mevcut izin kapısı devrededir. Ajana ayrı bir
   örnek verilmez: ajanın açtığı sayfayı kullanıcının görmesi bu panelin varlık
   sebebi.
+- **Panel YOKLAMAZ, sunucu İTER** (`BrowserSession.onChange` → WS
+  `browser_state`). İki aktör olmasının doğrudan sonucu: ajan sürerken panel
+  hiçbir istek atmıyor, dolayısıyla yoklama ancak kullanıcı elle bir "takip"
+  kutusu işaretlerse çalışıyordu — panelin varlık sebebi olan durum tam da
+  varsayılan hâlde görünmezdi. Yayını yalnız durumu DEĞİŞTİREN yol yapar
+  (`changed()`); `state()` ve `screenshot()` yayın yapmaz, yoksa panelin kendi
+  okuması kendine yankı olarak dönerdi. Kare, değişiklik olayına bağlı: sayfa
+  kendi kendine değişirse (gecikmeli yönlendirme) yeni kare gelmez.
 - **Tıklama sonrası durumu `waitForURL` ile bekle.** İkisi de ölçülüp elendi:
   sabit bekleme (geçiş anını okuyor) ve `waitForLoadState` (gezinme henüz
   commit edilmediği için ESKİ belgeyi soruyor, anında dönüyor). `framenavigated`

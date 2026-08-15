@@ -230,7 +230,7 @@ export default function App() {
         case 'skills':
           return <Skills agents={store.agents} />;
         case 'browser':
-          return <Browser />;
+          return <Browser pushed={store.browserState} />;
         case 'changes':
           return <Changes agents={store.agents} />;
         case 'memory':
@@ -248,7 +248,7 @@ export default function App() {
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [teamAgents, teamTasks, store.usage, store.budget, store.prompts, store.projectDir, focusedTile,
-     bulkBusy, team, teams.length, store.agents],
+     bulkBusy, team, teams.length, store.agents, store.browserState],
   );
 
   // ------------------------------------------------------------ orta gözler

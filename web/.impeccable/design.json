@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-14T00:00:00.000Z",
+  "generatedAt": "2026-08-15T00:00:00.000Z",
   "title": "Design System: claude-manager",
   "extensions": {
     "colorMeta": {
@@ -109,11 +109,24 @@
     },
     "typographyMeta": {
       "display": { "displayName": "Status Sentence", "purpose": "The single largest type in the product: the first-viewport status sentence. Vermilion <em> on the number, max 46ch, text-wrap: balance." },
-      "headline": { "displayName": "Plate Title", "purpose": "App title, plate titles, empty-state headings, boot wordmark. Bodoni italic 26px." },
-      "title": { "displayName": "Object Name", "purpose": "Agent names in the catalogue, modal headings, card titles. Names only, never data." },
-      "body": { "displayName": "Working Text", "purpose": "Rows, descriptions, help. Archivo 12-13px, prose capped at 44-72ch." },
-      "label": { "displayName": "Annotation Label", "purpose": "Small-caps vermilion annotation: section heads, field labels, column heads, badges, chips." },
-      "readout": { "displayName": "Coordinate", "purpose": "Every number and path. JetBrains Mono with tabular-nums; body disables tnum so this stays a signal." }
+      "headline": { "displayName": "Plate Title", "purpose": "App title, plate titles, empty-state headings, boot wordmark. Bodoni italic 26px — the boot wordmark matches it exactly so the word does not move when the curtain lifts." },
+      "headline-sm": { "displayName": "Plate Title (dense)", "purpose": "Modal heading and memory-panel title. The headline step for a bounded plate rather than a page." },
+      "title": { "displayName": "Object Name", "purpose": "Catalogue agent name (19px). Names only, never data." },
+      "title-sm": { "displayName": "Object Name (dense)", "purpose": "Prompt-card title. Same voice as title, one step down inside a card." },
+      "hero": { "displayName": "Hero Figure", "purpose": "The one big number on the Harcama board (.ub-tile.hero). Mono, NOT Bodoni — the Engraved Name Rule and the dataviz 'never a serif hero' rule agree here: the display face names things, it never carries a number." },
+      "hero-sm": { "displayName": "Hero Figure (narrow)", "purpose": "The hero figure's container-query step; the tile is a panel, so the break is measured on the panel, not the viewport." },
+      "figure": { "displayName": "Block Figure", "purpose": "A standalone mono figure inside a readout block — one magnitude given its own line rather than a table column." },
+      "base": { "displayName": "Base Text", "purpose": "The document default (body element). Every surface steps DOWN from here; 14px text is rare in the panel itself." },
+      "subtitle": { "displayName": "Row Lead", "purpose": "The emphasised single line at the head of a dense row or readout — full-strength fg where the rest of the row is muted." },
+      "body": { "displayName": "Working Text", "purpose": "Rows, descriptions, help. Prose capped at 44-72ch." },
+      "body-sm": { "displayName": "Working Text (dense)", "purpose": "The same voice in a sidebar or a card, where 13px would crowd." },
+      "row": { "displayName": "Row Text", "purpose": "The most-used step in the system (41 declarations): list rows, controls, chips' host text." },
+      "row-sm": { "displayName": "Row Text (dense)", "purpose": "Secondary text riding inside a row that already carries row-size text." },
+      "label": { "displayName": "Annotation Label", "purpose": "Small-caps vermilion annotation: section heads, field labels, column heads. This is the annotation voice." },
+      "label-sm": { "displayName": "Annotation Label (dense)", "purpose": "The annotation voice inside a control or a chip, where 10px would not fit the padding." },
+      "micro": { "displayName": "Badge Label", "purpose": "The smallest annotation: badges, count pills, column heads in a collapsed table." },
+      "readout": { "displayName": "Coordinate", "purpose": "Every number and path. Tabular-nums; body explicitly disables tnum so this stays a signal rather than a default." },
+      "readout-sm": { "displayName": "Coordinate (dense)", "purpose": "The coordinate voice in a tight column — transcript gutters, inline token counts." }
     },
     "shadows": [
       { "name": "card", "value": "0 1px 2px rgb(0 0 0 / 0.35)", "purpose": "Plates, prompt cards, diff panes. Just enough that the plate sits on paper instead of being cut out of it." },

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import type {
   AgentSnapshot,
+  BrowserState,
   BudgetState,
   PermissionRequestInfo,
   PromptTemplate,
@@ -22,6 +23,12 @@ export interface Store {
   transcripts: Record<string, TranscriptEvent[]>;
   permissions: PermissionRequestInfo[];
   connected: boolean;
+  /**
+   * Sunucudan İTİLEN son tarayıcı durumu (kullanıcı ya da ajan sürdüğünde).
+   * `null` = bu oturumda henüz itilmedi; Browser paneli o hâlde kendi ilk
+   * okumasını yapar.
+   */
+  browserState: BrowserState | null;
   /** İlk veri yüklemesi tamamlandı mı — açılış perdesi buna bakar. */
   ready: boolean;
   /** Ajanların üzerinde çalıştığı proje kökü (terminal karşılama kutusunda gösterilir). */
@@ -42,6 +49,7 @@ export function useStore(): Store {
   const [transcripts, setTranscripts] = useState<Record<string, TranscriptEvent[]>>({});
   const [permissions, setPermissions] = useState<PermissionRequestInfo[]>([]);
   const [connected, setConnected] = useState(false);
+  const [browserState, setBrowserState] = useState<BrowserState | null>(null);
   const [ready, setReady] = useState(false);
   const [projectDir, setProjectDir] = useState('');
   const wsRef = useRef<WebSocket | null>(null);
@@ -173,6 +181,9 @@ export function useStore(): Store {
               return next;
             });
             break;
+          case 'browser_state':
+            setBrowserState(msg.state);
+            break;
         }
       };
     }
@@ -198,6 +209,7 @@ export function useStore(): Store {
     transcripts,
     permissions,
     connected,
+    browserState,
     ready,
     projectDir,
     refreshAgents,

@@ -10,63 +10,67 @@ import type { BrowserState } from '../types';
  * görür ve istediği an devralır. Ajana ayrı bir tarayıcı örneği vermek
  * "ajan ne yapıyor" sorusunu yeniden görünmez kılardı.
  *
- * Görüntü sürekli AKMAZ, olaya bağlı tazelenir: her eylemden sonra bir kare,
- * bir de ajan sürüyor olabileceği için düşük hızlı bir yoklama (kullanıcı
- * açıkça açarsa). Sürekli akış, boşta duran bir panelde sunucuyu durmadan
- * ekran görüntüsü almaya zorlardı.
+ * Görüntü sürekli AKMAZ, olaya bağlı tazelenir: sayfa her DEĞİŞTİĞİNDE bir
+ * kare. Sürekli akış, boşta duran bir panelde sunucuyu durmadan ekran
+ * görüntüsü almaya zorlardı.
+ *
+ * Değişikliği sunucu bildirir (WS `browser_state`), panel yoklamaz. Yoklama
+ * yanlış taraftı: ajan sürerken panel hiçbir istek atmıyor, dolayısıyla
+ * kullanıcının elle bir "takip" kutusu işaretlemesi gerekiyordu — panelin
+ * varlık sebebi olan durum (ajan bir sayfa açtı) tam da varsayılan hâlde
+ * görünmez kalıyordu.
  */
 
 /** Sunucudaki sabit görüntü alanı; tıklama koordinatı buna ölçeklenir. */
 const VW = 1280;
 const VH = 800;
 
-export function Browser() {
+export function Browser({ pushed }: { pushed: BrowserState | null }) {
   const [state, setState] = useState<BrowserState | null>(null);
   const [addr, setAddr] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   /** Ekran görüntüsü URL'ine eklenen damga — tarayıcı önbelleğini kırar. */
   const [stamp, setStamp] = useState(0);
-  const [follow, setFollow] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const refreshShot = useCallback(() => setStamp(Date.now()), []);
 
-  const load = useCallback(async () => {
-    try {
-      const s = await api.browserState();
+  /**
+   * Adres kutusu KULLANICI YAZARKEN ezilmez; başka her durumda sunucudaki
+   * gerçek adresi izler.
+   */
+  const apply = useCallback(
+    (s: BrowserState) => {
       setState(s);
-      if (s.running) {
-        setAddr((cur) => (document.activeElement?.tagName === 'INPUT' ? cur : s.url));
-        refreshShot();
-      }
-      setError('');
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [refreshShot]);
+      setAddr((cur) => (document.activeElement?.tagName === 'INPUT' ? cur : s.url));
+      if (s.running) refreshShot();
+    },
+    [refreshShot],
+  );
 
+  // Panel açıldığında bir kez: tarayıcı panel kapalıyken de sürülmüş olabilir.
   useEffect(() => {
-    void load();
-  }, [load]);
+    api
+      .browserState()
+      .then(apply)
+      .catch((e: Error) => setError(e.message));
+  }, [apply]);
 
-  // Ajan da aynı tarayıcıyı sürebiliyor; "takip" açıkken düşük hızlı yoklama.
+  // Sunucudan itilen her değişiklik (kullanıcı ya da AJAN sürdüğünde).
   useEffect(() => {
-    if (!follow || !state?.running) return;
-    const t = setInterval(() => void load(), 2000);
-    return () => clearInterval(t);
-  }, [follow, state?.running, load]);
+    if (pushed) apply(pushed);
+  }, [pushed, apply]);
 
   async function run<T>(fn: () => Promise<T>) {
     setBusy(true);
     setError('');
     try {
+      // Sunucu bu değişikliği WS ile de itiyor; yanıtı burada da uygulamak
+      // paneli WS kopukken çalışır tutar (aynı durum, iki kez uygulanması zararsız).
       const s = (await fn()) as BrowserState;
-      if (s && typeof s === 'object' && 'running' in s) {
-        setState(s);
-        setAddr(s.url);
-      }
-      refreshShot();
+      if (s && typeof s === 'object' && 'running' in s) apply(s);
+      else refreshShot();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -135,10 +139,6 @@ export function Browser() {
             <button className="primary" onClick={() => void run(() => api.browserNavigate(addr))} disabled={busy}>
               Git
             </button>
-            <label className="cli-toggle">
-              <input type="checkbox" checked={follow} onChange={(e) => setFollow(e.target.checked)} />
-              takip
-            </label>
             {state?.running && (
               <button
                 className="danger"

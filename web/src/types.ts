@@ -443,4 +443,6 @@ export type WsPayload =
     }
   | { type: 'agents_changed' }
   | { type: 'commands_changed'; agentId: string; commands: SlashCommand[] }
-  | { type: 'task_update'; task: Task };
+  | { type: 'task_update'; task: Task }
+  /** Tarayıcı durumu değişti — ajan da sürebildiği için panel yoklamayla öğrenemez. */
+  | { type: 'browser_state'; state: BrowserState };

@@ -16,7 +16,9 @@ export type WsPayload =
     }
   | { type: 'agents_changed' }
   | { type: 'commands_changed'; agentId: string; commands: unknown }
-  | { type: 'task_update'; task: unknown };
+  | { type: 'task_update'; task: unknown }
+  /** Tarayıcı durumu değişti — ajan da sürebildiği için panel yoklamayla öğrenemez. */
+  | { type: 'browser_state'; state: unknown };
 
 /** Broadcast-only WebSocket hub; clients never send anything but pings. */
 export class WsHub {

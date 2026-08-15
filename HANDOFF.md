@@ -10,12 +10,32 @@ sağlayıcı) sırada — ama kullanıcı onu bilerek ertelemişti; açmadan ön
 2. **Değişiklikler HÂLÂ COMMIT EDİLMEDİ.** Üç fazın tamamı + iki ek iş çalışma
    ağacında duruyor. Kullanıcı isterse ilk iş commit olabilir.
 3. Yarım kalan iş YOK. Faz 3'ün dört paneli ve iki ek iş canlı doğrulandı.
-4. Açık uç sayılabilecek tek şey: **Browser panelinde ajan bir sayfa açtığında
-   panel kendiliğinden tazelenmiyor** — kullanıcı "takip" kutusunu işaretlerse
-   2 saniyede bir yeniliyor. WS ile push yapmak doğru çözüm; küçük iş, HANDOFF
-   dışı bir istek gelmezse öncelik değil.
+4. ~~Browser paneli kendiliğinden tazelenmiyor~~ **BİTTİ ✅** (aşağıda).
 
 ## Ek iş (Faz 3 sonrası, kullanıcı isteği) — BİTTİ ✅
+
+### 0) Browser paneli WS ile tazeleniyor (yoklama kalktı)
+`BrowserSession.onChange` → `hub.broadcast({type:'browser_state'})` →
+`useStore.browserState` → `<Browser pushed=…>`. "Takip" kutusu ve 2sn'lik
+`setInterval` KALDIRILDI: yoklama yanlış taraftaydı — ajan sürerken panel
+hiçbir istek atmıyor, dolayısıyla panelin varlık sebebi olan durum (ajan bir
+sayfa açtı) tam da varsayılan hâlde görünmez kalıyordu.
+
+Yayını yapan `changed()`; `state()` ve `screenshot()` yayın YAPMAZ (panelin
+kendi okuması kendine yankı olarak dönerdi). `close()` da yayınlar — `state()`
+çökmüş sayfayı görünce oraya düştüğü için panel kapanışı bu yolla da öğrenir.
+HTTP yanıtı panelde hâlâ uygulanıyor: aynı durumun iki kez uygulanması zararsız
+ve WS kopukken panel çalışır kalıyor.
+
+Doğrulandı: WS istemcisi hiç yoklamadan `navigate` ve `close` için birer
+`browser_state` karesi aldı; canlı panelde (panele DOKUNMADAN, dışarıdan curl
+ile sürülerek) adres/başlık/görüntü kendiliğinden geldi, `close` ile
+kendiliğinden "Tarayıcı kapalı"ya döndü.
+
+**Bilinen sınır:** sayfa kendi kendine değişirse (gecikmeli yönlendirme, canlı
+içerik) yeni kare gelmez — kare, durumu DEĞİŞTİREN eyleme bağlı. Eski "takip"
+kutusu bunu yakalardı; geri istenirse yoklama değil, sayfa olaylarına
+(`framenavigated`) bağlı bir yayın doğru yol olur.
 
 ### 1) Kod panelinde sözdizimi renklendirme
 `web/src/highlight.ts` + `web/src/prismLangs.ts` + `prismjs-components.d.ts`;

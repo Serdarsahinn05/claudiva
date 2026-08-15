@@ -59,6 +59,17 @@ export class BrowserSession {
   /** Kurulum eksikse sebebi; her istekte yeniden denememek için saklanır. */
   private unavailable: string | null = null;
 
+  /**
+   * Durum her DEĞİŞTİĞİNDE çağrılır (index.ts bunu WS yayınına bağlar).
+   *
+   * Panelin yoklamayla tazelenmesi yetmiyordu: iki aktörden biri AJAN ve o
+   * sürerken panel hiçbir istek atmıyor — kullanıcı elle "takip" kutusunu
+   * işaretlemediği sürece ajanın açtığı sayfayı görmüyordu. Oysa "ajanın
+   * açtığı sayfayı kullanıcı görsün" bu panelin varlık sebebi. Değişikliği
+   * BİLEN taraf burası, o yüzden haber buradan gider.
+   */
+  onChange: ((s: BrowserState) => void) | null = null;
+
   async state(): Promise<BrowserState> {
     const base = { viewport: VIEWPORT };
     if (this.unavailable) return { ...base, running: false, url: '', title: '', unavailable: this.unavailable };
@@ -70,6 +81,17 @@ export class BrowserSession {
       await this.close();
       return { ...base, running: false, url: '', title: '' };
     }
+  }
+
+  /**
+   * `state()` + dinleyiciye haber. Durumu DEĞİŞTİREN her yol bundan döner;
+   * `state()` (salt okuma) ve `screenshot()` yayın yapmaz — yoksa panelin
+   * kendi okuması kendine yankı olarak geri gelirdi.
+   */
+  private async changed(): Promise<BrowserState> {
+    const s = await this.state();
+    this.onChange?.(s);
+    return s;
   }
 
   /** Açık sayfayı döndürür, yoksa tarayıcıyı başlatır. */
@@ -107,19 +129,19 @@ export class BrowserSession {
     // `domcontentloaded`: `load` üçüncü taraf isteklerini de bekliyor ve reklam
     // taşıyan sayfalarda zaman aşımına düşüyordu — sayfa çoktan okunur hâldeyken.
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT });
-    return await this.state();
+    return await this.changed();
   }
 
   async back(): Promise<BrowserState> {
     const page = await this.ensure();
     await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => null);
-    return await this.state();
+    return await this.changed();
   }
 
   async reload(): Promise<BrowserState> {
     const page = await this.ensure();
     await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => null);
-    return await this.state();
+    return await this.changed();
   }
 
   async click(x: number, y: number): Promise<BrowserState> {
@@ -127,7 +149,7 @@ export class BrowserSession {
     const before = page.url();
     await page.mouse.click(x, y);
     await this.settle(page, before);
-    return await this.state();
+    return await this.changed();
   }
 
   /**
@@ -174,14 +196,14 @@ export class BrowserSession {
       await page.keyboard.press('Enter');
       await this.settle(page, before);
     }
-    return await this.state();
+    return await this.changed();
   }
 
   async scroll(dy: number): Promise<BrowserState> {
     const page = await this.ensure();
     await page.mouse.wheel(0, dy);
     await page.waitForTimeout(150);
-    return await this.state();
+    return await this.changed();
   }
 
   async screenshot(): Promise<Buffer> {
@@ -224,5 +246,8 @@ export class BrowserSession {
     this.page = null;
     this.browser = null;
     await b?.close().catch(() => null);
+    // `state()` de çökmüş sayfayı görünce buraya düşer; panel kapanışı bu yolla
+    // da öğrenir. Özyineleme yok: `this.page` artık null, `state()` anında döner.
+    this.onChange?.(await this.state());
   }
 }

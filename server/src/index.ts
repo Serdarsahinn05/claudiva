@@ -112,6 +112,8 @@ manager.on('commands_changed', (agentId, commands) =>
   hub.broadcast({ type: 'commands_changed', agentId, commands })
 );
 tasks.on('task_update', (task) => hub.broadcast({ type: 'task_update', task }));
+// Tarayıcıyı ajan da sürüyor; panel yoklamayla haber alamazdı (bkz. browser.ts).
+browser.onChange = (state) => hub.broadcast({ type: 'browser_state', state });
 
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
