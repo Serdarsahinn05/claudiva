@@ -52,7 +52,7 @@ Rules:
 - Ortamda başka oturumlardan kalmış artık sunucular olabilir; port çakışmasının ilk
   şüphelisi budur.
 
-## ŞU ANKİ İŞ (oku: HANDOFF.md, sonra docs/ANALIZ.md)
+## ŞU ANKİ İŞ (oku: docs/SONRAKI-ISLER.md, HANDOFF.md, docs/ANALIZ.md)
 
 Panel revizyonunun Faz 1-3'ü bitti ve 0.1.1 ile yayımlandı. 2026-11-23 turunda
 şunlar yapıldı (commit EDİLMEDİ): **Sohbet modu**, **`.claudiva` veri klasörü

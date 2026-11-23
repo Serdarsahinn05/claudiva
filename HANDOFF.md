@@ -1,6 +1,11 @@
 # Devir — Claudiva
 
-# ▶ GÜNCEL İŞ (2026-11-23): Sohbet modu + .claudiva + roller + skill'ler
+# ▶ SONRAKİ OTURUM: önce `docs/SONRAKI-ISLER.md` oku
+
+Stil temaları (Stüdyo/Atölye/Sade) ve JEV model yönlendiricisi orada planlı;
+hangisiyle başlanacağını oturum başında kullanıcıya sor.
+
+# Tamamlanan iş (2026-11-23): Sohbet modu + .claudiva + roller + skill'ler + i18n
 
 **Önce oku:** `docs/ANALIZ.md`. Proje analizi, eksikler, Orkas değerlendirmesi,
 videolar ve yol haritası orada. Bu bölüm yalnızca yürüyen işin durumunu tutar.
