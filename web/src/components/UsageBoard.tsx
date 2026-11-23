@@ -9,6 +9,7 @@ import type {
   UsageHistoryResponse,
   UsageSummary,
 } from '../types';
+import { L, dateLocale } from '../i18n';
 
 /**
  * Harcama panosu.
@@ -31,7 +32,7 @@ import type {
 type Range = 'today' | 'week' | 'all';
 type Metric = 'cost' | 'tokens';
 
-const RANGE_LABEL: Record<Range, string> = { today: 'Bugün', week: '7 gün', all: 'Tümü' };
+const RANGE_LABEL = L.usage.range as Record<Range, string>;
 
 interface RateWindow {
   utilization?: number;
@@ -43,17 +44,14 @@ interface PlanUsage {
 }
 
 const WINDOW_LABEL: Record<string, string> = {
-  five_hour: '5 saatlik pencere',
-  seven_day: '7 günlük pencere',
-  seven_day_opus: '7 günlük · Opus',
-  seven_day_sonnet: '7 günlük · Sonnet',
+  ...L.usage.window,
 };
 
 function fmtReset(iso?: string): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return `sıfırlanma ${d.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+  return L.usage.resets(d.toLocaleString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
 }
 
 /**
@@ -173,7 +171,7 @@ export function UsageBoard({ agents, usage, budget }: Props) {
       ...head.map((r) => ({ ...r, display: fmtCost(r.value) })),
       {
         key: '__other',
-        label: `Diğer (${tail.length})`,
+        label: L.usage.other(tail.length),
         value: tail.reduce((s, r) => s + r.value, 0),
         display: fmtCost(tail.reduce((s, r) => s + r.value, 0)),
       },
@@ -252,7 +250,7 @@ export function UsageBoard({ agents, usage, budget }: Props) {
         label: shortPath(p),
         value: v.tokens,
         display: `${fmtNum(v.tokens)} tok`,
-        note: v.agents > 1 ? `${v.agents} ajanda yüklü` : undefined,
+        note: v.agents > 1 ? L.usage.loadedIn(v.agents) : undefined,
       }));
   }, [contexts]);
 
@@ -274,7 +272,7 @@ export function UsageBoard({ agents, usage, budget }: Props) {
         label: name,
         value: v.tokens,
         display: `${fmtNum(v.tokens)} tok`,
-        note: `${v.tools} araç`,
+        note: L.usage.tools(v.tools),
       }));
   }, [contexts]);
 
@@ -295,14 +293,14 @@ export function UsageBoard({ agents, usage, budget }: Props) {
     ? (total.cacheReadTokens / totalTokens(total)) * 100
     : 0;
 
-  if (!total) return <div className="ub-empty">Kullanım verisi yükleniyor…</div>;
+  if (!total) return <div className="ub-empty">{L.usage.loading}</div>;
 
   return (
     <div className="ub">
       {/* ---------------------------------------------------------- başlık */}
       <div className="ub-head">
         <h2 className="ub-title">Harcama</h2>
-        <div className="ub-range" role="group" aria-label="Zaman aralığı">
+        <div className="ub-range" role="group" aria-label={L.usage.rangeAria}>
           {(Object.keys(RANGE_LABEL) as Range[]).map((r) => (
             <button key={r} className={r === range ? 'on' : ''} onClick={() => setRange(r)}>
               {RANGE_LABEL[r]}
@@ -310,7 +308,7 @@ export function UsageBoard({ agents, usage, budget }: Props) {
           ))}
         </div>
         <button className="ub-refresh" onClick={() => void load()} disabled={busy}>
-          {busy ? 'okunuyor…' : 'tazele'}
+          {busy ? L.usage.reading : L.usage.refresh}
         </button>
       </div>
 
@@ -318,38 +316,38 @@ export function UsageBoard({ agents, usage, budget }: Props) {
       <div className="ub-tiles">
         <StatTile
           hero
-          label="Toplam maliyet"
+          label={L.usage.totalCost}
           value={fmtCost(total.costUSD)}
-          sub={`${total.requests} tur · tüm zamanlar`}
+          sub={L.usage.turnsAllTime(total.requests)}
         />
-        <StatTile label="Toplam token" value={fmtNum(totalTokens(total))} sub={`%${Math.round(cacheShare)} önbellekten`} />
+        <StatTile label={L.usage.totalTokens} value={fmtNum(totalTokens(total))} sub={L.usage.fromCache(Math.round(cacheShare))} />
         <StatTile
-          label="Bugün"
+          label={L.usage.today}
           value={fmtCost(budget?.spentUSD ?? 0)}
-          sub={budget?.limitUSD ? `sınır ${fmtCost(budget.limitUSD)}` : 'sınır yok'}
+          sub={budget?.limitUSD ? L.usage.limit(fmtCost(budget.limitUSD)) : L.usage.noLimit}
           tone={budget?.exceeded ? 'alarm' : budget?.warn ? 'warn' : 'neutral'}
         />
         <StatTile
-          label={`Seçili aralık · ${RANGE_LABEL[range]}`}
+          label={L.usage.selected(RANGE_LABEL[range])}
           value={fmtCost(rangeCost)}
           sub={`${scoped.length} tur · ${fmtNum(rangeTokens)} tok`}
         />
         <StatTile
-          label="Açık ajan"
+          label={L.usage.openAgents}
           value={`${live.length}/${agents.length}`}
-          sub={live.length ? live.map((a) => a.config.name).slice(0, 3).join(', ') : 'hiçbiri çalışmıyor'}
+          sub={live.length ? live.map((a) => a.config.name).slice(0, 3).join(', ') : L.usage.noneWorking}
         />
       </div>
 
       {/* --------------------------------------------------------- ne kaldı */}
       <section className="ub-sec">
-        <h3>Ne kadar kaldı</h3>
+        <h3>{L.usage.howMuchLeft}</h3>
         <div className="ub-meters">
           <Meter
-            label="Günlük bütçe"
+            label={L.usage.dailyBudget}
             pct={budget?.pct ?? null}
             value={budget?.limitUSD ? `${fmtCost(budget.spentUSD)} / ${fmtCost(budget.limitUSD)}` : fmtCost(budget?.spentUSD ?? 0)}
-            note={budget?.limitUSD ? `${fmtCost(Math.max(0, budget.limitUSD - budget.spentUSD))} kaldı` : 'Ayarlar\'dan sınır koyabilirsin'}
+            note={budget?.limitUSD ? L.usage.left(fmtCost(Math.max(0, budget.limitUSD - budget.spentUSD))) : L.usage.setLimitHint}
           />
           {planWindows.map(([key, win]) => (
             <Meter
@@ -357,12 +355,12 @@ export function UsageBoard({ agents, usage, budget }: Props) {
               label={WINDOW_LABEL[key] ?? key}
               pct={win.utilization ?? 0}
               value={`%${win.utilization}`}
-              note={fmtReset(win.resets_at) || `%${100 - (win.utilization ?? 0)} kaldı`}
+              note={fmtReset(win.resets_at) || L.usage.pctLeft(100 - (win.utilization ?? 0))}
             />
           ))}
           {!planWindows.length && (
             <div className="ub-note">
-              Hesap plan kotası okunamadı — en az bir ajanın çalışıyor olması gerekiyor.
+              {L.usage.noPlan}
             </div>
           )}
         </div>
@@ -370,57 +368,56 @@ export function UsageBoard({ agents, usage, budget }: Props) {
 
       {/* ----------------------------------------------------------- zaman */}
       <section className="ub-sec">
-        <h3>Zaman içinde</h3>
+        <h3>{L.usage.overTime}</h3>
         <div className="ub-sec-tools">
-          <div className="ub-range" role="group" aria-label="Büyüklük">
+          <div className="ub-range" role="group" aria-label={L.usage.metricAria}>
             <button className={metric === 'cost' ? 'on' : ''} onClick={() => setMetric('cost')}>
-              maliyet
+              {L.usage.cost}
             </button>
             <button className={metric === 'tokens' ? 'on' : ''} onClick={() => setMetric('tokens')}>
-              token
+              {L.usage.tokens}
             </button>
           </div>
           <span className="ub-note">
-            kümülatif · kayıt başlangıcı{' '}
-            {history ? new Date(history.since).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '—'}
+            {L.usage.since}{' '}
+            {history ? new Date(history.since).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' }) : '—'}
           </span>
         </div>
         <AreaChart
           points={series}
           fmt={metric === 'cost' ? fmtCost : fmtNum}
-          label={`Kümülatif ${metric === 'cost' ? 'maliyet' : 'token'}`}
+          label={L.usage.cumulative(metric === 'cost' ? L.usage.cost : L.usage.tokens)}
         />
       </section>
 
       {/* ------------------------------------------------------- kim harcadı */}
       <section className="ub-sec">
-        <h3>Kim harcadı</h3>
+        <h3>{L.usage.whoSpent}</h3>
         <Donut
           slices={agentSlices}
           centerValue={fmtCost(total.costUSD)}
-          centerLabel="tüm zamanlar"
+          centerLabel={L.usage.allTime}
         />
       </section>
 
       {/* ------------------------------------------------------------ model */}
       <section className="ub-sec">
-        <h3>Model başına</h3>
+        <h3>{L.usage.perModel}</h3>
         <BarList
           data={modelBars}
-          empty={`Seçili aralıkta (${RANGE_LABEL[range]}) tur yok.`}
+          empty={L.usage.noTurns(RANGE_LABEL[range])}
         />
       </section>
 
       {/* ----------------------------------------------------------- bağlam */}
       <section className="ub-sec">
-        <h3>Bağlam penceresi nereye gidiyor</h3>
+        <h3>{L.usage.contextWhere}</h3>
         <span className="ub-note">
           {live.length
-            ? `${Object.keys(contexts).length} açık ajanın toplamı · her yeni tur bunun tamamını yeniden okur.
-               Boş alan ve otomatik-özet tamponu hariç — onlar tüketim değil artakalan; doluluk aşağıda.`
-            : 'Bağlam dökümü yalnızca açık ajanlardan okunur.'}
+            ? L.usage.contextNote(Object.keys(contexts).length)
+            : L.usage.contextOnlyOpen}
         </span>
-        <BarList data={contextBars} empty="Açık ajan yok." />
+        <BarList data={contextBars} empty={L.usage.noOpenAgents} />
 
         {live.length > 0 && (
           <div className="ub-fills">
@@ -432,7 +429,7 @@ export function UsageBoard({ agents, usage, budget }: Props) {
                   label={a.config.name}
                   pct={c ? c.percentage : null}
                   value={c ? `${fmtNum(c.totalTokens)} / ${fmtNum(c.maxTokens)}` : '—'}
-                  note={c ? `${fmtNum(c.maxTokens - c.totalTokens)} tok yer kaldı` : 'okunamadı'}
+                  note={c ? L.usage.roomLeft(fmtNum(c.maxTokens - c.totalTokens)) : L.usage.unreadable}
                 />
               );
             })}
@@ -442,38 +439,36 @@ export function UsageBoard({ agents, usage, budget }: Props) {
 
       {/* ----------------------------------------------------------- dosya */}
       <section className="ub-sec">
-        <h3>En çok token yiyen dosyalar</h3>
+        <h3>{L.usage.topFiles}</h3>
         <span className="ub-note">
-          Bağlama yüklenmiş kural ve hafıza dosyaları. Bir araç çağrısının (ör. bir
-          Read'in) kaç token götürdüğü hiçbir yerde dosyaya atfedilmiyor — o sayı
-          uydurulamayacağı için burada yok.
+          {L.usage.topFilesNote}
         </span>
-        <BarList data={fileBars} empty="Açık ajan yok ya da bağlama dosya yüklenmemiş." />
+        <BarList data={fileBars} empty={L.usage.noFiles} />
       </section>
 
       {/* ------------------------------------------------------------- MCP */}
       {toolBars.length > 0 && (
         <section className="ub-sec">
-          <h3>MCP sunucularının bağlam vergisi</h3>
-          <span className="ub-note">Araç şemaları her turda bağlamda duruyor.</span>
+          <h3>{L.usage.mcpTax}</h3>
+          <span className="ub-note">{L.usage.mcpNote}</span>
           <BarList data={toolBars} />
         </section>
       )}
 
       {/* ----------------------------------------------------------- tablo */}
       <section className="ub-sec">
-        <h3>Ajan başına tam döküm</h3>
+        <h3>{L.usage.perAgent}</h3>
         <div className="ub-table-wrap">
           <table className="ub-table">
             <thead>
               <tr>
-                <th>Ajan</th>
-                <th className="num">Girdi</th>
-                <th className="num">Çıktı</th>
-                <th className="num">Önbellek</th>
-                <th className="num">Tur</th>
-                <th className="num">Maliyet</th>
-                <th className="num">Bugün</th>
+                <th>{L.usage.colAgent}</th>
+                <th className="num">{L.usage.colInput}</th>
+                <th className="num">{L.usage.colOutput}</th>
+                <th className="num">{L.usage.colCache}</th>
+                <th className="num">{L.usage.colTurns}</th>
+                <th className="num">{L.usage.colCost}</th>
+                <th className="num">{L.usage.colToday}</th>
               </tr>
             </thead>
             <tbody>
