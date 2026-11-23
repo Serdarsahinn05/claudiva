@@ -435,6 +435,144 @@ export const tr = {
     clickHint: 'görüntüye tıklamak sayfaya tıklar',
   },
 
+  time: {
+    ago: (s: number) =>
+      s < 60
+        ? `${s}sn önce`
+        : s < 3600
+          ? `${Math.round(s / 60)}dk önce`
+          : s < 86400
+            ? `${Math.round(s / 3600)}sa önce`
+            : `${Math.round(s / 86400)}g önce`,
+  },
+
+  actions: {
+    refresh: 'Yenile',
+    cancel: 'Vazgeç',
+    edit: 'Düzenle',
+    add: 'Ekle',
+    saving: 'Kaydediliyor…',
+    revert: 'Geri al',
+  },
+
+  budget: {
+    exceeded: 'sınır aşıldı, yeni iş kabul edilmiyor',
+    warn: 'uyarı eşiğinin üstünde',
+    ok: 'sınır içinde',
+    noLimit: 'Sınır tanımlı değil — harcama serbest.',
+    dailyLimit: 'Günlük harcama sınırı',
+    dailyLimitHint: 'USD · boş bırakırsan sınırsız',
+    example: 'örn. 5',
+    warnAt: 'Uyarı eşiği',
+    warnAtHint: 'yüzde · bu orana gelince panel uyarır',
+    note: 'Sınır aşıldığında süren tur kesilmez — yarım iş bırakmamak için tamamlanır. Yeni mesaj ve yeni görev reddedilir. Sayaç her gün yerel gece yarısı sıfırlanır. Ajan başına ayrı sınır, ajanın kendi tanımında tutulur.',
+    today: (date: string) => `Bugün · ${date}`,
+  },
+
+  workspaceSettings: {
+    noteA: 'Panel yerleşimi (hangi panel hangi yuvada, yuva genişlikleri, açık terminaller) ',
+    noteStrong: 'yalnızca bu tarayıcıda',
+    noteB: ' saklanır. Sunucuya gitmez, ekibi ya da başka bir makineyi etkilemez.',
+    reset: 'Yerleşimi sıfırla',
+    resetHint: 'panelleri varsayılan yuvalarına döndürür',
+    resetButton: 'Varsayılana döndür',
+    resetNote: 'Açık terminaller kapanır, panel konumları ve yuva genişlikleri başlangıç düzenine döner. Ajanlar, görevler ve hafıza etkilenmez.',
+  },
+
+  systemInfo: {
+    project: 'Proje',
+    repo: 'Depo',
+    notRepo: 'git deposu değil',
+    files: (n: string) => `${n} dosya`,
+    partial: ' (kısmi sayım)',
+    team: 'Ekip tanımları',
+    runtime: 'Çalışma zamanı',
+    cores: (n: number) => `${n} çekirdek`,
+    loading: 'Sistem bilgisi okunuyor…',
+  },
+
+  changes: {
+    status: { added: 'eklendi', modified: 'değişti', deleted: 'silindi', renamed: 'taşındı', untracked: 'yeni' } as Record<string, string>,
+    diffFailed: (msg: string) => `(fark alınamadı: ${msg})`,
+    confirm: (path: string, untracked: boolean) =>
+      `"${path}" ${untracked ? 'silinsin' : 'son commit hâline döndürülsün'} mi?\n\nBu işlem geri alınamaz.`,
+    loading: 'Değişiklikler okunuyor…',
+    title: 'Değişiklikler',
+    descRepo: 'Çalışma ağacında son commit’e göre farklı olan dosyalar. Ajanların dokunduğu dosyalar işaretli.',
+    descNoRepo: 'Bu klasör bir git deposu değil — fark ve geri alma kullanılamıyor. Yalnızca ajanların dokunduğu dosyalar listelenir.',
+    clean: (head: string | null) => `Çalışma ağacı son commit ile aynı${head ? ` (${head})` : ''}.`,
+    none: 'Kayıtlı bir değişiklik yok.',
+    task: (id: string) => ` · görev ${id}`,
+    noAgent: 'ajan kaydı yok — senin değişikliğin olabilir',
+    revertTitle: 'Son commit hâline döndür',
+    notRepo: 'Git deposu değil',
+    noDiff: '(fark yok)',
+    pick: 'Farkını görmek için soldan bir dosya seç.',
+  },
+
+  code: {
+    title: 'Kod',
+    desc: 'Ajanların üzerinde çalıştığı proje. Salt okunur — dosyayı değiştiren tek özne ajanın kendisi, o da izin kapısından geçer.',
+    treeAria: 'Proje ağacı',
+    treeLoading: 'Ağaç okunuyor…',
+    pick: 'Okumak için soldan bir dosya seç.',
+    openFailed: 'Dosya açılamadı.',
+    lines: (n: number) => ` · ${n} satır`,
+    tooLarge: (size: string) => `Dosya çok büyük (${size}) — panelde açılmıyor.`,
+    clipped: (shown: number, total: number) => `İlk ${shown} satır gösteriliyor (${total} satırın).`,
+  },
+
+  prompts: {
+    title: 'Prompt kütüphanesi',
+    desc: 'Ajana olduğu gibi gönderilen hazır metinler. Davranış kuralı yazacaksan skill daha uygun.',
+    newPrompt: '+ Yeni prompt',
+    emptyTitle: 'Kütüphane boş',
+    emptyA: 'Eski hazır promptlar ',
+    emptySkill: "skill'e",
+    emptyB: ' dönüştürüldü: artık terminalde ',
+    emptyC: ' yazıp ',
+    emptyD: ' gibi komutlarla çağırılıyorlar.',
+    emptyHint: 'Buraya yalnızca sık tekrarladığın, ajana olduğu gibi göndermek istediğin uzun metinleri ekle.',
+    targetAria: 'Gönderilecek ajan',
+    pickAgent: 'Ajan seç…',
+    confirmDelete: (title: string) => `"${title}" silinsin mi?`,
+    editTitle: 'Promptu düzenle',
+    newTitle: 'Yeni prompt',
+    addSub: 'kütüphaneye ekle',
+    fieldTitle: 'Başlık',
+    fieldTitleHint: 'listede bunu göreceksin',
+    fieldTitlePh: 'örn. Hata raporu şablonu',
+    fieldDesc: 'Açıklama',
+    fieldDescHint: 'opsiyonel · ne işe yaradığı',
+    fieldDescPh: 'örn. Ustaya kök neden odaklı hata çözümü verir',
+    fieldText: 'Metin',
+    fieldTextHint: 'ajana aynen gönderilir',
+    lines: (n: number) => `${n} satır`,
+    textPh: 'Bağlam: hangi proje / dizin\nİstek: yapılmasını istediğin iş\nKapsam dışı: dokunulmayacaklar\nTeslim kriteri: bittiğini nasıl anlarız',
+  },
+
+  reports: {
+    filter: { all: 'Hepsi', done: 'Bitenler', failed: 'Başarısız' } as Record<string, string>,
+    loading: 'Raporlar okunuyor…',
+    title: 'Raporlar',
+    desc: 'Sonuçlanmış görevler. Rapor metni ajanın kendi anlatısı; yanındaki dosya listesi o görevde gerçekten yazılanlar — iddia ile ölçüm yan yana.',
+    emptyTitle: 'Henüz rapor yok',
+    emptyA: 'Bir görev bittiğinde ajanın sonucu buraya düşer. Görev vermek için ',
+    emptyTasks: 'Görevler',
+    emptyB: ' panelini ya da alttaki orkestratör çubuğunu kullan.',
+    files: (n: number) => `${n} dosya`,
+    noFiles: 'dosya yok',
+    givenBy: 'veren: ',
+    user: 'kullanıcı',
+    duration: (d: string) => `süre: ${d}`,
+    chainStep: (n: number) => `zincir adımı ${n}`,
+    givenWork: 'Verilen iş',
+    noResult: '(ajan bir sonuç metni bırakmadı)',
+    evidence: 'Kanıt — yazılan dosyalar',
+    withSubtasks: ' (alt görevler dahil)',
+    noneWritten: 'Bu görev sırasında hiçbir dosya yazılmadı. Araştırma/inceleme görevlerinde beklenen bir durum; kod yazması beklenen bir görevde raporu şüpheyle oku.',
+  },
+
   boot: {
     waiting: 'sunucu bekleniyor — yeniden deneniyor',
     noAnswer: 'sunucu yanıt vermiyor · `npm run dev` ile başlattığından emin ol',

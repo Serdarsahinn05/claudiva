@@ -3,6 +3,7 @@ import type { AgentSnapshot, PromptTemplate } from '../types';
 import { api } from '../api';
 import { ROLE_LABEL } from '../format';
 import { Modal } from './Modal';
+import { L } from '../i18n';
 
 interface Props {
   prompts: PromptTemplate[];
@@ -75,26 +76,24 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
     <div className="prompt-library">
       <section className="pl-head">
         <div>
-          <h2 className="plate-title">Prompt kütüphanesi</h2>
+          <h2 className="plate-title">{L.prompts.title}</h2>
           <p className="pl-head-desc">
-            Ajana olduğu gibi gönderilen hazır metinler. Davranış kuralı yazacaksan skill daha uygun.
+            {L.prompts.desc}
           </p>
         </div>
         <button className="primary" onClick={() => openEditor()}>
-          + Yeni prompt
+          {L.prompts.newPrompt}
         </button>
       </section>
 
       {prompts.length === 0 && (
         <div className="empty">
-          <h2>Kütüphane boş</h2>
+          <h2>{L.prompts.emptyTitle}</h2>
           <p>
-            Eski hazır promptlar <strong>skill'e</strong> dönüştürüldü: artık terminalde <kbd>/</kbd> yazıp{' '}
-            <code>/durum-ozeti</code>, <code>/hata-avi</code> gibi komutlarla çağırılıyorlar.
+            {L.prompts.emptyA}<strong>{L.prompts.emptySkill}</strong>{L.prompts.emptyB}<kbd>/</kbd>{L.prompts.emptyC}
+            <code>/durum-ozeti</code>, <code>/hata-avi</code>{L.prompts.emptyD}
           </p>
-          <p className="muted small">
-            Buraya yalnızca sık tekrarladığın, ajana olduğu gibi göndermek istediğin uzun metinleri ekle.
-          </p>
+          <p className="muted small">{L.prompts.emptyHint}</p>
         </div>
       )}
 
@@ -113,9 +112,9 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
                 className="pl-target"
                 value={target[p.id] ?? ''}
                 onChange={(e) => setTarget({ ...target, [p.id]: e.target.value })}
-                aria-label="Gönderilecek ajan"
+                aria-label={L.prompts.targetAria}
               >
-                <option value="">Ajan seç…</option>
+                <option value="">{L.prompts.pickAgent}</option>
                 {agents.map((a) => (
                   <option key={a.config.id} value={a.config.id}>
                     {a.config.name} · {ROLE_LABEL[a.config.role] ?? a.config.role}
@@ -123,14 +122,14 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
                 ))}
               </select>
               <button className="primary" disabled={!target[p.id]} onClick={() => send(p)}>
-                Gönder
+                {L.common.send}
               </button>
               <div className="spacer" />
-              <button onClick={() => openEditor(p)}>Düzenle</button>
+              <button onClick={() => openEditor(p)}>{L.actions.edit}</button>
               <button
                 className="danger"
                 onClick={async () => {
-                  if (!confirm(`"${p.title}" silinsin mi?`)) return;
+                  if (!confirm(L.prompts.confirmDelete(p.title))) return;
                   await api.deletePrompt(p.id);
                   onChanged();
                 }}
@@ -145,56 +144,54 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
       {editorOpen && (
         <Modal onClose={closeEditor}>
             <div className="modal-head">
-              <h2>{editing ? 'Promptu düzenle' : 'Yeni prompt'}</h2>
-              <span className="modal-sub">{editing ? editing.id : 'kütüphaneye ekle'}</span>
+              <h2>{editing ? L.prompts.editTitle : L.prompts.newTitle}</h2>
+              <span className="modal-sub">{editing ? editing.id : L.prompts.addSub}</span>
             </div>
 
             <div className="modal-pane">
               <label className="tb-field">
                 <span className="tb-field-label">
-                  Başlık<span className="tb-hint">listede bunu göreceksin</span>
+                  {L.prompts.fieldTitle}<span className="tb-hint">{L.prompts.fieldTitleHint}</span>
                 </span>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="örn. Hata raporu şablonu"
+                  placeholder={L.prompts.fieldTitlePh}
                   ref={titleRef}
                 />
               </label>
 
               <label className="tb-field">
                 <span className="tb-field-label">
-                  Açıklama<span className="tb-hint">opsiyonel · ne işe yaradığı</span>
+                  {L.prompts.fieldDesc}<span className="tb-hint">{L.prompts.fieldDescHint}</span>
                 </span>
                 <input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="örn. Ustaya kök neden odaklı hata çözümü verir"
+                  placeholder={L.prompts.fieldDescPh}
                 />
               </label>
 
               <label className="tb-field grow">
                 <span className="tb-field-label">
-                  Metin
-                  <span className="tb-hint">ajana aynen gönderilir</span>
-                  {lines > 0 && <span className="pl-count">{lines} satır</span>}
+                  {L.prompts.fieldText}
+                  <span className="tb-hint">{L.prompts.fieldTextHint}</span>
+                  {lines > 0 && <span className="pl-count">{L.prompts.lines(lines)}</span>}
                 </span>
                 <textarea
                   rows={10}
                   value={template}
                   onChange={(e) => setTemplate(e.target.value)}
-                  placeholder={
-                    'Bağlam: hangi proje / dizin\nİstek: yapılmasını istediğin iş\nKapsam dışı: dokunulmayacaklar\nTeslim kriteri: bittiğini nasıl anlarız'
-                  }
+                  placeholder={L.prompts.textPh}
                 />
               </label>
             </div>
 
             {error && <div className="error">{error}</div>}
             <div className="modal-actions">
-              <button onClick={closeEditor}>Vazgeç</button>
+              <button onClick={closeEditor}>{L.actions.cancel}</button>
               <button className="primary" disabled={!ready || busy} onClick={save}>
-                {busy ? 'Kaydediliyor…' : editing ? 'Kaydet' : 'Ekle'}
+                {busy ? L.actions.saving : editing ? L.common.save : L.actions.add}
               </button>
             </div>
         </Modal>

@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { AgentSnapshot, ChangedFile, ChangesResponse } from '../types';
+import { L } from '../i18n';
 
 interface Props {
   agents: AgentSnapshot[];
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  added: 'eklendi',
-  modified: 'değişti',
-  deleted: 'silindi',
-  renamed: 'taşındı',
-  untracked: 'yeni',
-};
+const STATUS_LABEL: Record<string, string> = L.changes.status;
 
 /** Durum → mevcut çip renkleri. Yeni bir renk ailesi açmaya gerek yok. */
 const STATUS_CHIP: Record<string, string> = {
@@ -25,10 +20,7 @@ const STATUS_CHIP: Record<string, string> = {
 
 function rel(ts: number): string {
   const s = Math.round((Date.now() - ts) / 1000);
-  if (s < 60) return `${s}sn önce`;
-  if (s < 3600) return `${Math.round(s / 60)}dk önce`;
-  if (s < 86400) return `${Math.round(s / 3600)}sa önce`;
-  return `${Math.round(s / 86400)}g önce`;
+  return L.time.ago(s);
 }
 
 /** Fark satırını türüne göre sınıflandırır (+ / - / @@ / bağlam). */
@@ -81,7 +73,7 @@ export function Changes({ agents }: Props) {
         if (!cancelled) setDiff(r.diff);
       })
       .catch((e: Error) => {
-        if (!cancelled) setDiff(`(fark alınamadı: ${e.message})`);
+        if (!cancelled) setDiff(L.changes.diffFailed(e.message));
       });
     return () => {
       cancelled = true;
@@ -89,8 +81,7 @@ export function Changes({ agents }: Props) {
   }, [sel]);
 
   async function revert(f: ChangedFile) {
-    const verb = f.status === 'untracked' ? 'silinsin' : 'son commit hâline döndürülsün';
-    if (!confirm(`"${f.path}" ${verb} mi?\n\nBu işlem geri alınamaz.`)) return;
+    if (!confirm(L.changes.confirm(f.path, f.status === 'untracked'))) return;
     setBusy(true);
     try {
       await api.revertChange(f.path);
@@ -103,18 +94,18 @@ export function Changes({ agents }: Props) {
   }
 
   if (!data) {
-    return <div className="muted center">{error || 'Değişiklikler okunuyor…'}</div>;
+    return <div className="muted center">{error || L.changes.loading}</div>;
   }
 
   return (
     <div className="changes">
       <section className="pl-head">
         <div>
-          <h2 className="plate-title">Değişiklikler</h2>
+          <h2 className="plate-title">{L.changes.title}</h2>
           <p className="pl-head-desc">
             {data.isRepo
-              ? 'Çalışma ağacında son commit’e göre farklı olan dosyalar. Ajanların dokunduğu dosyalar işaretli.'
-              : 'Bu klasör bir git deposu değil — fark ve geri alma kullanılamıyor. Yalnızca ajanların dokunduğu dosyalar listelenir.'}
+              ? L.changes.descRepo
+              : L.changes.descNoRepo}
           </p>
         </div>
         <button onClick={() => void load()} disabled={busy}>
@@ -129,8 +120,8 @@ export function Changes({ agents }: Props) {
           <h2>Temiz</h2>
           <p>
             {data.isRepo
-              ? `Çalışma ağacı son commit ile aynı${data.head ? ` (${data.head})` : ''}.`
-              : 'Kayıtlı bir değişiklik yok.'}
+              ? L.changes.clean(data.head ?? null)
+              : L.changes.none}
           </p>
         </div>
       ) : (
@@ -153,10 +144,10 @@ export function Changes({ agents }: Props) {
                   {f.touches.length > 0 ? (
                     <>
                       {nameOf(f.touches[0].agentId)}
-                      {f.touches[0].taskId && ` · görev ${f.touches[0].taskId}`} · {rel(f.touches[0].ts)}
+                      {f.touches[0].taskId && L.changes.task(f.touches[0].taskId)} · {rel(f.touches[0].ts)}
                     </>
                   ) : (
-                    'ajan kaydı yok — senin değişikliğin olabilir'
+                    L.changes.noAgent
                   )}
                 </span>
               </button>
@@ -171,13 +162,13 @@ export function Changes({ agents }: Props) {
                   <button
                     className="danger"
                     disabled={busy || !data.isRepo}
-                    title={data.isRepo ? 'Son commit hâline döndür' : 'Git deposu değil'}
+                    title={data.isRepo ? L.changes.revertTitle : L.changes.notRepo}
                     onClick={() => {
                       const f = data.files.find((x) => x.path === sel);
                       if (f) void revert(f);
                     }}
                   >
-                    Geri al
+                    {L.actions.revert}
                   </button>
                 </div>
                 <pre className="ch-diff-body">
@@ -187,11 +178,11 @@ export function Changes({ agents }: Props) {
                           {line || ' '}
                         </span>
                       ))
-                    : '(fark yok)'}
+                    : L.changes.noDiff}
                 </pre>
               </>
             ) : (
-              <div className="muted center">Farkını görmek için soldan bir dosya seç.</div>
+              <div className="muted center">{L.changes.pick}</div>
             )}
           </div>
         </div>

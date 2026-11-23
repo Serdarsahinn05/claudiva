@@ -21,7 +21,7 @@ import { api } from '../api';
 import { fmtCost } from '../format';
 import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
 import { UI_MODES, setUiMode, useUiMode, type UiMode } from '../uiMode';
-import { L, LOCALES, locale, setLocale } from '../i18n';
+import { L, LOCALES, locale, setLocale, dateLocale } from '../i18n';
 
 interface Props {
   budget: BudgetState | null;
@@ -138,14 +138,14 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                       <div className="set-meter-sub">
                         %{pct.toFixed(0)} ·{' '}
                         {budget.exceeded
-                          ? 'sınır aşıldı, yeni iş kabul edilmiyor'
+                          ? L.budget.exceeded
                           : budget.warn
-                            ? 'uyarı eşiğinin üstünde'
-                            : 'sınır içinde'}
+                            ? L.budget.warn
+                            : L.budget.ok}
                       </div>
                     </>
                   ) : (
-                    <div className="set-meter-sub">Sınır tanımlı değil — harcama serbest.</div>
+                    <div className="set-meter-sub">{L.budget.noLimit}</div>
                   )}
 
                   {spenders.length > 0 && (
@@ -166,8 +166,8 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
 
               <label className="tb-field">
                 <span className="tb-field-label">
-                  Günlük harcama sınırı
-                  <span className="tb-hint">USD · boş bırakırsan sınırsız</span>
+                  {L.budget.dailyLimit}
+                  <span className="tb-hint">{L.budget.dailyLimitHint}</span>
                 </span>
                 <input
                   type="number"
@@ -175,13 +175,13 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                   step="0.5"
                   value={limit}
                   onChange={(e) => setLimit(e.target.value)}
-                  placeholder="örn. 5"
+                  placeholder={L.budget.example}
                 />
               </label>
 
               <label className="tb-field">
                 <span className="tb-field-label">
-                  Uyarı eşiği<span className="tb-hint">yüzde · bu orana gelince panel uyarır</span>
+                  {L.budget.warnAt}<span className="tb-hint">{L.budget.warnAtHint}</span>
                 </span>
                 <input
                   type="number"
@@ -193,9 +193,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
               </label>
 
               <div className="set-note dim">
-                Sınır aşıldığında süren tur kesilmez — yarım iş bırakmamak için tamamlanır.
-                Yeni mesaj ve yeni görev reddedilir. Sayaç her gün yerel gece yarısı sıfırlanır.
-                Ajan başına ayrı sınır, ajanın kendi tanımında tutulur.
+                {L.budget.note}
               </div>
             </>
           )}
@@ -253,13 +251,11 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
           {section === 'alan' && (
             <>
               <div className="set-note">
-                Panel yerleşimi (hangi panel hangi yuvada, yuva genişlikleri, açık
-                terminaller) <strong>yalnızca bu tarayıcıda</strong> saklanır. Sunucuya
-                gitmez, ekibi ya da başka bir makineyi etkilemez.
+                {L.workspaceSettings.noteA}<strong>{L.workspaceSettings.noteStrong}</strong>{L.workspaceSettings.noteB}
               </div>
               <div className="tb-field">
                 <span className="tb-field-label">
-                  Yerleşimi sıfırla<span className="tb-hint">panelleri varsayılan yuvalarına döndürür</span>
+                  {L.workspaceSettings.reset}<span className="tb-hint">{L.workspaceSettings.resetHint}</span>
                 </span>
                 <div className="row">
                   <button
@@ -268,13 +264,12 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                       onClose();
                     }}
                   >
-                    Varsayılana döndür
+                    {L.workspaceSettings.resetButton}
                   </button>
                 </div>
               </div>
               <div className="set-note dim">
-                Açık terminaller kapanır, panel konumları ve yuva genişlikleri
-                başlangıç düzenine döner. Ajanlar, görevler ve hafıza etkilenmez.
+                {L.workspaceSettings.resetNote}
               </div>
             </>
           )}
@@ -284,36 +279,36 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
               {sys ? (
                 <div className="set-facts">
                   <div className="set-fact">
-                    <span className="label">Proje</span>
+                    <span className="label">{L.systemInfo.project}</span>
                     <span className="set-fact-val">{sys.project.name}</span>
                     <span className="set-fact-sub">{sys.project.dir}</span>
                   </div>
                   <div className="set-fact">
-                    <span className="label">Depo</span>
-                    <span className="set-fact-val">{sys.project.gitBranch ?? 'git deposu değil'}</span>
+                    <span className="label">{L.systemInfo.repo}</span>
+                    <span className="set-fact-val">{sys.project.gitBranch ?? L.systemInfo.notRepo}</span>
                     <span className="set-fact-sub">
-                      {sys.project.fileCount.toLocaleString('tr-TR')} dosya ·{' '}
+                      {L.systemInfo.files(sys.project.fileCount.toLocaleString(dateLocale))} ·{' '}
                       {fmtBytes(sys.project.sizeBytes)}
-                      {sys.project.truncated ? ' (kısmi sayım)' : ''}
+                      {sys.project.truncated ? L.systemInfo.partial : ''}
                     </span>
                   </div>
                   <div className="set-fact">
-                    <span className="label">Ekip tanımları</span>
-                    <span className="set-fact-val">{agents.length} ajan</span>
+                    <span className="label">{L.systemInfo.team}</span>
+                    <span className="set-fact-val">{L.common.agents(agents.length)}</span>
                     <span className="set-fact-sub">{sys.claude.teamDir}</span>
                   </div>
                   <div className="set-fact">
-                    <span className="label">Çalışma zamanı</span>
+                    <span className="label">{L.systemInfo.runtime}</span>
                     <span className="set-fact-val">
                       Node {sys.host.nodeVersion} · SDK {sys.claude.sdkVersion}
                     </span>
                     <span className="set-fact-sub">
-                      {sys.host.platform} {sys.host.release} · {sys.host.cpuCount} çekirdek
+                      {sys.host.platform} {sys.host.release} · {L.systemInfo.cores(sys.host.cpuCount)}
                     </span>
                   </div>
                 </div>
               ) : (
-                <div className="set-note dim">Sistem bilgisi okunuyor…</div>
+                <div className="set-note dim">{L.systemInfo.loading}</div>
               )}
             </>
           )}
@@ -322,7 +317,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
 
       {error && <div className="error">{error}</div>}
       <div className="modal-actions">
-        <button onClick={onClose}>{section === 'butce' ? 'Vazgeç' : 'Kapat'}</button>
+        <button onClick={onClose}>{section === 'butce' ? L.actions.cancel : L.common.close}</button>
         {section === 'butce' && (
           <button className="primary" disabled={busy} onClick={() => void save()}>
             {busy ? 'Kaydediliyor…' : 'Kaydet'}

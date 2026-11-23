@@ -424,6 +424,144 @@ export const en: Dict = {
     clickHint: 'clicking the screenshot clicks the page',
   },
 
+  time: {
+    ago: (s) =>
+      s < 60
+        ? `${s}s ago`
+        : s < 3600
+          ? `${Math.round(s / 60)}m ago`
+          : s < 86400
+            ? `${Math.round(s / 3600)}h ago`
+            : `${Math.round(s / 86400)}d ago`,
+  },
+
+  actions: {
+    refresh: 'Refresh',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    add: 'Add',
+    saving: 'Saving…',
+    revert: 'Revert',
+  },
+
+  budget: {
+    exceeded: 'limit exceeded, new work is rejected',
+    warn: 'above the warning threshold',
+    ok: 'within the limit',
+    noLimit: 'No limit set — spending is unrestricted.',
+    dailyLimit: 'Daily spending limit',
+    dailyLimitHint: 'USD · leave empty for no limit',
+    example: 'e.g. 5',
+    warnAt: 'Warning threshold',
+    warnAtHint: 'percent · the panel warns at this level',
+    note: 'A running turn is not cut when the limit is hit — it finishes so no work is left half done. New messages and new tasks are rejected. The counter resets at local midnight every day. Per-agent limits live in each agent’s own definition.',
+    today: (date) => `Today · ${date}`,
+  },
+
+  workspaceSettings: {
+    noteA: 'The panel layout (which panel sits in which dock, dock widths, open terminals) is stored ',
+    noteStrong: 'only in this browser',
+    noteB: '. It never reaches the server and does not affect the team or another machine.',
+    reset: 'Reset layout',
+    resetHint: 'moves panels back to their default docks',
+    resetButton: 'Restore defaults',
+    resetNote: 'Open terminals close, and panel positions and dock widths return to the starting layout. Agents, tasks and memory are not affected.',
+  },
+
+  systemInfo: {
+    project: 'Project',
+    repo: 'Repository',
+    notRepo: 'not a git repository',
+    files: (n) => `${n} files`,
+    partial: ' (partial count)',
+    team: 'Team definitions',
+    runtime: 'Runtime',
+    cores: (n) => `${n} ${n === 1 ? 'core' : 'cores'}`,
+    loading: 'Reading system info…',
+  },
+
+  changes: {
+    status: { added: 'added', modified: 'modified', deleted: 'deleted', renamed: 'renamed', untracked: 'new' },
+    diffFailed: (msg) => `(could not read the diff: ${msg})`,
+    confirm: (path, untracked) =>
+      `${untracked ? 'Delete' : 'Revert to the last commit:'} "${path}"?\n\nThis cannot be undone.`,
+    loading: 'Reading changes…',
+    title: 'Changes',
+    descRepo: 'Files in the working tree that differ from the last commit. Files touched by agents are marked.',
+    descNoRepo: 'This folder is not a git repository — diff and revert are unavailable. Only files touched by agents are listed.',
+    clean: (head) => `The working tree matches the last commit${head ? ` (${head})` : ''}.`,
+    none: 'No recorded changes.',
+    task: (id) => ` · task ${id}`,
+    noAgent: 'no agent record — this may be your own change',
+    revertTitle: 'Revert to the last commit',
+    notRepo: 'Not a git repository',
+    noDiff: '(no diff)',
+    pick: 'Pick a file on the left to see its diff.',
+  },
+
+  code: {
+    title: 'Code',
+    desc: 'The project the agents work on. Read-only — the only one who changes files is the agent, and it goes through the permission gate.',
+    treeAria: 'Project tree',
+    treeLoading: 'Reading the tree…',
+    pick: 'Pick a file on the left to read it.',
+    openFailed: 'Could not open the file.',
+    lines: (n) => ` · ${n} ${n === 1 ? 'line' : 'lines'}`,
+    tooLarge: (size) => `The file is too large (${size}) — it does not open in the panel.`,
+    clipped: (shown, total) => `Showing the first ${shown} lines (of ${total}).`,
+  },
+
+  prompts: {
+    title: 'Prompt library',
+    desc: 'Ready-made texts sent to an agent as they are. For behavior rules, a skill fits better.',
+    newPrompt: '+ New prompt',
+    emptyTitle: 'The library is empty',
+    emptyA: 'The old built-in prompts became ',
+    emptySkill: 'skills',
+    emptyB: ': type ',
+    emptyC: ' in a terminal and call them with commands like ',
+    emptyD: '.',
+    emptyHint: 'Only add long texts here that you repeat often and want to send to an agent as is.',
+    targetAria: 'Agent to send to',
+    pickAgent: 'Pick an agent…',
+    confirmDelete: (title) => `Delete "${title}"?`,
+    editTitle: 'Edit prompt',
+    newTitle: 'New prompt',
+    addSub: 'add to the library',
+    fieldTitle: 'Title',
+    fieldTitleHint: 'this is what you see in the list',
+    fieldTitlePh: 'e.g. Bug report template',
+    fieldDesc: 'Description',
+    fieldDescHint: 'optional · what it is for',
+    fieldDescPh: 'e.g. Gives the senior dev a root-cause-first bug fix brief',
+    fieldText: 'Text',
+    fieldTextHint: 'sent to the agent as is',
+    lines: (n) => `${n} ${n === 1 ? 'line' : 'lines'}`,
+    textPh: 'Context: which project / directory\nRequest: the work you want done\nOut of scope: what not to touch\nDone when: how we know it is finished',
+  },
+
+  reports: {
+    filter: { all: 'All', done: 'Done', failed: 'Failed' },
+    loading: 'Reading reports…',
+    title: 'Reports',
+    desc: 'Finished tasks. The report text is the agent’s own account; next to it are the files actually written during that task — claim and measurement side by side.',
+    emptyTitle: 'No reports yet',
+    emptyA: 'When a task finishes, the agent’s result lands here. To give a task, use the ',
+    emptyTasks: 'Tasks',
+    emptyB: ' panel or the orchestrator bar at the bottom.',
+    files: (n) => `${n} ${n === 1 ? 'file' : 'files'}`,
+    noFiles: 'no files',
+    givenBy: 'from: ',
+    user: 'user',
+    duration: (d) => `duration: ${d}`,
+    chainStep: (n) => `chain step ${n}`,
+    givenWork: 'The task',
+    noResult: '(the agent left no result text)',
+    evidence: 'Evidence — files written',
+    withSubtasks: ' (including subtasks)',
+    noneWritten: 'No files were written during this task. Expected for research/review tasks; for a task that should have written code, read the report with suspicion.',
+  },
+
   boot: {
     waiting: 'waiting for the server — retrying',
     noAnswer: 'the server is not responding · make sure it was started with `npm run dev`',

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import type { AgentSnapshot, Report, TaskStatus } from '../types';
+import { L, dateLocale } from '../i18n';
 
 /**
  * Raporlar paneli — sonuçlanmış görevler ve KANITI.
@@ -23,15 +24,10 @@ const STATUS_CHIP: Record<TaskStatus, string> = {
   running: 'chip-running',
   pending: 'chip-pending',
 };
-const STATUS_LABEL: Record<TaskStatus, string> = {
-  done: 'bitti',
-  failed: 'başarısız',
-  running: 'çalışıyor',
-  pending: 'sırada',
-};
+const STATUS_LABEL = L.taskStatus as Record<TaskStatus, string>;
 
 type Filter = 'all' | 'done' | 'failed';
-const FILTER_LABEL: Record<Filter, string> = { all: 'Hepsi', done: 'Bitenler', failed: 'Başarısız' };
+const FILTER_LABEL = L.reports.filter as Record<Filter, string>;
 
 function when(ts: number): string {
   return new Date(ts).toLocaleString('tr-TR', {
@@ -95,19 +91,18 @@ export function Reports({ agents }: Props) {
     };
   }, [reports, ids]);
 
-  if (!reports) return <div className="muted center">{error || 'Raporlar okunuyor…'}</div>;
+  if (!reports) return <div className="muted center">{error || L.reports.loading}</div>;
 
   return (
     <div className="reports">
       <section className="pl-head">
         <div>
-          <h2 className="plate-title">Raporlar</h2>
+          <h2 className="plate-title">{L.reports.title}</h2>
           <p className="pl-head-desc">
-            Sonuçlanmış görevler. Rapor metni ajanın kendi anlatısı; yanındaki dosya
-            listesi o görevde gerçekten yazılanlar — iddia ile ölçüm yan yana.
+            {L.reports.desc}
           </p>
         </div>
-        <button onClick={() => void load()}>Yenile</button>
+        <button onClick={() => void load()}>{L.actions.refresh}</button>
       </section>
 
       {error && <div className="error">{error}</div>}
@@ -124,10 +119,9 @@ export function Reports({ agents }: Props) {
 
       {shown.length === 0 ? (
         <div className="empty">
-          <h2>Henüz rapor yok</h2>
+          <h2>{L.reports.emptyTitle}</h2>
           <p>
-            Bir görev bittiğinde ajanın sonucu buraya düşer. Görev vermek için
-            <strong> Görevler</strong> panelini ya da alttaki orkestratör çubuğunu kullan.
+            {L.reports.emptyA}<strong>{L.reports.emptyTasks}</strong>{L.reports.emptyB}
           </p>
         </div>
       ) : (
@@ -157,7 +151,7 @@ export function Reports({ agents }: Props) {
                   {/* Kanıt rozeti: sıfırsa da yazılır — sessiz kalmak "yaptım"
                       iddiasını doğrulanmamış hâlde geçirmek olurdu. */}
                   <span className={`rp-eviq${r.files.length ? '' : ' none'}`}>
-                    {r.files.length ? `${r.files.length} dosya` : 'dosya yok'}
+                    {r.files.length ? L.reports.files(r.files.length) : L.reports.noFiles}
                   </span>
                   <span className="rp-when">{when(t.finishedAt ?? t.createdAt)}</span>
                 </button>
@@ -166,18 +160,18 @@ export function Reports({ agents }: Props) {
                   <div className="rp-body">
                     <div className="rp-meta">
                       <span>
-                        veren: <strong>{t.assignedBy === 'user' ? 'kullanıcı' : nameOf(t.assignedBy)}</strong>
+                        {L.reports.givenBy}<strong>{t.assignedBy === 'user' ? L.reports.user : nameOf(t.assignedBy)}</strong>
                       </span>
-                      {t.startedAt && t.finishedAt && <span>süre: {dur(t.startedAt, t.finishedAt)}</span>}
-                      {t.chainId && <span>zincir adımı {(t.stepIndex ?? 0) + 1}</span>}
+                      {t.startedAt && t.finishedAt && <span>{L.reports.duration(dur(t.startedAt, t.finishedAt))}</span>}
+                      {t.chainId && <span>{L.reports.chainStep((t.stepIndex ?? 0) + 1)}</span>}
                       <span className="dim">#{t.id}</span>
                     </div>
 
-                    <h4 className="rp-sub">Verilen iş</h4>
+                    <h4 className="rp-sub">{L.reports.givenWork}</h4>
                     <pre className="rp-prompt">{t.prompt}</pre>
 
                     <h4 className="rp-sub">Rapor</h4>
-                    <pre className="rp-result">{t.result || '(ajan bir sonuç metni bırakmadı)'}</pre>
+                    <pre className="rp-result">{t.result || L.reports.noResult}</pre>
 
                     {/* Delegasyon: iş kimlere bölündü. Üst görevin raporu çoğu
                         zaman "delege ettim" der; asıl işi bunlar yapmıştır. */}
@@ -199,8 +193,8 @@ export function Reports({ agents }: Props) {
                     )}
 
                     <h4 className="rp-sub">
-                      Kanıt — yazılan dosyalar
-                      {r.subtasks.length > 0 && <span className="rp-sub-note"> (alt görevler dahil)</span>}
+                      {L.reports.evidence}
+                      {r.subtasks.length > 0 && <span className="rp-sub-note">{L.reports.withSubtasks}</span>}
                     </h4>
                     {r.files.length ? (
                       <ul className="rp-files">
@@ -209,7 +203,7 @@ export function Reports({ agents }: Props) {
                             <span className="rp-file-path">{f.path}</span>
                             <span className="rp-file-meta">
                               {f.tool} · {nameOf(f.agentId)} ·{' '}
-                              {new Date(f.ts).toLocaleTimeString('tr-TR', {
+                              {new Date(f.ts).toLocaleTimeString(dateLocale, {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
@@ -219,9 +213,7 @@ export function Reports({ agents }: Props) {
                       </ul>
                     ) : (
                       <p className="rp-none">
-                        Bu görev sırasında hiçbir dosya yazılmadı. Araştırma/inceleme
-                        görevlerinde beklenen bir durum; kod yazması beklenen bir görevde
-                        raporu şüpheyle oku.
+                        {L.reports.noneWritten}
                       </p>
                     )}
                   </div>

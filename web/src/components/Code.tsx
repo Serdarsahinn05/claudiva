@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { highlight, langOf, preload, whenReady } from '../highlight';
 import type { AgentSnapshot, FileContent, TreeEntry } from '../types';
+import { L } from '../i18n';
 
 /**
  * Kod paneli — ajanların üzerinde çalıştığı kod tabanı.
@@ -41,10 +42,7 @@ function iconNameOf(entry: TreeEntry, isOpen: boolean): string | undefined {
 
 function rel(ts: number): string {
   const s = Math.round((Date.now() - ts) / 1000);
-  if (s < 60) return `${s}sn önce`;
-  if (s < 3600) return `${Math.round(s / 60)}dk önce`;
-  if (s < 86400) return `${Math.round(s / 3600)}sa önce`;
-  return `${Math.round(s / 86400)}g önce`;
+  return L.time.ago(s);
 }
 
 export function Code({ agents }: Props) {
@@ -166,19 +164,18 @@ export function Code({ agents }: Props) {
     <div className="code">
       <section className="pl-head">
         <div>
-          <h2 className="plate-title">Kod</h2>
+          <h2 className="plate-title">{L.code.title}</h2>
           <p className="pl-head-desc">
-            Ajanların üzerinde çalıştığı proje. Salt okunur — dosyayı değiştiren tek
-            özne ajanın kendisi, o da izin kapısından geçer.
+            {L.code.desc}
           </p>
         </div>
-        <button onClick={() => void loadDir('')}>Yenile</button>
+        <button onClick={() => void loadDir('')}>{L.actions.refresh}</button>
       </section>
 
       {error && <div className="error">{error}</div>}
 
       <div className="code-split">
-        <div className="code-tree" role="tree" aria-label="Proje ağacı">
+        <div className="code-tree" role="tree" aria-label={L.code.treeAria}>
           {rows.map(({ entry, depth }) => (
             <button
               key={entry.path}
@@ -226,23 +223,23 @@ export function Code({ agents }: Props) {
               )}
             </button>
           ))}
-          {!rows.length && <div className="muted center">Ağaç okunuyor…</div>}
+          {!rows.length && <div className="muted center">{L.code.treeLoading}</div>}
         </div>
 
         <div className="code-view">
           {!sel ? (
-            <div className="muted center">Okumak için soldan bir dosya seç.</div>
+            <div className="muted center">{L.code.pick}</div>
           ) : loading ? (
             <div className="muted center">Okunuyor…</div>
           ) : !file ? (
-            <div className="muted center">{error || 'Dosya açılamadı.'}</div>
+            <div className="muted center">{error || L.code.openFailed}</div>
           ) : (
             <>
               <div className="code-head">
                 <span className="code-path">{file.path}</span>
                 <span className="code-meta">
                   {fmtSize(file.size)}
-                  {file.lines > 0 && ` · ${file.lines} satır`}
+                  {file.lines > 0 && L.code.lines(file.lines)}
                   {langOf(file.path) && ` · ${langOf(file.path)}`}
                 </span>
               </div>
@@ -263,7 +260,7 @@ export function Code({ agents }: Props) {
 
               {file.tooLarge ? (
                 <div className="muted center">
-                  Dosya çok büyük ({fmtSize(file.size)}) — panelde açılmıyor.
+                  {L.code.tooLarge(fmtSize(file.size))}
                 </div>
               ) : file.binary ? (
                 <div className="muted center">İkili dosya ({fmtSize(file.size)}) — metin olarak okunamaz.</div>
@@ -296,7 +293,7 @@ export function Code({ agents }: Props) {
 
               {file.lines > MAX_RENDER_LINES && (
                 <div className="code-clip">
-                  İlk {MAX_RENDER_LINES} satır gösteriliyor ({file.lines} satırın).
+                  {L.code.clipped(MAX_RENDER_LINES, file.lines)}
                 </div>
               )}
             </>
