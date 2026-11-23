@@ -8,6 +8,7 @@ import type {
   SkillInfo,
   SkillScope,
 } from '../types';
+import { L } from '../i18n';
 
 /**
  * Skill paneli — iki kip, iki ayrı soru.
@@ -28,16 +29,12 @@ import type {
  * `SKILL.md` varsa yüklenir, `SKILL.md.disabled` ise yüklenmez (bkz. skills.ts).
  */
 
-const SCOPE_LABEL: Record<SkillScope, string> = {
-  global: 'genel',
-  project: 'proje',
-  agent: 'ajan',
-};
+const SCOPE_LABEL = L.skills.scope as Record<SkillScope, string>;
 
 const SCOPE_NOTE: Record<SkillScope, string> = {
-  global: 'Bütün projelerinde geçerli (~/.claude/skills).',
-  project: 'Yalnız bu depoda geçerli (.claude/skills).',
-  agent: 'Yalnız bu ajanda geçerli.',
+  global: L.skills.scopeNote.global,
+  project: L.skills.scopeNote.project,
+  agent: L.skills.scopeNote.agent,
 };
 
 function fmtSize(n: number): string {
@@ -47,10 +44,7 @@ function fmtSize(n: number): string {
 
 function rel(ts: number): string {
   const s = Math.round((Date.now() - ts) / 1000);
-  if (s < 60) return 'az önce';
-  if (s < 3600) return `${Math.round(s / 60)}dk önce`;
-  if (s < 86400) return `${Math.round(s / 3600)}sa önce`;
-  return `${Math.round(s / 86400)}g önce`;
+  return s < 60 ? L.skills.justNow : L.time.ago(s);
 }
 
 type Tab = 'all' | SkillScope;
@@ -119,7 +113,7 @@ export function Skills({ agents }: Props) {
       await api.toggleSkill(s.id, !s.enabled);
       await load();
       setNotice(
-        `"${s.name}" ${s.enabled ? 'kapatıldı' : 'açıldı'}. Değişiklik ajanın BİR SONRAKİ başlatmasında geçerli olur.`,
+        L.skills.toggled(s.name, s.enabled),
       );
     } catch (e) {
       setError((e as Error).message);
@@ -131,9 +125,9 @@ export function Skills({ agents }: Props) {
   async function remove(s: SkillInfo) {
     const extra =
       s.scope === 'global'
-        ? '\n\nDİKKAT: genel kapsam — bu skill bütün projelerinden silinir.'
+        ? L.skills.globalWarn
         : '';
-    if (!confirm(`"${s.name}" skill'i tamamen silinsin mi?\n\n${s.dir}${extra}\n\nBu işlem geri alınamaz.`)) {
+    if (!confirm(L.skills.confirmDelete(s.name, s.dir, extra))) {
       return;
     }
     setBusy(s.id);
@@ -148,7 +142,7 @@ export function Skills({ agents }: Props) {
     }
   }
 
-  if (!skills) return <div className="muted center">{error || 'Skill’ler taranıyor…'}</div>;
+  if (!skills) return <div className="muted center">{error || L.skills.scanning}</div>;
 
   return (
     <div className="skills">
@@ -158,13 +152,12 @@ export function Skills({ agents }: Props) {
           <p className="pl-head-desc">
             {mode === 'installed' ? (
               <>
-                Ajanların kullanabildiği yetenekler. Kapatmak dosyayı silmez —{' '}
-                <code>SKILL.md</code> yeniden adlandırılır, istediğinde geri açılır.
+                {L.skills.descInstalledA}
+                <code>SKILL.md</code>{L.skills.descInstalledB}
               </>
             ) : (
               <>
-                Depolarda ara, işaretle, toplu kur. Kapsam kurulum anında BİR KEZ sorulur ve
-                işaretlediklerinin hepsine uygulanır.
+                {L.skills.descCatalog}
               </>
             )}
           </p>
@@ -174,13 +167,13 @@ export function Skills({ agents }: Props) {
             className={`tb-filter${mode === 'installed' ? ' sel' : ''}`}
             onClick={() => setMode('installed')}
           >
-            Kurulu <span className="tb-filter-count">{counts.all}</span>
+            {L.skills.installed} <span className="tb-filter-count">{counts.all}</span>
           </button>
           <button
             className={`tb-filter${mode === 'catalog' ? ' sel' : ''}`}
             onClick={() => setMode('catalog')}
           >
-            Keşfet
+            {L.skills.discover}
           </button>
         </div>
       </section>
@@ -209,23 +202,23 @@ export function Skills({ agents }: Props) {
             </div>
             <input
               className="mem-search"
-              placeholder="ada ya da açıklamaya göre ara…"
+              placeholder={L.skills.search}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              aria-label="Skill ara"
+              aria-label={L.skills.searchAria}
             />
-            <button onClick={() => setInstallOpen(true)}>Elle kur</button>
+            <button onClick={() => setInstallOpen(true)}>{L.skills.manual}</button>
           </div>
 
           {tab !== 'all' && <p className="sk-scope-note">{SCOPE_NOTE[tab]}</p>}
 
           {shown.length === 0 ? (
             <div className="empty">
-              <h2>{q ? 'Eşleşme yok' : 'Skill yok'}</h2>
+              <h2>{q ? L.skills.noMatch : L.skills.none}</h2>
               <p>
                 {q
-                  ? 'Aramayı daralt ya da başka bir kapsama bak.'
-                  : '“Keşfet” kipinden arayıp kurabilirsin.'}
+                  ? L.skills.narrow
+                  : L.skills.useDiscover}
               </p>
             </div>
           ) : (
@@ -239,7 +232,7 @@ export function Skills({ agents }: Props) {
                         {SCOPE_LABEL[s.scope]}
                         {s.agentId && ` · ${nameOf(s.agentId)}`}
                       </span>
-                      {!s.enabled && <span className="chip chip-pending">kapalı</span>}
+                      {!s.enabled && <span className="chip chip-pending">{L.skills.off}</span>}
                     </div>
                     {s.description && <p className="sk-desc">{s.description}</p>}
                     <div className="sk-meta">
@@ -253,10 +246,10 @@ export function Skills({ agents }: Props) {
 
                   <div className="sk-actions">
                     <button onClick={() => void toggle(s)} disabled={busy === s.id}>
-                      {s.enabled ? 'Kapat' : 'Aç'}
+                      {s.enabled ? L.skills.disable : L.skills.enable}
                     </button>
                     <button className="danger" onClick={() => void remove(s)} disabled={busy === s.id}>
-                      Sil
+                      {L.skills.delete}
                     </button>
                   </div>
                 </article>
@@ -387,7 +380,7 @@ function Discover({
       setResults(res);
       const ok = res.filter((r) => r.ok).length;
       onNotice(
-        `${ok}/${res.length} skill kuruldu (${SCOPE_LABEL[scope]} kapsam). Ajanı yeniden başlatınca görünür.`,
+        L.skills.installedN(ok, res.length, SCOPE_LABEL[scope]),
       );
       setSel(new Set());
       onInstalled();
@@ -399,7 +392,7 @@ function Discover({
     }
   }
 
-  if (!view) return <div className="muted center">{error || 'Katalog okunuyor…'}</div>;
+  if (!view) return <div className="muted center">{error || L.skills.catalogLoading}</div>;
 
   const never = view.fetchedAt === null;
 
@@ -408,13 +401,13 @@ function Discover({
       <div className="sk-tools">
         <input
           className="mem-search"
-          placeholder="ada, açıklamaya ya da depoya göre ara…"
+          placeholder={L.skills.catalogSearch}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label="Katalogda ara"
+          aria-label={L.skills.catalogAria}
         />
         <button onClick={() => void refresh()} disabled={refreshing}>
-          {refreshing ? 'Taranıyor…' : 'Yenile'}
+          {refreshing ? L.skills.refreshing : L.actions.refresh}
         </button>
         <button onClick={() => setSrcOpen(true)}>Kaynaklar</button>
       </div>
@@ -422,8 +415,8 @@ function Discover({
       <div className="sk-cat-bar">
         <span className="sk-cat-when">
           {never
-            ? 'Katalog hiç taranmadı — “Yenile” ile başla.'
-            : `${view.skills.length} skill · ${rel(view.fetchedAt!)} tarandı`}
+            ? L.skills.neverScanned
+            : L.skills.scanned(view.skills.length, rel(view.fetchedAt!))}
         </span>
         <div className="tb-filters">
           <button className={`tb-filter${repo === '' ? ' sel' : ''}`} onClick={() => setRepo('')}>
@@ -455,11 +448,11 @@ function Discover({
 
       {shown.length === 0 ? (
         <div className="empty">
-          <h2>{never ? 'Katalog boş' : 'Eşleşme yok'}</h2>
+          <h2>{never ? L.skills.catalogEmpty : L.skills.noMatch}</h2>
           <p>
             {never
-              ? '“Yenile” kaynak depoları tarar ve kurulabilir skill’leri listeler.'
-              : 'Aramayı daralt ya da başka bir kaynağa bak.'}
+              ? L.skills.refreshHint
+              : L.skills.narrowSource}
           </p>
         </div>
       ) : (
@@ -475,7 +468,7 @@ function Discover({
                 onChange={toggleAllShown}
                 disabled={selectable.length === 0}
               />
-              <span>Görünen {selectable.length} kurulabilir skill’i seç</span>
+              <span>{L.skills.selectVisible(selectable.length)}</span>
             </label>
           </div>
 
@@ -490,7 +483,7 @@ function Discover({
                       checked={sel.has(s.id)}
                       onChange={() => toggleOne(s.id)}
                       disabled={installed}
-                      aria-label={`${s.name} seç`}
+                      aria-label={L.skills.pick(s.name)}
                     />
                   </label>
                   <div className="sk-main">
@@ -522,11 +515,11 @@ function Discover({
       {sel.size > 0 && (
         <div className="sk-bulkbar">
           <span>
-            <strong>{sel.size}</strong> skill seçildi
+            <strong>{sel.size}</strong>{L.skills.selected}
           </span>
-          <button onClick={() => setSel(new Set())}>Seçimi temizle</button>
+          <button onClick={() => setSel(new Set())}>{L.skills.clearSel}</button>
           <button className="primary" onClick={() => setScopeOpen(true)} disabled={refreshing}>
-            {refreshing ? 'Kuruluyor…' : `Kur (${sel.size})`}
+            {refreshing ? L.skills.installing : L.skills.install(sel.size)}
           </button>
         </div>
       )}
@@ -575,11 +568,10 @@ function ScopeDialog({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Kurulum kapsamı">
-        <h3>{skills.length} skill kurulacak</h3>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={L.skills.scopeDialog}>
+        <h3>{L.skills.willInstall(skills.length)}</h3>
         <p className="sk-dialog-note">
-          Her birinin <code>SKILL.md</code> dosyası ve yanındaki dosyalar indirilip diske yazılır.
-          Kaynak <code>skills-lock.json</code> dosyasına kaydedilir.
+          {L.skills.downloadNoteA}<code>SKILL.md</code>{L.skills.downloadNoteB}<code>skills-lock.json</code>{L.skills.downloadNoteC}
         </p>
 
         <ul className="sk-chosen">
@@ -588,22 +580,22 @@ function ScopeDialog({
               {s.name} <span className="muted">· {s.repo}</span>
             </li>
           ))}
-          {skills.length > 8 && <li className="muted">+{skills.length - 8} tane daha</li>}
+          {skills.length > 8 && <li className="muted">{L.skills.more(skills.length - 8)}</li>}
         </ul>
 
         <label>
-          Kapsam — hepsine uygulanır
+          {L.skills.scopeAll}
           <select value={scope} onChange={(e) => setScope(e.target.value as SkillScope)}>
-            <option value="project">Proje — yalnız bu depo</option>
-            <option value="global">Genel — bütün projelerin</option>
-            <option value="agent">Ajan — tek bir ajan</option>
+            <option value="project">{L.skills.optProject}</option>
+            <option value="global">{L.skills.optGlobal}</option>
+            <option value="agent">{L.skills.optAgent}</option>
           </select>
         </label>
         <p className="sk-scope-note">{SCOPE_NOTE[scope]}</p>
 
         {scope === 'agent' && (
           <label>
-            Ajan
+            {L.skills.agent}
             <select value={agentId} onChange={(e) => setAgentId(e.target.value)}>
               {agents.map((a) => (
                 <option key={a.config.id} value={a.config.id}>
@@ -615,7 +607,7 @@ function ScopeDialog({
         )}
 
         <div className="modal-actions">
-          <button onClick={onClose}>Vazgeç</button>
+          <button onClick={onClose}>{L.actions.cancel}</button>
           <button
             className="primary"
             onClick={() => onConfirm(scope, scope === 'agent' ? agentId : undefined)}
@@ -634,9 +626,9 @@ function ResultDialog({ results, onClose }: { results: BulkResult[]; onClose: ()
   const bad = results.filter((r) => !r.ok);
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Kurulum sonucu">
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={L.skills.resultDialog}>
         <h3>
-          {results.length - bad.length}/{results.length} kuruldu
+          {L.skills.installedOf(results.length - bad.length, results.length)}
         </h3>
         <ul className="sk-results">
           {results.map((r) => (
@@ -649,7 +641,7 @@ function ResultDialog({ results, onClose }: { results: BulkResult[]; onClose: ()
         </ul>
         <div className="modal-actions">
           <button className="primary" onClick={onClose}>
-            Tamam
+            {L.skills.ok}
           </button>
         </div>
       </div>
@@ -708,11 +700,10 @@ function SourceDialog({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Katalog kaynakları">
-        <h3>Katalog kaynakları</h3>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={L.skills.sourcesDialog}>
+        <h3>{L.skills.sourcesDialog}</h3>
         <p className="sk-dialog-note">
-          Her depo taranırken tek bir istek atılır (dosya ağacı); açıklamalar dosya başlarından
-          okunur. Değişiklikten sonra <strong>Yenile</strong> ile yeniden tara.
+          {L.skills.sourcesNoteA}<strong>{L.actions.refresh}</strong>{L.skills.sourcesNoteB}
         </p>
 
         <ul className="sk-src-list">
@@ -721,29 +712,29 @@ function SourceDialog({
               <span className="sk-src-name">{s.label}</span>
               <span className="sk-src-repo">{s.repo}</span>
               <button onClick={() => void drop(s.repo)} disabled={busy}>
-                {s.builtin ? 'Gizle' : 'Kaldır'}
+                {s.builtin ? L.skills.hide : L.skills.remove}
               </button>
             </li>
           ))}
         </ul>
 
         <label>
-          Depo ekle
+          {L.skills.addRepo}
           <input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="sahip/depo" />
         </label>
         <label>
-          Ad (isteğe bağlı)
-          <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Koleksiyonun adı" />
+          {L.skills.nameOptional}
+          <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={L.skills.collectionPh} />
         </label>
 
         {error && <div className="error">{error}</div>}
 
         <div className="modal-actions">
           <button onClick={onClose} disabled={busy}>
-            Kapat
+            {L.common.close}
           </button>
           <button className="primary" onClick={() => void add()} disabled={busy || !repo.trim()}>
-            Ekle
+            {L.actions.add}
           </button>
         </div>
       </div>
@@ -776,7 +767,7 @@ function InstallDialog({
 
   async function submit() {
     if (!repo.trim() || !skillPath.trim()) {
-      setError('Depo ve skill yolu gerekli.');
+      setError(L.skills.needRepo);
       return;
     }
     setBusy(true);
@@ -788,7 +779,7 @@ function InstallDialog({
         scope,
         agentId: scope === 'agent' ? agentId : undefined,
       });
-      onDone(`"${s.name}" kuruldu (${SCOPE_LABEL[s.scope]} kapsam). Ajanı yeniden başlatınca görünür.`);
+      onDone(L.skills.installedOne(s.name, SCOPE_LABEL[s.scope]));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -798,15 +789,14 @@ function InstallDialog({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="GitHub’dan skill kur">
-        <h3>GitHub’dan skill kur</h3>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={L.skills.ghDialog}>
+        <h3>{L.skills.ghDialog}</h3>
         <p className="sk-dialog-note">
-          Belirttiğin dizindeki <code>SKILL.md</code> ve yanındaki dosyalar indirilip diske yazılır.
-          Kaynak <code>skills-lock.json</code> dosyasına kaydedilir.
+          {L.skills.ghNoteA}<code>SKILL.md</code>{L.skills.ghNoteB}<code>skills-lock.json</code>{L.skills.downloadNoteC}
         </p>
 
         <label>
-          Depo
+          {L.skills.repo}
           <input
             value={repo}
             onChange={(e) => setRepo(e.target.value)}
@@ -816,7 +806,7 @@ function InstallDialog({
         </label>
 
         <label>
-          Depo içindeki skill yolu
+          {L.skills.skillPath}
           <input
             value={skillPath}
             onChange={(e) => setSkillPath(e.target.value)}
@@ -825,17 +815,17 @@ function InstallDialog({
         </label>
 
         <label>
-          Kapsam
+          {L.skills.scopeLabel}
           <select value={scope} onChange={(e) => setScope(e.target.value as SkillScope)}>
-            <option value="project">Proje — yalnız bu depo</option>
-            <option value="global">Genel — bütün projelerin</option>
-            <option value="agent">Ajan — tek bir ajan</option>
+            <option value="project">{L.skills.optProject}</option>
+            <option value="global">{L.skills.optGlobal}</option>
+            <option value="agent">{L.skills.optAgent}</option>
           </select>
         </label>
 
         {scope === 'agent' && (
           <label>
-            Ajan
+            {L.skills.agent}
             <select value={agentId} onChange={(e) => setAgentId(e.target.value)}>
               {agents.map((a) => (
                 <option key={a.config.id} value={a.config.id}>
@@ -850,10 +840,10 @@ function InstallDialog({
 
         <div className="modal-actions">
           <button onClick={onClose} disabled={busy}>
-            Vazgeç
+            {L.actions.cancel}
           </button>
           <button className="primary" onClick={() => void submit()} disabled={busy}>
-            {busy ? 'İndiriliyor…' : 'Kur'}
+            {busy ? L.skills.downloading : L.skills.installOne}
           </button>
         </div>
       </div>
