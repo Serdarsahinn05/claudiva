@@ -67,6 +67,26 @@ videolar ve yol haritası orada. Bu bölüm yalnızca yürüyen işin durumunu t
 - **DİKKAT:** inceleme için açılan bir sunucu bu reponun `.claude-manager` klasörünü `.claudiva`ya TAŞIDI (beklenen davranış, veri eksiksiz). Gerçek `~/.claude-manager` HÂLÂ taşınmadı.
 - `docs/*.mp4` `.gitignore`'a eklendi (~18 MB ikili dosya git geçmişine girmesin).
 
+- [x] **Token: CLAUDE.md bölündü** (kök 5.4 KB + `server/CLAUDE.md` + `web/CLAUDE.md`). Ölçüldü: ajan bağlamı yeni oturum başına 52.7k → **35.0k** (hafıza dosyaları 20.9k → 3.4k).
+- [x] Sohbet gönder düğmesi tek satırda tam ortada (ölçüldü: 778.2 = 778.2), çok satırda altta.
+- [x] **GitHub:** 6 commit `claudiva-sohbet` dalında, push edildi. `main`e birleştirme kullanıcı kararı. **npm publish EN SONA** (kullanıcı isteği); commit/push npm'i etkilemez.
+- Rakip ürün ekran görüntüsü (`docs/Screenshot_…jpg`) bilerek commit edilmedi.
+
+## Çok dil önerisi (kullanıcıya sunuldu, karar bekliyor)
+
+- **İki ayrı dil var, karıştırma:**
+  - (1) **arayüz dili**: düğmeler, etiketler, paneldeki metinler;
+  - (2) **ajan dili**: `personality.md`, skill'ler, `brief.ts`, görev kuyruğunun ajana yazdığı metin, otomatik model hatırlatması.
+  - İkisi bağımsız seçilebilmeli: İngilizce arayüzle Türkçe çalışan ekip mümkün olmalı.
+- **Arayüz:** kütüphane yok. `web/src/i18n/tr.ts` kaynak sözlük; `en.ts` aynı anahtarları `typeof tr` ile TİPLİ taşır (eksik anahtar derlemede yakalanır). `useLocale()` mevcut `uiMode.ts` deseniyle kurulur, `t('chat.send')` biçiminde kullanılır.
+- **Sunucu:** hata metinleri kod döndürür, metni arayüz çevirir.
+- **Ajan:** `agents/<id>/personality.<dil>.md` ve skill'in `SKILL.<dil>.md` sürümü; dil ajan ayarında tutulur.
+- **Kapsam (ölçüldü, alt sınır):**
+  - Arayüzde Türkçe karakter taşıyan en az 227 dizge (32 dosya; gerçek sayı muhtemelen 2-3 katı).
+  - Sunucuda 21 dizge.
+  - Ajan tarafında 8 personality + 54 skill, yaklaşık 54 KB metin.
+  - Toplam: kademeli 3-4 iş oturumu.
+
 ## Sıradaki adımlar (öneri sırası)
 
 1. Kullanıcı isterse **commit** (Co-Authored-By satırı YOK).
