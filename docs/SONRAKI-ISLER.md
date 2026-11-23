@@ -156,6 +156,43 @@ yeterli.
 
 ---
 
+## 3. İleride değerlendirilecek: masaüstü uygulaması (Tauri)
+
+**Karar: sunucu Rust'a ÇEVRİLMEZ** (2026-11-23 değerlendirmesi). Gerekçeler:
+
+- **Node zaten zorunlu.** Agent SDK, Claude Code CLI'ını çalıştırıyor ve CLI bir
+  Node programı. Rust'ın "tek ikili dosya, bağımlılık yok" vaadi boşa düşer.
+- **Resmî Rust Agent SDK'sı yok** (yalnız TS ve Python). CLI'ın `stream-json`
+  protokolünü, süreç içi MCP sunucularını (`team`, `task`, `self`, `browser`),
+  `canUseTool` izin kapısını ve resume akışını elle yeniden yazmak gerekirdi.
+  Protokol değişirse kod sessizce kırılır.
+- **Darboğaz sunucu değil, model.** Bir tur saniyeler sürüyor; Rust burada
+  kullanıcının hissetmeyeceği milisaniyeler kazandırır.
+- **Playwright'ın resmî Rust sürümü yok** (`chromiumoxide` / CDP ile yapılır,
+  ölçülmüş incelikler yeniden kurulur).
+- **Kodun çoğu React arayüzü.** Paylaşılan tipler iki ayrı dilde yaşamaya başlar.
+- **npm dağıtımı karmaşıklaşır.** Platform başına derlenmiş paket ve CI hattı
+  gerekir; bugün `npm publish` tek komut.
+
+**Rust'ın gerçekten işe yarayacağı yer: Tauri ile masaüstü uygulaması.**
+
+- Mevcut React paneli olduğu gibi Tauri penceresine girer.
+- Node sunucusu **sidecar** olarak yanında çalışır, Rust'a çevrilmez.
+- Boyut ~10 MB (Electron ~150 MB; Orkas Electron kullanıyor).
+- Kazanç:
+  - sistem tepsisi ikonu;
+  - "izin bekliyor" / "görev bitti" için yerel bildirim;
+  - otomatik güncelleme;
+  - çift tıkla açılan uygulama.
+  "Terminal bilmeyen kullanıcı" hedefine (Sohbet modu, Sade stil) doğrudan hizmet eder.
+- **Açık sorular:**
+  - Sidecar Node'u uygulamayla mı paketlenir, yoksa kullanıcının Node'u mu kullanılır? (Claude Code CLI için Node yine gerekli.)
+  - Windows/macOS imzalama maliyeti.
+  - npm dağıtımı mı kalır, yoksa ikisi birlikte mi?
+- **Ne zaman:** stil temaları ve JEV'den sonra; npm yayını ile çakışmasın.
+
+---
+
 ## Hatırlatmalar (bu iki işten bağımsız)
 
 - **Kalan çeviri:** `web/src/localCommands.ts` komut çıktıları (~100 satır),
