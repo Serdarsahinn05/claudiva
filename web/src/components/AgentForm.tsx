@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { AgentSnapshot } from '../types';
 import { api } from '../api';
 import { Modal } from './Modal';
+import { L } from '../i18n';
 
 interface Props {
   existing?: AgentSnapshot;
@@ -16,30 +17,30 @@ interface Props {
 type Section = 'kimlik' | 'yetenek' | 'kisilik' | 'gelismis';
 
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
-  { id: 'kimlik', label: 'Kimlik', hint: 'ad ve açıklama' },
-  { id: 'yetenek', label: 'Yetenek', hint: 'rol, model, hafıza' },
-  { id: 'kisilik', label: 'Kişilik', hint: 'system prompt' },
-  { id: 'gelismis', label: 'Gelişmiş', hint: 'MCP, izinler' },
+  { id: 'kimlik', label: L.agentForm.secId, hint: L.agentForm.secIdHint },
+  { id: 'yetenek', label: L.agentForm.secSkill, hint: L.agentForm.secSkillHint },
+  { id: 'kisilik', label: L.agentForm.secPersona, hint: L.agentForm.secPersonaHint },
+  { id: 'gelismis', label: L.agentForm.secAdvanced, hint: L.agentForm.secAdvancedHint },
 ];
 
 const ROLES = [
-  { id: 'boss', label: 'Patron', desc: 'Kullanıcının muhatabı. İsteği böler, ekibe dağıtır, sonucu tek raporda toplar; kod yazmaz' },
-  { id: 'manager', label: 'Yönetici', desc: 'Patrondan gelen teknik işi alt görevlere çevirir, dağıtır, denetleyip birleştirir' },
-  { id: 'team-leader', label: 'Takım Lideri', desc: 'Kendi takımındaki birkaç uzmana iş verir, gerekirse kendisi de yapar' },
-  { id: 'worker', label: 'Çalışan', desc: 'Verilen işi kendisi yapar; başkasına iş dağıtamaz' },
+  { id: 'boss', label: L.roles.boss, desc: L.agentForm.roleDesc.boss },
+  { id: 'manager', label: L.roles.manager, desc: L.agentForm.roleDesc.manager },
+  { id: 'team-leader', label: L.roles['team-leader'], desc: L.agentForm.roleDesc['team-leader'] },
+  { id: 'worker', label: L.roles.worker, desc: L.agentForm.roleDesc.worker },
 ] as const;
 
 const MODELS = [
-  { id: 'haiku', label: 'Haiku', desc: 'Hızlı ve ucuz — basit işler' },
-  { id: 'sonnet', label: 'Sonnet', desc: 'Dengeli — çoğu iş için' },
-  { id: 'opus', label: 'Opus', desc: 'Güçlü — zor kararlar, karmaşık kod' },
+  { id: 'haiku', label: 'Haiku', desc: L.agentForm.modelDesc.haiku },
+  { id: 'sonnet', label: 'Sonnet', desc: L.agentForm.modelDesc.sonnet },
+  { id: 'opus', label: 'Opus', desc: L.agentForm.modelDesc.opus },
 ] as const;
 
 const MEMORY = [
-  { id: 'both', label: 'Ortak + Özel' },
-  { id: 'shared', label: 'Sadece ortak' },
-  { id: 'private', label: 'Sadece özel' },
-  { id: 'none', label: 'Hafıza yok' },
+  { id: 'both', label: L.agentForm.memory.both },
+  { id: 'shared', label: L.agentForm.memory.shared },
+  { id: 'private', label: L.agentForm.memory.private },
+  { id: 'none', label: L.agentForm.memory.none },
 ] as const;
 
 /** Seçenek kartı — açılır liste yerine, açıklamasıyla birlikte görünür. */
@@ -110,8 +111,8 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
   return (
     <Modal onClose={onClose} wide>
         <div className="modal-head">
-          <h2>{existing ? existing.config.name : 'Yeni Ajan'}</h2>
-          <span className="modal-sub">{existing ? 'ajan yapılandırması' : 'mürettebata yeni üye'}</span>
+          <h2>{existing ? existing.config.name : L.agentForm.newTitle}</h2>
+          <span className="modal-sub">{existing ? L.agentForm.editSub : L.agentForm.newSub}</span>
         </div>
 
         <div className="modal-body">
@@ -134,19 +135,19 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
             {section === 'kimlik' && (
               <>
                 <label className="tb-field">
-                  <span className="tb-field-label">İsim</span>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="örn. Araştırmacı" />
+                  <span className="tb-field-label">{L.agentForm.name}</span>
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder={L.agentForm.namePh} />
                 </label>
                 {/* Takım serbest metindir ve datalist bir KISITLAMA DEĞİL öneri:
                     yeni bir ad yazmak yeni takımı var eder (bkz. teams.ts). */}
                 <label className="tb-field">
                   <span className="tb-field-label">
-                    Takım<span className="tb-hint">boş bırakılırsa GENEL · üstteki sekmeleri bu belirler</span>
+                    {L.agentForm.team}<span className="tb-hint">{L.agentForm.teamHint}</span>
                   </span>
                   <input
                     value={team}
                     onChange={(e) => setTeam(e.target.value)}
-                    placeholder="örn. PRODUCT"
+                    placeholder={L.agentForm.teamPh}
                     list="cm-teams"
                     autoComplete="off"
                   />
@@ -158,13 +159,13 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
                 </label>
                 <label className="tb-field">
                   <span className="tb-field-label">
-                    Açıklama<span className="tb-hint">patron görev dağıtırken bunu okur</span>
+                    {L.agentForm.desc}<span className="tb-hint">{L.agentForm.descHint}</span>
                   </span>
                   <textarea
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="örn. Web araştırması ve karşılaştırmalı rapor yazımında uzman"
+                    placeholder={L.agentForm.descPh}
                   />
                 </label>
               </>
@@ -189,7 +190,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
 
                 <div className="tb-field">
                   <span className="tb-field-label">
-                    Model<span className="tb-hint">otomatik seçim açıksa bu temel model olur</span>
+                    {L.agentForm.model}<span className="tb-hint">{L.agentForm.modelHint}</span>
                   </span>
                   <div className="choice-grid">
                     {MODELS.map((m) => (
@@ -201,13 +202,13 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
                 <label className="check switch">
                   <input type="checkbox" checked={autoModel} onChange={(e) => setAutoModel(e.target.checked)} />
                   <span>
-                    <strong>Otomatik model seçimi</strong>
-                    <em>Ajan işin zorluğuna bakıp haiku/sonnet/opus arasında kendisi geçer.</em>
+                    <strong>{L.agentForm.autoModel}</strong>
+                    <em>{L.agentForm.autoModelDesc}</em>
                   </span>
                 </label>
 
                 <div className="tb-field">
-                  <span className="tb-field-label">Hafıza</span>
+                  <span className="tb-field-label">{L.agentForm.memoryLabel}</span>
                   <div className="choice-row">
                     {MEMORY.map((m) => (
                       <Choice
@@ -225,7 +226,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
             {section === 'kisilik' && (
               <label className="tb-field grow">
                 <span className="tb-field-label">
-                  Kişilik / talimatlar<span className="tb-hint">system prompt'a eklenir</span>
+                  {L.agentForm.persona}<span className="tb-hint">{L.agentForm.personaHint}</span>
                 </span>
                 <textarea
                   rows={16}
@@ -236,8 +237,8 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
                   }}
                   placeholder={
                     existing
-                      ? '(boş bırakılırsa mevcut kişilik korunur)'
-                      : 'örn. Sen titiz bir araştırmacısın. Kaynak göstermeden iddia yazmazsın...'
+                      ? L.agentForm.personaKeep
+                      : L.agentForm.personaPh
                   }
                 />
               </label>
@@ -247,7 +248,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
               <>
                 <label className="tb-field">
                   <span className="tb-field-label">
-                    MCP sunucuları<span className="tb-hint">JSON · dış uygulama bağlantıları</span>
+                    {L.agentForm.mcp}<span className="tb-hint">{L.agentForm.mcpHint}</span>
                   </span>
                   <textarea
                     rows={8}
@@ -259,8 +260,8 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
                 <label className="check switch danger-zone">
                   <input type="checkbox" checked={autoApprove} onChange={(e) => setAutoApprove(e.target.checked)} />
                   <span>
-                    <strong>Otomatik onay</strong>
-                    <em>Araç izinlerini sormadan çalışır. Dosya silme dahil her şeyi onaysız yapar.</em>
+                    <strong>{L.agentForm.autoApprove}</strong>
+                    <em>{L.agentForm.autoApproveDesc}</em>
                   </span>
                 </label>
               </>
@@ -270,9 +271,9 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
 
         {error && <div className="error">{error}</div>}
         <div className="modal-actions">
-          <button onClick={onClose}>Vazgeç</button>
+          <button onClick={onClose}>{L.actions.cancel}</button>
           <button className="primary" disabled={busy || !name.trim()} onClick={submit}>
-            {busy ? 'Kaydediliyor…' : existing ? 'Kaydet' : 'Oluştur'}
+            {busy ? L.actions.saving : existing ? L.common.save : L.agentForm.create}
           </button>
         </div>
     </Modal>

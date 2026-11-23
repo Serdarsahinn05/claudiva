@@ -2,23 +2,15 @@ import { useMemo, useState } from 'react';
 import type { AgentSnapshot, Task } from '../types';
 import { api } from '../api';
 import { ROLE_LABEL, STATUS_LABEL } from '../format';
+import { L } from '../i18n';
 
-const STATUS_TR: Record<string, string> = {
-  pending: 'bekliyor',
-  running: 'çalışıyor',
-  done: 'tamamlandı',
-  failed: 'başarısız',
-};
+const STATUS_TR: Record<string, string> = L.tasks.status;
 
 type Filter = 'all' | 'running' | 'pending' | 'done' | 'failed';
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'Hepsi' },
-  { id: 'running', label: 'Çalışan' },
-  { id: 'pending', label: 'Sırada' },
-  { id: 'done', label: 'Biten' },
-  { id: 'failed', label: 'Hatalı' },
-];
+const FILTERS: { id: Filter; label: string }[] = (['all', 'running', 'pending', 'done', 'failed'] as const).map(
+  (id) => ({ id, label: L.tasks.filter[id] })
+);
 
 interface Props {
   tasks: Task[];
@@ -90,7 +82,7 @@ export function TaskBoard({ tasks, agents }: Props) {
     // "başlat"a basıp adımını kaybetmek sürpriz olurdu.
     const all = ready ? [...steps, { title, prompt, assignedTo }] : steps;
     if (all.length < 2) {
-      setError('Zincir en az iki adım ister; tek adım için zincir kipini kapat.');
+      setError(L.tasks.chainTooShort);
       return;
     }
     setBusy(true);
@@ -154,15 +146,14 @@ export function TaskBoard({ tasks, agents }: Props) {
           <div className="task-detail">
             {t.dependsOn && (
               <div className="muted small">
-                Bu adım {agentName(tasks.find((x) => x.id === t.dependsOn)?.assignedTo ?? '')} adımının
-                sonucunu girdi olarak alır.
+                {L.tasks.dependsOn(agentName(tasks.find((x) => x.id === t.dependsOn)?.assignedTo ?? ''))}
               </div>
             )}
-            <div className="tb-field-label">Görev</div>
+            <div className="tb-field-label">{L.tasks.task}</div>
             <pre>{t.prompt}</pre>
             {t.result && (
               <>
-                <div className="tb-field-label">Sonuç</div>
+                <div className="tb-field-label">{L.tasks.result}</div>
                 <pre>{t.result}</pre>
               </>
             )}
@@ -176,7 +167,7 @@ export function TaskBoard({ tasks, agents }: Props) {
     <div className="taskboard">
       {/* ---------- pano başlığı: önce durum, sonra eylem ---------- */}
       <div className="tb-board-head">
-        <h2 className="plate-title">Görevler</h2>
+        <h2 className="plate-title">{L.tasks.title}</h2>
         <div className="tb-filters">
           {FILTERS.map((f) => (
             <button
@@ -199,7 +190,7 @@ export function TaskBoard({ tasks, agents }: Props) {
           }}
           aria-expanded={composeOpen}
         >
-          {composeOpen ? 'Kapat' : 'Görev ata'}
+          {composeOpen ? L.common.close : L.tasks.assign}
         </button>
       </div>
 
@@ -207,7 +198,7 @@ export function TaskBoard({ tasks, agents }: Props) {
       {composeOpen && (
       <section className="tb-compose">
         <div className="tb-compose-head">
-          <span className="eph-mod-head">{chainMode ? 'Zincir kur' : 'Görev ata'}</span>
+          <span className="eph-mod-head">{chainMode ? L.tasks.buildChain : L.tasks.assign}</span>
           <button
             type="button"
             className={`tb-filter${chainMode ? ' sel' : ''}`}
@@ -215,9 +206,9 @@ export function TaskBoard({ tasks, agents }: Props) {
               setChainMode((v) => !v);
               setError('');
             }}
-            title="Adımlar sırayla çalışır; her adım bir öncekinin sonucunu girdi olarak alır."
+            title={L.tasks.chainTitle}
           >
-            Zincir
+            {L.tasks.chain}
             {steps.length > 0 && <span className="tb-filter-count">{steps.length}</span>}
           </button>
         </div>
@@ -234,8 +225,8 @@ export function TaskBoard({ tasks, agents }: Props) {
                 <button
                   type="button"
                   className="icon-btn"
-                  title="Adımı çıkar"
-                  aria-label="Adımı çıkar"
+                  title={L.tasks.removeStep}
+                  aria-label={L.tasks.removeStep}
                   onClick={() => setSteps((list) => list.filter((_, k) => k !== i))}
                 >
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
@@ -251,24 +242,24 @@ export function TaskBoard({ tasks, agents }: Props) {
         <div className="tb-compose-grid">
           <div className="tb-fields">
             <label className="tb-field">
-              <span className="tb-field-label">Başlık</span>
+              <span className="tb-field-label">{L.tasks.fieldTitle}</span>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Kısa ve ayırt edici bir ad"
+                placeholder={L.tasks.fieldTitlePh}
               />
             </label>
 
             <label className="tb-field">
               <span className="tb-field-label">
-                Görev
-                <span className="tb-hint">bağlam · yapılacak iş · teslim kriteri</span>
+                {L.tasks.task}
+                <span className="tb-hint">{L.tasks.fieldTaskHint}</span>
               </span>
               <textarea
                 rows={7}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={'Bağlam: hangi dizin, mevcut durum\nGörev: yapılacak iş\nKapsam dışı: dokunulmayacaklar\nTeslim kriteri: bittiğini nasıl anlarız'}
+                placeholder={L.tasks.fieldTaskPh}
               />
             </label>
           </div>
@@ -293,7 +284,7 @@ export function TaskBoard({ tasks, agents }: Props) {
                   </span>
                 </button>
               ))}
-              {agents.length === 0 && <div className="muted small">Önce bir ajan oluştur.</div>}
+              {agents.length === 0 && <div className="muted small">{L.tasks.noAgents}</div>}
             </div>
           </div>
         </div>
@@ -305,16 +296,16 @@ export function TaskBoard({ tasks, agents }: Props) {
               <>
                 <span className={`led led-${target.status}`} />
                 {target.config.name} · {STATUS_LABEL[target.status]}
-                {target.status === 'offline' && <span className="tb-warn"> — başlatılacak</span>}
+                {target.status === 'offline' && <span className="tb-warn">{L.tasks.willStart}</span>}
               </>
             ) : (
-              'Bir ajan seç'
+              L.tasks.pickAgent
             )}
           </span>
           {chainMode ? (
             <>
               <button disabled={!ready || busy} onClick={addStep} type="button">
-                Adımı ekle
+                {L.tasks.addStep}
               </button>
               <button
                 className="primary"
@@ -322,12 +313,12 @@ export function TaskBoard({ tasks, agents }: Props) {
                 onClick={() => void startChain()}
                 type="button"
               >
-                {busy ? 'Başlatılıyor…' : `Zinciri başlat (${steps.length + (ready ? 1 : 0)})`}
+                {busy ? L.tasks.starting : L.tasks.startChain(steps.length + (ready ? 1 : 0))}
               </button>
             </>
           ) : (
             <button className="primary" disabled={!ready || busy} onClick={create}>
-              {busy ? 'Gönderiliyor…' : 'Görevi ata'}
+              {busy ? L.common.sending : L.tasks.assignTask}
             </button>
           )}
         </div>
@@ -339,19 +330,14 @@ export function TaskBoard({ tasks, agents }: Props) {
         {shown.length === 0 &&
           (tasks.length === 0 ? (
             <div className="empty">
-              <h2>Pano boş</h2>
+              <h2>{L.tasks.emptyTitle}</h2>
               <p>
-                Henüz kimseye iş verilmedi. <strong>Görev ata</strong> ile bir ajana tek bir iş
-                verebilirsin; <strong>Zincir</strong> ile birbirine bağlı adımlar kurarsın — her adım
-                bir öncekinin sonucunu girdi olarak alır.
+                {L.tasks.emptyA}<strong>{L.tasks.assign}</strong>{L.tasks.emptyB}<strong>{L.tasks.chain}</strong>{L.tasks.emptyC}
               </p>
-              <p>
-                Patrona iş verirsen bağımsız parçaları kendisi ekibe dağıtır; burada onların hepsini
-                tek pano üzerinde görürsün.
-              </p>
+              <p>{L.tasks.emptyD}</p>
             </div>
           ) : (
-            <div className="muted small tb-empty">Bu filtrede görev yok.</div>
+            <div className="muted small tb-empty">{L.tasks.filterEmpty}</div>
           ))}
 
         <div className="task-list">

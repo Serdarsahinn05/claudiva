@@ -10,6 +10,7 @@ import type { AgentSnapshot, BudgetState, SystemInfo, Task, UsageSummary } from 
 import { api } from '../api';
 import { fmtCost, fmtNum, totalTokens } from '../format';
 import { Sky } from './Sky';
+import { L } from '../i18n';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -28,12 +29,7 @@ interface RateWindow {
   resets_at?: string;
 }
 
-const WINDOW_LABEL: Record<string, string> = {
-  five_hour: '5 saatlik',
-  seven_day: '7 günlük',
-  seven_day_opus: '7g Opus',
-  seven_day_sonnet: '7g Sonnet',
-};
+const WINDOW_LABEL: Record<string, string> = L.survey.window;
 
 function fmtBytes(n: number): string {
   if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
@@ -131,18 +127,18 @@ function phrase(
   const active = agents.filter((a) => a.status !== 'offline').length;
   const running = tasks.filter((t) => t.status === 'running').length;
 
-  if (agents.length === 0) return { lead: '', count: 'Ekip henüz kurulmadı', tail: '.' };
-  if (budget?.exceeded) return { lead: 'Günlük bütçe doldu — ', count: 'yeni iş kabul edilmiyor', tail: '.' };
-  if (waiting > 0) return { lead: '', count: `${waiting} ajan`, tail: ' onayını bekliyor.' };
+  if (agents.length === 0) return { lead: '', count: L.survey.noTeam, tail: '.' };
+  if (budget?.exceeded) return { lead: L.survey.budgetFullLead, count: L.survey.budgetFull, tail: '.' };
+  if (waiting > 0) return { lead: '', count: L.survey.agents(waiting), tail: L.survey.waitingTail };
   if (working > 0)
     return {
       lead: '',
-      count: `${working} ajan`,
-      tail: running > 0 ? ` çalışıyor, ${running} görev sürüyor.` : ' çalışıyor.',
+      count: L.survey.agents(working),
+      tail: L.survey.workingTail(running),
     };
-  if (running > 0) return { lead: '', count: `${running} görev`, tail: ' sırada bekliyor.' };
-  if (active > 0) return { lead: '', count: `${active} ajan`, tail: ' hazır, iş bekliyor.' };
-  return { lead: '', count: 'Bütün ajanlar kapalı', tail: '.' };
+  if (running > 0) return { lead: '', count: L.survey.tasks(running), tail: L.survey.queuedTail };
+  if (active > 0) return { lead: '', count: L.survey.agents(active), tail: L.survey.readyTail };
+  return { lead: '', count: L.survey.allOff, tail: '.' };
 }
 
 export function Survey({
@@ -202,9 +198,9 @@ export function Survey({
           {p.tail}
         </h2>
         <div className="phase-sub">
-          <b>{active}</b>/{agents.length} ajan açık · <b>{running}</b> görev çalışıyor · <b>{pending}</b> sırada ·{' '}
-          <b>{done}</b> bitti
-          {budget && ` · bugün ${fmtCost(budget.spentUSD)}`}
+          <b>{active}</b>/{agents.length}{L.survey.subOpen}<b>{running}</b>{L.survey.subRunning}<b>{pending}</b>{L.survey.subQueued}
+          <b>{done}</b>{L.survey.subDone}
+          {budget && L.survey.subToday(fmtCost(budget.spentUSD))}
         </div>
       </div>
 
@@ -212,7 +208,7 @@ export function Survey({
         <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />
 
         <div className="eph">
-          <Mod label="Günlük bütçe" onClick={onOpenSettings}>
+          <Mod label={L.survey.dailyBudget} onClick={onOpenSettings}>
             {budget && budget.limitUSD ? (
               <>
                 <Gauge
@@ -220,34 +216,34 @@ export function Survey({
                   label={`${fmtCost(budget.spentUSD)} / $${budget.limitUSD.toFixed(2)}`}
                   sub={
                     budget.exceeded
-                      ? 'sınır aşıldı — yeni iş kabul edilmiyor'
-                      : `sıfırlanma: gece yarısı (${budget.date})`
+                      ? L.survey.exceeded
+                      : L.survey.resetsMidnight(budget.date)
                   }
                 />
-                {budget.exceeded && <Stat k="Durum" v="KİLİTLİ" tone="alarm" />}
-                {!budget.exceeded && budget.warn && <Stat k="Durum" v="eşiğe yakın" tone="warn" />}
+                {budget.exceeded && <Stat k={L.survey.state} v={L.survey.locked} tone="alarm" />}
+                {!budget.exceeded && budget.warn && <Stat k={L.survey.state} v={L.survey.nearLimit} tone="warn" />}
               </>
             ) : (
               <>
-                {budget && <Stat k="Bugün harcanan" v={fmtCost(budget.spentUSD)} />}
-                <div className="bgauge-sub">Sınır tanımlı değil — sınır koymak için tıkla</div>
+                {budget && <Stat k={L.survey.spentToday} v={fmtCost(budget.spentUSD)} />}
+                <div className="bgauge-sub">{L.survey.noLimit}</div>
               </>
             )}
           </Mod>
 
-          <Mod label="Plan kotası">
+          <Mod label={L.survey.planQuota}>
             {planWindows.length ? (
               planWindows.map(([k, w]) => (
                 <Gauge
                   key={k}
                   label={WINDOW_LABEL[k] ?? k}
                   pct={w.utilization!}
-                  sub={w.resets_at ? `sıfırlanma ${fmtReset(w.resets_at)}` : undefined}
+                  sub={w.resets_at ? L.survey.resets(fmtReset(w.resets_at)) : undefined}
                 />
               ))
             ) : (
               <div className="bgauge-sub">
-                {planAvailable ? 'Kota penceresi yok.' : 'Kota okunamıyor — en az bir ajan çalışmalı.'}
+                {planAvailable ? L.survey.noWindow : L.survey.noQuota}
               </div>
             )}
           </Mod>
@@ -257,46 +253,46 @@ export function Survey({
               <>
                 <Stat k="Toplam" v={fmtNum(totalTokens(usage.total))} />
                 <Stat k="Maliyet" v={fmtCost(usage.total.costUSD)} />
-                <Stat k="Giriş" v={fmtNum(usage.total.inputTokens)} />
-                <Stat k="Çıkış" v={fmtNum(usage.total.outputTokens)} />
-                <Stat k="Önbellek" v={fmtNum(usage.total.cacheReadTokens)} />
-                <Stat k="İstek" v={String(usage.total.requests)} />
+                <Stat k={L.survey.input} v={fmtNum(usage.total.inputTokens)} />
+                <Stat k={L.survey.output} v={fmtNum(usage.total.outputTokens)} />
+                <Stat k={L.survey.cache} v={fmtNum(usage.total.cacheReadTokens)} />
+                <Stat k={L.survey.requests} v={String(usage.total.requests)} />
               </>
             ) : (
-              <div className="bgauge-sub">Veri yok.</div>
+              <div className="bgauge-sub">{L.survey.noData}</div>
             )}
           </Mod>
         </div>
       </div>
 
       <div className="survey-foot">
-        <Mod label="Proje">
+        <Mod label={L.survey.project}>
           {sys ? (
             <>
-              <Stat k="Ad" v={sys.project.name} />
-              <Stat k="Dal" v={sys.project.gitBranch ?? '—'} />
-              <Stat k="Dosya" v={`${fmtNum(sys.project.fileCount)}${sys.project.truncated ? '+' : ''}`} />
-              <Stat k="Boyut" v={fmtBytes(sys.project.sizeBytes)} />
+              <Stat k={L.survey.name} v={sys.project.name} />
+              <Stat k={L.survey.branch} v={sys.project.gitBranch ?? '—'} />
+              <Stat k={L.survey.files} v={`${fmtNum(sys.project.fileCount)}${sys.project.truncated ? '+' : ''}`} />
+              <Stat k={L.survey.size} v={fmtBytes(sys.project.sizeBytes)} />
               <div className="bridge-path" title={projectDir}>
                 {sys.project.dir}
               </div>
             </>
           ) : (
-            <div className="bgauge-sub">Taranıyor…</div>
+            <div className="bgauge-sub">{L.survey.scanning}</div>
           )}
         </Mod>
 
-        <Mod label="Sistem">
+        <Mod label={L.survey.system}>
           {sys ? (
             <>
               <Gauge
-                label="Bellek"
+                label={L.survey.memory}
                 pct={memUsedPct}
                 sub={`${fmtBytes(sys.host.memTotal - sys.host.memFree)} / ${fmtBytes(sys.host.memTotal)}`}
               />
-              <Stat k="İşlemci" v={`${sys.host.cpuCount} çekirdek`} />
+              <Stat k={L.survey.cpu} v={L.survey.cores(sys.host.cpuCount)} />
               <Stat k="Platform" v={`${sys.host.platform} ${sys.host.arch}`} />
-              <Stat k="Açık kalma" v={fmtUptime(sys.host.uptimeSec)} />
+              <Stat k={L.survey.uptime} v={fmtUptime(sys.host.uptimeSec)} />
               <div className="bridge-cpu" title={sys.host.cpuModel}>
                 {sys.host.cpuModel}
               </div>
@@ -306,12 +302,12 @@ export function Survey({
           )}
         </Mod>
 
-        <Mod label="Çalışma zamanı">
+        <Mod label={L.survey.runtime}>
           {sys ? (
             <>
               <Stat k="Agent SDK" v={sys.claude.sdkVersion} />
               <Stat k="Node" v={sys.host.nodeVersion} />
-              <Stat k="Ajan tanımı" v={agents.length ? `${agents.length} tanım` : '—'} />
+              <Stat k={L.survey.agentDefs} v={agents.length ? L.survey.defs(agents.length) : '—'} />
               <div className="bridge-path" title={sys.claude.teamDir}>
                 {sys.claude.teamDir}
               </div>
