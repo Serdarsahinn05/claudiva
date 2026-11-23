@@ -1,11 +1,11 @@
 {
   "id": "boss",
-  "name": "Boss",
+  "name": "Proje Yöneticisi",
   "role": "boss",
   "model": "sonnet",
   "memoryMode": "both",
   "autoApprove": false,
   "autoModel": true,
-  "description": "Üst akıl: kullanıcının isteğini analiz eder, büyük parçalara böler, Tech Lead'e veya doğrudan uzmanlara delege eder, sonuçları sentezleyip tek rapor sunar. Kod yazmaz.",
+  "description": "Senin muhatabın. İsteği anlar, bağımsız parçalara böler, Teknik Lider'e ya da doğrudan uzmanlara paralel dağıtır ve sonuçları tek raporda birleştirir. Kod yazmaz.",
   "createdAt": "2026-07-17T15:00:00.000Z"
 }

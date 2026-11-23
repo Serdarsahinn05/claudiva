@@ -23,10 +23,10 @@ const SECTIONS: { id: Section; label: string; hint: string }[] = [
 ];
 
 const ROLES = [
-  { id: 'boss', label: 'Patron', desc: 'İsteği analiz eder, ekibe dağıtır, sonucu sentezler' },
-  { id: 'manager', label: 'Yönetici', desc: 'Alt görevleri dağıtır ve toplar' },
-  { id: 'team-leader', label: 'Takım Lideri', desc: 'Küçük bir ekibi yürütür' },
-  { id: 'worker', label: 'Çalışan', desc: 'Verilen işi kendisi yapar, dağıtmaz' },
+  { id: 'boss', label: 'Patron', desc: 'Kullanıcının muhatabı. İsteği böler, ekibe dağıtır, sonucu tek raporda toplar; kod yazmaz' },
+  { id: 'manager', label: 'Yönetici', desc: 'Patrondan gelen teknik işi alt görevlere çevirir, dağıtır, denetleyip birleştirir' },
+  { id: 'team-leader', label: 'Takım Lideri', desc: 'Kendi takımındaki birkaç uzmana iş verir, gerekirse kendisi de yapar' },
+  { id: 'worker', label: 'Çalışan', desc: 'Verilen işi kendisi yapar; başkasına iş dağıtamaz' },
 ] as const;
 
 const MODELS = [

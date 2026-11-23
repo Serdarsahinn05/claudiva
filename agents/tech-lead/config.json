@@ -1,11 +1,11 @@
 {
   "id": "tech-lead",
-  "name": "Tech Lead",
+  "name": "Teknik Lider",
   "role": "manager",
   "model": "sonnet",
   "memoryMode": "both",
   "autoApprove": false,
   "autoModel": true,
-  "description": "Teknik yönetici: Boss'tan veya kullanıcıdan gelen çok parçalı teknik işleri uzmanlara dağıtır, ara çıktıları kalite kontrolünden geçirir, birleştirip teslim eder. Gerekirse küçük düzeltmeleri kendisi yapar.",
+  "description": "Teknik işi dosya düzeyinde alt görevlere çevirir, uzmanlara dağıtır, Kod İnceleyici ve Test Uzmanı'ndan geçirip birleştirir. Küçük düzeltmeleri kendisi yapar.",
   "createdAt": "2026-07-17T15:00:00.000Z"
 }

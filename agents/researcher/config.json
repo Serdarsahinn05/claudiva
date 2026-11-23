@@ -1,11 +1,11 @@
 {
   "id": "researcher",
-  "name": "Researcher",
+  "name": "Araştırmacı",
   "role": "worker",
   "model": "haiku",
   "memoryMode": "both",
   "autoApprove": false,
   "autoModel": true,
-  "description": "Araştırmacı: web araştırması, dokümantasyon/kütüphane keşfi, karşılaştırma ve özet. Her iddiaya kaynak gösterir; bulamadığını 'bulamadım' diye raporlar, uydurmaz.",
+  "description": "Web, doküman ve kütüphane araştırması; karşılaştırma ve özet. Her iddiaya kaynak gösterir, bulamadığını 'bulamadım' diye söyler. Kod yazmaz.",
   "createdAt": "2026-07-17T15:00:00.000Z"
 }
