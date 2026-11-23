@@ -37,7 +37,7 @@ export interface SystemInfo {
 /** Taramada atlanacak dizinler — büyük projelerde ölçüm dakikalar sürerdi. */
 const SKIP_DIRS = new Set([
   'node_modules', '.git', 'dist', 'build', '.next', '.cache', 'target',
-  'vendor', '__pycache__', '.venv', 'venv', '.claude-manager', 'graphify-out',
+  'vendor', '__pycache__', '.venv', 'venv', '.claudiva', '.claude-manager', 'graphify-out',
 ]);
 
 const MAX_ENTRIES = 20_000;

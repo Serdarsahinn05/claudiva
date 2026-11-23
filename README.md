@@ -257,11 +257,11 @@ Ekip **global**, veri **proje başına**. Aynı ajan ekibi her projede hazır ge
 ama görevler ve hafıza projelere karışmaz; aynı ajan iki projede ayrı oturum
 yürütür.
 
-> Disk üzerindeki klasör adı `.claude-manager` olarak kaldı (projenin eski adı).
-> Adı değiştirmek mevcut kurulumlardaki ajanları, görevleri ve hafızayı görünmez
-> yapardı; bu bir yeniden adlandırma değil taşıma işi olurdu.
+> Klasörlerin eski adı `.claude-manager` idi. Eski bir kurulum açılışta bir kez
+> `.claudiva`ya taşınır (ajanlar, görevler ve hafıza korunur). Klasör o an
+> kilitliyse (açık eski sunucu) eski adla çalışmaya devam edilir.
 
-**`~/.claude-manager/`** — bütün projelerde ortak
+**`~/.claudiva/`** — bütün projelerde ortak
 
 | Dizin | İçerik |
 |---|---|
@@ -271,7 +271,7 @@ yürütür.
 senior-dev, frontend-dev, reviewer, tester, researcher, docs). Sonradan
 yaptığınız düzenlemeler güncellemelerde korunur.
 
-**`<proje>/.claude-manager/`** — o projeye özel, git'e girmez
+**`<proje>/.claudiva/`** — o projeye özel, git'e girmez
 
 | Dizin | İçerik |
 |---|---|

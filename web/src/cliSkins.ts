@@ -43,7 +43,7 @@ export const CLI_MARKS: Record<CliSkin, Record<string, string>> = {
 /** Grok'un imza braille spinner'ı (brainless: 90ms'de dönen 10 kare). */
 export const BRAILLE_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
-const STORAGE_KEY = 'claude-manager.cli';
+const STORAGE_KEY = 'claudiva.cli';
 export const DEFAULT_CLI_SKIN: CliSkin = 'claude';
 
 function isKnown(id: string | null): id is CliSkin {

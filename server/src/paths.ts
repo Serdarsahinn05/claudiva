@@ -2,6 +2,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { upgradeSeededAgent } from './agentUpgrade.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -9,19 +10,50 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const INSTALL_ROOT = path.resolve(here, '..', '..');
 
 /**
- * Claude Manager iki ayrı yer kullanır:
+ * Claudiva iki ayrı yer kullanır:
  *
- *  ~/.claude-manager/agents/     Ajan ekibi ve skill'leri — GLOBAL, her projede aynı.
- *  <proje>/.claude-manager/      Göreve/projeye özel veri: hafıza, görevler, token sayımı.
+ *  ~/.claudiva/agents/     Ajan ekibi ve skill'leri — GLOBAL, her projede aynı.
+ *  <proje>/.claudiva/      Göreve/projeye özel veri: hafıza, görevler, token sayımı.
  *
  * Ajanların çalışma dizini (cwd) projenin kökü olur; yani dosyaları doğrudan
  * senin projende yönetirler.
  *
  * Yollar modül yüklenirken çözülür, bu yüzden `bin/claudiva.js` ortam
  * değişkenlerini sunucuyu import etmeden ÖNCE ayarlar.
+ *
+ * ESKİ AD: proje önce "claude-manager" adını taşıyordu; klasörler `.claude-manager`
+ * idi. Mevcut kurulumlar açılışta bir kez yeni ada taşınır (`migrateLegacyDir`).
+ * Taşıma YOL ÇÖZÜMÜNDEN ÖNCE yapılmak zorunda: aşağıdaki sabitler modül
+ * yüklenirken hesaplanıyor ve taşıma başarısızsa eski klasörü göstermeleri gerekiyor.
  */
-export const HOME_DIR =
-  process.env.CLAUDE_MANAGER_HOME ?? path.join(os.homedir(), '.claude-manager');
+const LEGACY_NAME = '.claude-manager';
+const DATA_NAME = '.claudiva';
+
+/**
+ * Eski klasörü yeni ada taşır ve KULLANILACAK yolu döndürür.
+ * - Yeni varsa: yeni kazanır (eskiye dokunulmaz).
+ * - Yalnız eski varsa: yeniden adlandırılır; Windows'ta klasör kilitliyse
+ *   (açık bir eski sunucu, editör) eski yol kullanılmaya devam edilir — veri
+ *   kaybetmektense eski adda çalışmak.
+ */
+function migrateLegacyDir(legacy: string, next: string): string {
+  try {
+    if (fs.existsSync(next) || !fs.existsSync(legacy)) return next;
+    fs.renameSync(legacy, next);
+    console.log(`[claudiva] ${legacy} → ${next} taşındı.`);
+    return next;
+  } catch (err) {
+    console.warn(
+      `[claudiva] ${legacy} taşınamadı (${(err as Error).message}); eski klasör kullanılıyor.`
+    );
+    return legacy;
+  }
+}
+
+const explicitHome = process.env.CLAUDIVA_HOME ?? process.env.CLAUDE_MANAGER_HOME;
+export const HOME_DIR = explicitHome
+  ? path.resolve(explicitHome)
+  : migrateLegacyDir(path.join(os.homedir(), LEGACY_NAME), path.join(os.homedir(), DATA_NAME));
 
 /**
  * Ajanların üzerinde çalıştığı proje kökü.
@@ -31,11 +63,17 @@ export const HOME_DIR =
  * proje kökünü bu verir) > içinde bulunulan dizin.
  */
 export const PROJECT_DIR = path.resolve(
-  process.env.CLAUDE_MANAGER_PROJECT ?? process.env.INIT_CWD ?? process.cwd()
+  process.env.CLAUDIVA_PROJECT ??
+    process.env.CLAUDE_MANAGER_PROJECT ??
+    process.env.INIT_CWD ??
+    process.cwd()
 );
 
 /** Bu projeye ait verilerin tutulduğu klasör. */
-export const PROJECT_DATA_DIR = path.join(PROJECT_DIR, '.claude-manager');
+export const PROJECT_DATA_DIR = migrateLegacyDir(
+  path.join(PROJECT_DIR, LEGACY_NAME),
+  path.join(PROJECT_DIR, DATA_NAME)
+);
 
 /** Ajan tanımları global; ekip her projede hazır gelir. */
 export const AGENTS_DIR = path.join(HOME_DIR, 'agents');
@@ -72,8 +110,13 @@ function seedAgents(): void {
   for (const entry of fs.readdirSync(bundled, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     const target = path.join(AGENTS_DIR, entry.name);
-    if (fs.existsSync(target)) continue;
-    copyDir(path.join(bundled, entry.name), target);
+    const source = path.join(bundled, entry.name);
+    if (fs.existsSync(target)) {
+      // Var olan ajan: yalnız kullanıcının dokunmadığı alanlar ve yeni skill'ler.
+      upgradeSeededAgent(source, target, copyDir);
+      continue;
+    }
+    copyDir(source, target);
   }
 }
 

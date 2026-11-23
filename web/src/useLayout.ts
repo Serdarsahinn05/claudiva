@@ -181,7 +181,7 @@ export function useLayout(): LayoutApi {
   }, []);
 
   const reset = useCallback(() => {
-    localStorage.removeItem('claude-manager.layout.v1');
+    localStorage.removeItem('claudiva.layout.v1');
     setLayout(loadLayout());
   }, []);
 

@@ -71,7 +71,7 @@ export async function listDir(relPath: string): Promise<TreeEntry[]> {
 
   for (const e of entries) {
     if (e.isDirectory() && HIDDEN_DIRS.has(e.name)) continue;
-    // Nokta dosyaları gösterilir (.claude-manager, .env.example okunmak istenir),
+    // Nokta dosyaları gösterilir (.claudiva, .env.example okunmak istenir),
     // yalnızca yukarıdaki devasa/gürültülü dizinler elenir.
     const rel = path
       .relative(path.resolve(PROJECT_DIR), path.join(abs, e.name))

@@ -4,7 +4,7 @@ import { MEMORY_DIR } from './paths.js';
 import type { MemoryNode } from './types.js';
 
 /**
- * Ajan hafızası = `<proje>/.claude-manager/memory/<ajanId|shared>/*.md`.
+ * Ajan hafızası = `<proje>/.claudiva/memory/<ajanId|shared>/*.md`.
  * Her dosya tek bir hafıza: frontmatter (name/description/metadata.type) +
  * gövdede `[[dosya-adi]]` bağlantıları (hafiza-yaz skill'inin ürettiği biçim).
  *

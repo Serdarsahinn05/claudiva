@@ -9,6 +9,7 @@ dist/
 .agents/
 
 # runtime-generated
+.claudiva/
 .claude-manager/
 workspaces/
 data/
@@ -29,3 +30,6 @@ graphify-out/
 # işletim sistemi artıkları — depoyu başka platformdan klonlayanlar için
 .DS_Store
 Thumbs.db
+
+# Referans videolar (büyük ikili dosya; git geçmişine girerse depo kalıcı olarak şişer)
+docs/*.mp4

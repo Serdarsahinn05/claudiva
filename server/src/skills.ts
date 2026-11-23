@@ -7,7 +7,7 @@
  *   · **global** (`~/.claude/skills`) — kullanıcının bütün projelerinde geçerli.
  *     Buradan silmek başka projeleri de etkiler; panel bunu söylemek zorunda.
  *   · **proje** (`<proje>/.claude/skills`) — yalnız bu depo.
- *   · **ajan** (`~/.claude-manager/agents/<id>/skills`) — yalnız o ajan. Ajan
+ *   · **ajan** (`~/.claudiva/agents/<id>/skills`) — yalnız o ajan. Ajan
  *     dizini aynı zamanda yerel bir Claude Code plugin'i (bkz. manager.ts).
  *
  * ETKİNLİK MEKANİZMASI ÖLÇÜLDÜ, UYDURULMADI: `settings.json` içinde skill'i

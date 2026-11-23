@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -17,9 +17,24 @@
       Yani ikisi ayrışırsa panel bir temayla boyanır, seçici başka bir temayı
       işaretli gösterir. İkisi birlikte değiştirilmeli.
     -->
+    <!--
+      Eski anahtar adları (`claude-manager.*`) burada, bundle'dan ÖNCE bir kez
+      `claudiva.*`ya taşınır. Modüller (themes.ts, cliSkins.ts) anahtarı modül
+      yüklenirken okuyor; taşıma onlardan sonra yapılsaydı ilk açılış eski
+      tercihleri görmezdi.
+    -->
     <script>
       try {
-        var t = localStorage.getItem('claude-manager.theme');
+        ['theme', 'cli', 'layout.v1'].forEach(function (k) {
+          var old = localStorage.getItem('claude-manager.' + k);
+          if (old !== null && localStorage.getItem('claudiva.' + k) === null) {
+            localStorage.setItem('claudiva.' + k, old);
+          }
+          localStorage.removeItem('claude-manager.' + k);
+        });
+      } catch (e) {}
+      try {
+        var t = localStorage.getItem('claudiva.theme');
         document.documentElement.dataset.theme = t || 'obsidian';
       } catch (e) {
         document.documentElement.dataset.theme = 'obsidian';

@@ -5,7 +5,7 @@
  *   cd D:/YeniProjem
  *   claudiva
  *
- * Ajanlar komutun çalıştırıldığı dizinde çalışır; ekip ~/.claude-manager/agents
+ * Ajanlar komutun çalıştırıldığı dizinde çalışır; ekip ~/.claudiva/agents
  * altından gelir. Ortam değişkenleri sunucu import edilmeden ÖNCE ayarlanmalı,
  * çünkü paths.ts yolları modül yüklenirken çözer.
  */
@@ -40,8 +40,8 @@ if (argv.includes('--help') || argv.includes('-h')) {
     --no-open       Tarayıcıyı otomatik açma
     -h, --help      Bu yardım
 
-  Ekip tanımları:  ~/.claude-manager/agents
-  Proje verisi:    <proje>/.claude-manager
+  Ekip tanımları:  ~/.claudiva/agents   (eski ~/.claude-manager açılışta taşınır)
+  Proje verisi:    <proje>/.claudiva
 `);
   process.exit(0);
 }
@@ -100,7 +100,7 @@ if (!fs.existsSync(entry)) {
   process.exit(1);
 }
 
-process.env.CLAUDE_MANAGER_PROJECT = projectDir;
+process.env.CLAUDIVA_PROJECT = projectDir;
 process.env.PORT = String(port);
 
 const url = `http://localhost:${port}`;

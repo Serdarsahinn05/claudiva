@@ -430,7 +430,7 @@ async function configOutput(ctx: LocalContext): Promise<string> {
     ['günlük sınır', b?.settings?.dailyLimitUSD ? fmtUSD(b.settings.dailyLimitUSD) : '(yok)'],
     ['uyarı eşiği', `%${b?.settings?.warnAtPercent ?? 80}`],
     ['tema', document.documentElement.dataset.theme ?? '(varsayılan)'],
-    ['terminal', localStorage.getItem('claude-manager.cli') ?? 'claude'],
+    ['terminal', localStorage.getItem('claudiva.cli') ?? 'claude'],
   ])));
 
   lines.push('', 'Değiştirmek için: ajan kartındaki düzenle · Ayarlar (bütçe) · Görünüm (tema)');

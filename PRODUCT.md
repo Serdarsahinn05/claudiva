@@ -29,8 +29,8 @@ aşamada olduğunu görebilmek.** Panelin ilk işi rapor vermek değil, durum bi
 
 Komşu bir ürünün dürüstçe kopyalayamayacağı mekanizmalar:
 
-- **Ajan tanımı global, iş verisi projeye ait.** Tanımlar `~/.claude-manager/agents`,
-  çalışma verisi `<proje>/.claude-manager/data`. Aynı ajan iki farklı projede ayrı oturum
+- **Ajan tanımı global, iş verisi projeye ait.** Tanımlar `~/.claudiva/agents`,
+  çalışma verisi `<proje>/.claudiva/data`. Aynı ajan iki farklı projede ayrı oturum
   yürütür; tanımı taşımak veri taşımaz.
 - **Sağlayıcıdan bağımsız oturum katmanı.** `AgentSession` SDK'yı hiç bilmez; SDK'ya özel
   her şey `AgentBackend` arkasındadır. Döküm, bütçe, görev korelasyonu, izin bekletme ve
@@ -68,7 +68,7 @@ Komşu bir ürünün dürüstçe kopyalayamayacağı mekanizmalar:
   düzenlemek etkisizdir.
 - **Doğrulama `npm run build` ile yapılır.** CLI kaynağı değil `server/dist`i çalıştırır ve
   `web/tsconfig.json` bir çözüm dosyasıdır; `tsc --noEmit` hiçbir şeyi denetlemez.
-- Hafıza paneli `.claude-manager/memory/<ajanId|shared>/*.md` dosyalarını okur; kenarlar
+- Hafıza paneli `.claudiva/memory/<ajanId|shared>/*.md` dosyalarını okur; kenarlar
   `[[link]]` eşlemesiyle istemcide türetilir, çalışma anında AI gerekmez.
 - **Bilinen açık sorun:** ajan `complete_task`ı çağırmadan önce `ToolSearch` ile yüklemek
   zorunda; fazladan bir tur maliyeti var, işlevi bozmuyor.

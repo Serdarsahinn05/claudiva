@@ -3,7 +3,7 @@
 # Depoda her şey LF ile saklanır; bu zaten böyleydi, burada sabitleniyor.
 * text=auto
 
-# `bin/claude-manager.js` ÖZEL BİR DURUM ve ölçülerek bulundu:
+# `bin/claudiva.js` (eski adı claude-manager.js) ÖZEL BİR DURUM ve ölçülerek bulundu:
 #
 # `npm install` bu dosyanın YALNIZCA shebang satırını (`#!/usr/bin/env node`)
 # LF'e çeviriyor — paketin bir `bin` girdisi var, npm de bin dosyalarını
@@ -12,11 +12,11 @@
 # "değişmiş" sayıyor.
 #
 # Ölçüldü: taze klon tertemiz (`w/crlf`), `npm install` sonrası
-# `M bin/claude-manager.js` (`w/mixed`) — içerik farkı YOK, yalnızca 1. satır.
+# `M bin/claudiva.js` (`w/mixed`) — içerik farkı YOK, yalnızca 1. satır.
 # Yani depoyu klonlayan herkes ilk kurulumdan sonra kirli bir çalışma ağacı
 # görüyordu. Dosyayı bütünüyle LF'e sabitlemek npm'in yazdığıyla birebir
 # örtüşmesini sağlıyor.
-bin/claude-manager.js text eol=lf
+bin/claudiva.js text eol=lf
 
 # Kabuk betikleri CRLF ile çalışmaz.
 *.sh text eol=lf

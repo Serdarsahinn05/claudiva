@@ -80,7 +80,7 @@ export const THEMES: ThemeDef[] = [
 export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar'];
 
 export const DEFAULT_THEME = 'obsidian';
-const STORAGE_KEY = 'claude-manager.theme';
+const STORAGE_KEY = 'claudiva.theme';
 
 function isKnown(id: string | null): id is string {
   return !!id && THEMES.some((t) => t.id === id);

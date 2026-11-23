@@ -106,7 +106,7 @@ export const DEFAULT_LAYOUT: Layout = {
   center: { tiles: [{ kind: 'panel', id: 'survey' }], maximized: null },
 };
 
-const STORAGE_KEY = 'claude-manager.layout.v1';
+const STORAGE_KEY = 'claudiva.layout.v1';
 
 /**
  * Kayıtlı yerleşimi okur. Doğrulama gevşek DEĞİL: sürüm atlandığında ya da

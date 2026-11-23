@@ -98,7 +98,7 @@ yayınlanmaz.
 
 Buna ek olarak npm her zaman `README.md`, `LICENSE` ve `package.json` ekler.
 
-Pakete **girmeyenler**: `.claude-manager/` (görev geçmişi, oturumlar, dökümler) ·
+Pakete **girmeyenler**: `.claudiva/` (görev geçmişi, oturumlar, dökümler) ·
 `.claude/` · `graphify-out/` · `memory/` · `CLAUDE.md` · `PRODUCT.md` ·
 `DESIGN.md` · `server/src` · `web/src` · `node_modules` · `docs/`
 
