@@ -313,6 +313,11 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     return {
       model: this.resolveModel(),
       cwd: opts.workspace,
+      // Ajan oturumunu işaretler: kullanıcının kendi hook'ları (ör. skill
+      // kütüphanesinin SessionStart önerileri) bu değişkene bakıp Claudiva'nın
+      // çalıştırdığı oturumlarda sessiz kalır. `env` verildiğinde SDK süreç
+      // ortamını DEVRALMAZ, bu yüzden process.env'in tamamı taşınıyor.
+      env: { ...process.env, CLAUDIVA_AGENT: '1' },
       abortController: this.abort ?? undefined,
       systemPrompt: {
         type: 'preset',
