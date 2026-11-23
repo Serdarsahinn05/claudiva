@@ -13,6 +13,7 @@
 import type { AgentSnapshot } from './types';
 import { ROLE_LABEL } from './format';
 import { canDelegate } from './teams';
+import { L } from './i18n';
 
 export const BRIEF_MARKER = '⟪claudiva:ekip-talimatı⟫';
 
@@ -38,7 +39,7 @@ export function buildBrief(
       request,
       '',
       BRIEF_MARKER,
-      'Bu bir SORU. Görev dağıtma, dosya değiştirme; bildiklerinle ya da okuyarak kısaca cevap ver.',
+      L.brief.question,
     ].join('\n');
   }
 
@@ -55,21 +56,21 @@ export function buildBrief(
     });
 
   const steps = [
-    'Nasıl yapacaksın:',
-    '1. İsteği BİRBİRİNDEN BAĞIMSIZ parçalara böl (her parça tek bir ajanın tek başına bitirebileceği bir iş olsun).',
-    '2. Her parçayı uzmanlığına en uygun ajana eşle.',
+    L.brief.howTo,
+    L.brief.step1,
+    L.brief.step2,
   ];
   if (opts.plan === 'approve') {
     steps.push(
-      '3. HENÜZ DAĞITMA. Planı (parça → ajan → teslim kriteri) kısa bir liste olarak yaz ve onayımı bekle.',
-      '4. Onay verdiğimde `delegate_tasks` aracını TEK ÇAĞRIDA, tüm parçaların dizisiyle çağır.',
-      '5. Sonuçlar gelince hepsini tek bir özet halinde birleştir ve bana ne yapıldığını söyle.'
+      L.brief.approve3,
+      L.brief.approve4,
+      L.brief.step5
     );
   } else {
     steps.push(
-      '3. `delegate_tasks` aracını TEK ÇAĞRIDA, tüm parçaların dizisiyle çağır — parça başına ayrı ayrı `delegate_task` ÇAĞIRMA, o zaman ekip seri çalışır ve süre parçaların toplamı olur.',
-      '4. Yalnızca bir parça gerçekten bir öncekinin çıktısına bağlıysa onu `delegate_task after_task_id` ile zincirle.',
-      '5. Sonuçlar gelince hepsini tek bir özet halinde birleştir ve bana ne yapıldığını söyle.'
+      L.brief.auto3,
+      L.brief.auto4,
+      L.brief.step5
     );
   }
 
@@ -78,9 +79,9 @@ export function buildBrief(
     '',
     BRIEF_MARKER,
     '',
-    `Bu bir EKİP İŞİDİR. Sen takımın liderisin; işi kendin baştan sona yapma, böl ve dağıt.`,
+    L.brief.teamWork,
     '',
-    roster.length ? `Emrindeki ajanlar:\n${roster.join('\n')}` : 'Emrinde başka ajan yok — işi kendin yap.',
+    roster.length ? L.brief.roster(roster.join('\n')) : L.brief.alone,
     '',
     roster.length ? steps.join('\n') : '',
   ]

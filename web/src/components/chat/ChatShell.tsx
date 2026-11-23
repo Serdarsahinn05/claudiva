@@ -27,6 +27,7 @@ import { Avatar, ChatMessage } from './ChatMessage';
 import { clock } from './chatFormat';
 import { ChatComposer, type ReplyTarget } from './ChatComposer';
 import { quoteOf } from '../../reply';
+import { L, dateLocale } from '../../i18n';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -70,7 +71,7 @@ export function ChatShell(props: Props) {
   }, [agents.length]);
 
   const byId = useMemo(() => new Map(agents.map((a) => [a.config.id, a])), [agents]);
-  const nameOf = (id: string) => (id === 'user' ? 'Sen' : byId.get(id)?.config.name ?? id);
+  const nameOf = (id: string) => (id === 'user' ? L.chat.you : byId.get(id)?.config.name ?? id);
 
   // DM'deki ajan silinirse gruba dön.
   useEffect(() => {
@@ -80,7 +81,7 @@ export function ChatShell(props: Props) {
   // ------------------------------------------------------------ konuşmalar
   const teams = useMemo(() => teamsOf(agents), [agents]);
   const groups = useMemo(() => {
-    const list = [{ key: ALL_TEAMS, label: 'Tüm ekip', members: agents }];
+    const list = [{ key: ALL_TEAMS, label: L.common.allTeam, members: agents }];
     if (teams.length > 1) {
       for (const t of teams) list.push({ key: t.name, label: t.name, members: agentsInTeam(agents, t.name) });
     }
@@ -253,9 +254,9 @@ export function ChatShell(props: Props) {
     <main className="chat-wrap">
     <div className={`chat${infoOpen ? ' info-open' : ''}`}>
       <aside className="chat-list" aria-label="Sohbetler">
-        <div className="chat-list-head">Sohbetler</div>
+        <div className="chat-list-head">{L.chat.chats}</div>
 
-        <div className="chat-list-sec">Ekipler</div>
+        <div className="chat-list-sec">{L.chat.teams}</div>
         {groups.map((g) => {
           const f = groupFeeds.get(g.key) ?? [];
           const active = conv.kind === 'team' && g.key === activeGroup.key;
@@ -288,7 +289,7 @@ export function ChatShell(props: Props) {
           );
         })}
 
-        <div className="chat-list-sec">Doğrudan</div>
+        <div className="chat-list-sec">{L.chat.direct}</div>
         {agents.map((a) => {
           const f = dmFeeds.get(a.config.id) ?? [];
           const active = conv.kind === 'dm' && conv.id === a.config.id;
@@ -306,7 +307,7 @@ export function ChatShell(props: Props) {
                   {f.length > 0 && <time>{clock(f[f.length - 1].ts)}</time>}
                 </span>
                 <span className="chat-conv-prev">
-                  {a.pendingPermissions.length > 0 ? 'onay bekliyor' : previewOf(f.at(-1), nameOf)}
+                  {a.pendingPermissions.length > 0 ? L.chat.awaitingApproval : previewOf(f.at(-1), nameOf)}
                 </span>
               </span>
               {n > 0 && <span className="chat-unread">{n}</span>}
@@ -337,7 +338,7 @@ export function ChatShell(props: Props) {
             className={`icon-btn chat-info-btn${infoOpen ? ' on' : ''}`}
             onClick={() => setInfoOpen((v) => !v)}
             aria-pressed={infoOpen}
-            title="Ekip ve açık görevler"
+            title={L.chat.infoTitle}
           >
             i
           </button>
@@ -353,11 +354,11 @@ export function ChatShell(props: Props) {
         >
           {feed.length === 0 ? (
             <div className="chat-empty">
-              <h3>{conv.kind === 'team' ? 'Ekibe ilk işi ver' : `${title} ile konuş`}</h3>
+              <h3>{conv.kind === 'team' ? L.chat.emptyTeamTitle : L.chat.emptyDmTitle(title)}</h3>
               <p>
                 {conv.kind === 'team'
-                  ? `Aşağıya ne istediğini yaz. ${lead?.config.name ?? 'Lider'} işi parçalara bölüp ekibe dağıtacak; kim kime ne verdi, kim ne teslim etti burada akacak. Bir ajana doğrudan yazmak için @ ile başla.`
-                  : 'Bu ajanla birebir konuşma. Terminaldeki / komutları burada da çalışır.'}
+                  ? L.chat.emptyTeamBody(lead?.config.name ?? L.chat.leadFallback)
+                  : L.chat.emptyDmBody}
               </p>
             </div>
           ) : (
@@ -382,7 +383,7 @@ export function ChatShell(props: Props) {
                       <i />
                       <i />
                     </span>
-                    {a.config.name} {a.currentActivity ?? 'düşünüyor'}
+                    {a.config.name} {a.currentActivity ?? L.chat.thinking}
                   </div>
                 </div>
               </div>
@@ -406,8 +407,8 @@ export function ChatShell(props: Props) {
       </section>
 
       {infoOpen && (
-        <aside className="chat-info" aria-label="Ekip bilgisi">
-          <div className="chat-list-sec">Katılımcılar</div>
+        <aside className="chat-info" aria-label={L.chat.infoAria}>
+          <div className="chat-list-sec">{L.chat.members}</div>
           {members.map((a) => (
             <button key={a.config.id} className="chat-member" onClick={() => setConv({ kind: 'dm', id: a.config.id })}>
               <Avatar agent={a} size="sm" />
@@ -419,11 +420,11 @@ export function ChatShell(props: Props) {
               </span>
             </button>
           ))}
-          <div className="chat-list-sec">Açık görevler · {openTasks.length}</div>
-          {openTasks.length === 0 && <p className="chat-info-empty">Şu an açık görev yok.</p>}
+          <div className="chat-list-sec">{L.chat.openTasks(openTasks.length)}</div>
+          {openTasks.length === 0 && <p className="chat-info-empty">{L.chat.noOpenTasks}</p>}
           {openTasks.map((t) => (
             <div key={t.id} className="chat-task">
-              <span className={`cm-status s-${t.status}`}>{t.status === 'running' ? 'çalışıyor' : 'sırada'}</span>
+              <span className={`cm-status s-${t.status}`}>{L.taskStatus[t.status]}</span>
               <span className="chat-task-title">{t.title}</span>
               <span className="chat-conv-prev">
                 {nameOf(t.assignedBy)} → {nameOf(t.assignedTo)}
@@ -455,7 +456,7 @@ function Thread({
   let day = '';
   let prev: ChatItem | null = null;
   for (const item of feed) {
-    const d = new Date(item.ts).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+    const d = new Date(item.ts).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', weekday: 'long' });
     if (d !== day) {
       day = d;
       prev = null;

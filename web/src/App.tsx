@@ -31,6 +31,7 @@ import { fmtCost, fmtNum, totalTokens } from './format';
 import { ALL_TEAMS, agentsInTeam, tasksInTeam, teamsOf } from './teams';
 import { PANELS, tileKey, type PanelId } from './workspace';
 import type { AgentSnapshot } from './types';
+import { L as T, LOCALES, locale, setLocale } from './i18n';
 
 export default function App() {
   const store = useStore();
@@ -50,7 +51,7 @@ export default function App() {
   const teams = useMemo(() => teamsOf(store.agents), [store.agents]);
   const teamAgents = useMemo(() => agentsInTeam(store.agents, team), [store.agents, team]);
   const teamTasks = useMemo(() => tasksInTeam(store.tasks, teamAgents, team), [store.tasks, teamAgents, team]);
-  const teamLabel = team === ALL_TEAMS ? 'Tüm ekip' : team;
+  const teamLabel = team === ALL_TEAMS ? T.common.allTeam : team;
 
   /**
    * Seçili takım ortadan kalkabilir (son üyesi başka takıma taşınır, ajan
@@ -140,7 +141,7 @@ export default function App() {
   }
 
   async function deleteAgent(a: AgentSnapshot) {
-    if (!confirm(`"${a.config.name}" ajanı ve tanım dosyaları silinsin mi? (Hafızası silinmez)`)) return;
+    if (!confirm(T.app.deleteAgent(a.config.name))) return;
     await api.deleteAgent(a.config.id);
     L.closeTile(`t:${a.config.id}`);
     await store.refreshAgents();
@@ -213,13 +214,12 @@ export default function App() {
             />
           ) : (
             <div className="empty">
-              <h2>Ekibi kur</h2>
+              <h2>{T.app.setupTitle}</h2>
               <p>
-                "Yeni ajan" ile ilk ajanını oluştur. Öneri: önce bir <strong>patron</strong> oluştur
-                (Opus/Sonnet), sonra farklı uzmanlıklarda <strong>çalışan</strong> ajanlar ekle
-                (Haiku/Sonnet).
+                {T.app.setupBody1a}<strong>{T.app.setupBoss}</strong>{T.app.setupBody1b}
+                <strong>{T.app.setupWorker}</strong>{T.app.setupBody1c}
               </p>
-              <p>Patrona ne istediğini anlat — işi ekibe kendisi dağıtır.</p>
+              <p>{T.app.setupBody2}</p>
             </div>
           );
         case 'usage':
@@ -285,7 +285,7 @@ export default function App() {
             {/* Tur payı toplamdan AYRI okunur: `usage` tümel toplam olduğu için
                 "şu an ne kadar yakıyor" sorusunu tek başına yanıtlamıyor. */}
             {agent.lastTurn && (
-              <span className="tile-turn" title={`son tur · ${fmtCost(agent.lastTurn.costUSD)}`}>
+              <span className="tile-turn" title={T.app.lastTurn(fmtCost(agent.lastTurn.costUSD))}>
                 +{fmtNum(totalTokens(agent.lastTurn))}
               </span>
             )}
@@ -338,41 +338,48 @@ export default function App() {
     () => [
       ...(Object.keys(PANELS) as PanelId[]).map((p) => ({
         id: `panel:${p}`,
-        label: `${PANELS[p].title} panelini ${visiblePanels.has(p) ? 'kapat' : 'aç'}`,
-        hint: 'panel',
+        label: T.palette.panelToggle(PANELS[p].title, visiblePanels.has(p)),
+        hint: T.palette.panelHint,
         keywords: `panel bolum ${p}`,
         run: () => togglePanel(p),
       })),
       ...teams.map((t) => ({
         id: `team:${t.name}`,
-        label: `${t.name} takımına geç`,
-        hint: `${t.count} ajan`,
+        label: T.palette.teamSwitch(t.name),
+        hint: T.palette.teamHint(t.count),
         keywords: `takim team ${t.name}`,
         run: () => setTeam(t.name),
       })),
-      { id: 'team-all', label: 'Tüm takımlar', hint: 'kapsam', keywords: 'tumu hepsi takim', run: () => setTeam(ALL_TEAMS) },
-      { id: 'new-agent', label: 'Yeni ajan', hint: 'oluştur', keywords: 'ekle create', run: () => setFormAgent('new') },
-      { id: 'settings', label: 'Ayarlar', hint: 'bütçe', keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
+      { id: 'team-all', label: T.palette.allTeams, hint: T.palette.scopeHint, keywords: 'tumu hepsi takim', run: () => setTeam(ALL_TEAMS) },
+      { id: 'new-agent', label: T.header.newAgent, hint: T.palette.newAgentHint, keywords: 'ekle create', run: () => setFormAgent('new') },
+      { id: 'settings', label: T.header.settings, hint: T.palette.settingsHint, keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
       {
         id: 'ui-mode',
-        label: uiMode === 'chat' ? 'Panel moduna geç' : 'Sohbet moduna geç',
-        hint: 'arayüz',
+        label: uiMode === 'chat' ? T.palette.toPanels : T.palette.toChat,
+        hint: T.palette.uiHint,
         keywords: 'mod arayuz sohbet chat panel grup',
         run: () => setUiMode(uiMode === 'chat' ? 'panels' : 'chat'),
       },
-      { id: 'theme-picker', label: 'Görünüm…', hint: 'plaka', keywords: 'tema renk plaka premium', run: () => setThemeOpen(true) },
-      { id: 'layout-reset', label: 'Yerleşimi sıfırla', hint: 'düzen', keywords: 'duzen yerlesim reset panel', run: () => L.reset() },
+      ...LOCALES.filter((l) => l.id !== locale).map((l) => ({
+        id: `locale:${l.id}`,
+        label: `${T.palette.language}: ${l.label}`,
+        hint: T.palette.languageHint,
+        keywords: 'dil language lang tr en',
+        run: () => setLocale(l.id),
+      })),
+      { id: 'theme-picker', label: T.palette.look, hint: T.palette.lookHint, keywords: 'tema renk plaka premium', run: () => setThemeOpen(true) },
+      { id: 'layout-reset', label: T.header.resetLayout, hint: T.palette.layoutHint, keywords: 'duzen yerlesim reset panel', run: () => L.reset() },
       {
         id: 'toggle-all-agents',
-        label: allOffline ? `${teamLabel}: tüm ajanları başlat` : `${teamLabel}: tüm ajanları durdur`,
-        hint: 'toplu',
+        label: allOffline ? T.palette.startAll(teamLabel) : T.palette.stopAll(teamLabel),
+        hint: T.palette.bulkHint,
         keywords: 'hepsi tumu baslat durdur',
         run: () => void toggleAllAgents(),
       },
       {
         id: 'toggle-all-auto-approve',
-        label: allAutoApprove ? 'Otomatik onayı kapat' : 'Otomatik onayı aç',
-        hint: 'toplu',
+        label: allAutoApprove ? T.palette.autoOff : T.palette.autoOn,
+        hint: T.palette.bulkHint,
         keywords: 'oto onay izin hepsi tumu',
         run: () => void toggleAllAutoApprove(),
       },
@@ -401,23 +408,23 @@ export default function App() {
 
         <div className="spacer" />
 
-        {pendingCount > 0 && <span className="badge warn">{pendingCount} izin bekliyor</span>}
+        {pendingCount > 0 && <span className="badge warn">{T.header.pending(pendingCount)}</span>}
         {store.usage && (
-          <span className="totals" title="toplam token (tüm ajanlar)">
-            <span className="readout-key">TOPLAM</span> {fmtNum(totalTokens(store.usage.total))} tok ·{' '}
+          <span className="totals" title={T.header.totalTitle}>
+            <span className="readout-key">{T.header.total}</span> {fmtNum(totalTokens(store.usage.total))} tok ·{' '}
             {fmtCost(store.usage.total.costUSD)}
           </span>
         )}
         {activeCount > 0 && (
-          <span className="totals" title="çalışan ajan sayısı">
-            <span className="readout-key">AÇIK</span> {activeCount}/{store.agents.length}
+          <span className="totals" title={T.header.openTitle}>
+            <span className="readout-key">{T.header.open}</span> {activeCount}/{store.agents.length}
           </span>
         )}
         <span className={`conn ${store.connected ? 'on' : 'off'}`}>
           <span className={`led ${store.connected ? 'led-idle' : 'led-offline'}`} />
-          {store.connected ? 'bağlı' : 'bağlantı yok'}
+          {store.connected ? T.header.connected : T.header.disconnected}
         </span>
-        <button className="kbd-hint" onClick={() => setPaletteOpen(true)} title="Komut paleti">
+        <button className="kbd-hint" onClick={() => setPaletteOpen(true)} title={T.header.palette}>
           {navigator.platform.startsWith('Mac') ? '⌘' : 'Ctrl+'}K
         </button>
         <button
@@ -425,23 +432,23 @@ export default function App() {
           onClick={() => setSettingsOpen(true)}
           title={
             store.budget?.limitUSD
-              ? `Bugün $${store.budget.spentUSD.toFixed(4)} / $${store.budget.limitUSD.toFixed(2)}`
-              : 'Ayarlar · bütçe sınırı'
+              ? T.header.budgetTitle(`$${store.budget.spentUSD.toFixed(4)}`, `$${store.budget.limitUSD.toFixed(2)}`)
+              : T.header.settingsTitle
           }
-          aria-label="Ayarlar"
+          aria-label={T.header.settings}
         >
           {ICONS.settings}
         </button>
-        <button className="icon-btn" onClick={() => setThemeOpen(true)} title="Görünüm" aria-label="Görünüm">
+        <button className="icon-btn" onClick={() => setThemeOpen(true)} title={T.header.look} aria-label={T.header.look}>
           {ICONS.plate}
         </button>
         {uiMode === 'panels' && (
-          <button className="icon-btn" onClick={L.reset} title="Yerleşimi sıfırla" aria-label="Yerleşimi sıfırla">
+          <button className="icon-btn" onClick={L.reset} title={T.header.resetLayout} aria-label={T.header.resetLayout}>
             {ICONS.layout}
           </button>
         )}
         <button className="primary" onClick={() => setFormAgent('new')}>
-          Yeni ajan
+          {T.header.newAgent}
         </button>
       </header>
 
@@ -503,14 +510,12 @@ export default function App() {
           onMoveTile={L.moveTile}
           empty={
             <div className="empty">
-              <h2>Çalışma alanı boş</h2>
+              <h2>{T.app.emptyTitle}</h2>
               <p>
-                Soldaki <strong>Ekip</strong> listesinden bir ajana bas — terminali burada açılır.
-                Birden fazla ajana basarsan hepsi yan yana döşenir.
+                {T.app.emptyBody1a}<strong>{T.app.emptyBody1team}</strong>{T.app.emptyBody1b}
               </p>
               <p>
-                Bir panelin sekmesini ya da başlığını tutup <strong>buraya sürükleyebilirsin</strong>;
-                yuvalar arasında da aynı şekilde taşınır.
+                {T.app.emptyBody2a}<strong>{T.app.emptyBody2drag}</strong>{T.app.emptyBody2b}
               </p>
             </div>
           }

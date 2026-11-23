@@ -1,3 +1,4 @@
+import { L } from './i18n';
 /**
  * Açılış perdesini (index.html'deki #boot) yönetir.
  *
@@ -27,8 +28,8 @@ let dismissed = false;
  * uzun sürünse teşhis.
  */
 const STAGES: { at: number; text: string }[] = [
-  { at: 4000, text: 'sunucu bekleniyor — yeniden deneniyor' },
-  { at: 12000, text: 'sunucu yanıt vermiyor · `npm run dev` ile başlattığından emin ol' },
+  { at: 4000, text: L.boot.waiting },
+  { at: 12000, text: L.boot.noAnswer },
 ];
 
 let timers: number[] = [];

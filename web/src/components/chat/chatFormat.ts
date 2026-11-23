@@ -1,6 +1,7 @@
+import { dateLocale } from '../../i18n';
 /** Sohbet bileşenlerinin ortak biçimleyicileri (bileşen dosyası yalnız bileşen dışa aktarsın diye ayrı). */
 export function clock(ts: number): string {
-  return new Date(ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  return new Date(ts).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
 }
 
 export function initials(name: string): string {

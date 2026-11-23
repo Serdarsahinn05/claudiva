@@ -16,6 +16,7 @@
 import type { AgentSnapshot, PermissionRequestInfo, Task, TranscriptEvent } from './types';
 import { stripBrief } from './brief';
 import { parseReply, type ReplyRef } from './reply';
+import { L } from './i18n';
 
 export interface ToolCall {
   name: string;
@@ -92,7 +93,7 @@ export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatI
         if (e.text?.trim()) openTurn(e).texts.push(e.text);
         break;
       case 'tool_use':
-        openTurn(e).tools.push({ name: e.toolName ?? 'araç', input: e.input });
+        openTurn(e).tools.push({ name: e.toolName ?? L.chat.tool, input: e.input });
         break;
       case 'tool_result': {
         const t = openTurn(e);
@@ -115,10 +116,10 @@ export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatI
       }
       case 'error':
         if (turn) {
-          (turn as Extract<ChatItem, { type: 'turn' }>).error = e.text ?? 'Hata';
+          (turn as Extract<ChatItem, { type: 'turn' }>).error = e.text ?? L.chat.error;
           closeTurn();
         } else {
-          out.push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? 'Hata', tone: 'error' });
+          out.push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? L.chat.error, tone: 'error' });
         }
         break;
       case 'local':
@@ -171,18 +172,18 @@ export function buildFeed({ agents, transcripts, tasks, permissions }: FeedInput
 
 /** Listede gösterilecek kısa önizleme. */
 export function previewOf(item: ChatItem | undefined, nameOf: (id: string) => string): string {
-  if (!item) return 'Henüz mesaj yok';
+  if (!item) return L.chat.noMessages;
   switch (item.type) {
     case 'user':
-      return `Sen: ${oneLine(item.text)}`;
+      return L.chat.previewYou(oneLine(item.text));
     case 'turn':
-      return `${nameOf(item.agentId)}: ${oneLine(item.texts.at(-1) ?? `${item.tools.length} araç kullandı`)}`;
+      return `${nameOf(item.agentId)}: ${oneLine(item.texts.at(-1) ?? L.chat.usedTools(item.tools.length))}`;
     case 'delegation':
       return `${nameOf(item.task.assignedBy)} → ${nameOf(item.task.assignedTo)}: ${oneLine(item.task.title)}`;
     case 'result':
-      return `${nameOf(item.task.assignedTo)} ${item.task.status === 'done' ? 'bitirdi' : 'başaramadı'}: ${oneLine(item.task.title)}`;
+      return L.chat.previewDone(nameOf(item.task.assignedTo), item.task.status === 'done', oneLine(item.task.title));
     case 'permission':
-      return `${nameOf(item.agentId)} onay bekliyor`;
+      return L.chat.previewWaiting(nameOf(item.agentId));
     case 'note':
       return oneLine(item.text);
   }

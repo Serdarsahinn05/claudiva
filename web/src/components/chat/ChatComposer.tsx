@@ -16,6 +16,7 @@ import { canDelegate } from '../../teams';
 import { fmtCost } from '../../format';
 import { Avatar, Quote } from './ChatMessage';
 import { withReply, type ReplyRef } from '../../reply';
+import { L } from '../../i18n';
 
 /** Yanıtlanan mesaj + yanıtın gideceği ajan (ajan mesajına yanıt o ajana gider). */
 export interface ReplyTarget extends ReplyRef {
@@ -159,19 +160,19 @@ export function ChatComposer({
 
   const placeholder =
     mode === 'dm'
-      ? `${label} ajanına yaz…`
+      ? L.composer.dmPlaceholder(label)
       : replyTo && target
-        ? `${target.config.name} ajanına yanıt yaz…`
+        ? L.composer.replyPlaceholder(target.config.name)
         : !lead
-        ? 'Bu ekipte ajan yok.'
+        ? L.composer.noAgents
         : kind === 'ask'
-          ? `Ekibe bir soru sor — ${lead.config.name} cevaplasın…`
-          : 'Ekibe ne yaptırmak istiyorsun?';
+          ? L.composer.askPlaceholder(lead.config.name)
+          : L.composer.taskPlaceholder;
 
   return (
     <div className={`chat-composer${error ? ' has-error' : ''}`}>
       {showMentions && (
-        <div className="cmd-menu chat-mentions" role="listbox" aria-label="Ajan seç">
+        <div className="cmd-menu chat-mentions" role="listbox" aria-label={L.composer.pickAgent}>
           {mentionMatches.map((a, i) => (
             <div
               key={a.config.id}
@@ -194,7 +195,7 @@ export function ChatComposer({
       {replyTo && (
         <div className="chat-replying">
           <Quote author={replyTo.author} text={replyTo.text} />
-          <button className="icon-btn chat-reply-x" onClick={onCancelReply} aria-label="Yanıtı iptal et" title="Yanıtı iptal et (Esc)">
+          <button className="icon-btn chat-reply-x" onClick={onCancelReply} aria-label={L.composer.cancelReply} title={L.composer.cancelReplyTitle}>
             ×
           </button>
         </div>
@@ -202,7 +203,7 @@ export function ChatComposer({
 
       <div className="chat-input-wrap">
         {target && (
-          <span className="chat-target" title="Mesaj yalnız bu ajana gider">
+          <span className="chat-target" title={L.composer.targetTitle}>
             → {target.config.name}
           </span>
         )}
@@ -247,7 +248,7 @@ export function ChatComposer({
           disabled={!text.trim() || busy || (mode === 'group' && !lead)}
           onClick={() => void send()}
         >
-          {busy ? 'Gönderiliyor…' : mode === 'dm' || target ? 'Gönder' : kind === 'ask' ? 'Sor' : delegates ? 'Ekibe ver' : 'Gönder'}
+          {busy ? L.common.sending : mode === 'dm' || target ? L.common.send : kind === 'ask' ? L.composer.ask : delegates ? L.composer.giveTeam : L.common.send}
         </button>
       </div>
 
@@ -256,34 +257,34 @@ export function ChatComposer({
       <div className="chat-chips">
         {mode === 'group' && (
           <>
-            <span className="chat-chip static" title="Hedefsiz mesajlar lidere gider">
-              {target ? `Hedef: ${target.config.name}` : lead ? `Lider: ${lead.config.name}` : 'Lider yok'}
+            <span className="chat-chip static" title={L.composer.leadChipTitle}>
+              {target ? L.composer.target(target.config.name) : lead ? L.composer.lead(lead.config.name) : L.composer.noLead}
             </span>
             {!target && (
-            <div className="chat-seg" role="group" aria-label="Kip">
+            <div className="chat-seg" role="group" aria-label={L.composer.mode}>
               <button className={`chat-chip${kind === 'task' ? ' on' : ''}`} onClick={() => setKind('task')}>
-                Görev
+                {L.composer.task}
               </button>
               <button className={`chat-chip${kind === 'ask' ? ' on' : ''}`} onClick={() => setKind('ask')}>
-                Soru
+                {L.composer.question}
               </button>
             </div>
             )}
             {kind === 'task' && delegates && (
-              <div className="chat-seg" role="group" aria-label="Plan">
+              <div className="chat-seg" role="group" aria-label={L.composer.plan}>
                 <button
                   className={`chat-chip${plan === 'auto' ? ' on' : ''}`}
                   onClick={() => setPlan('auto')}
-                  title="Lider planlar ve hemen dağıtır"
+                  title={L.composer.planAutoTitle}
                 >
-                  Plan: otomatik
+                  {L.composer.planAuto}
                 </button>
                 <button
                   className={`chat-chip${plan === 'approve' ? ' on' : ''}`}
                   onClick={() => setPlan('approve')}
-                  title="Lider önce planı yazar, sen onaylayınca dağıtır"
+                  title={L.composer.planApproveTitle}
                 >
-                  Plan: onaylı
+                  {L.composer.planApprove}
                 </button>
               </div>
             )}
@@ -293,18 +294,18 @@ export function ChatComposer({
           <button
             className={`chat-chip${allAuto ? ' on warn' : ''}`}
             onClick={() => void onToggleAutoApprove()}
-            title={allAuto ? 'Ajanlar izin sormadan çalışıyor' : 'Her araçta izin sorulur'}
+            title={allAuto ? L.composer.autoOnTitle : L.composer.autoOffTitle}
           >
-            {allAuto ? 'Oto-onay açık' : 'İzin sor'}
+            {allAuto ? L.composer.autoOn : L.composer.autoOff}
           </button>
         )}
         {anyWorking && (
           <button
             className="chat-chip danger"
             onClick={() => void Promise.all(working.map((a) => api.interrupt(a.config.id).catch(() => {})))}
-            title="Çalışan ajanların turunu kes"
+            title={L.composer.stopTitle}
           >
-            Durdur
+            {L.composer.stop}
           </button>
         )}
       </div>
@@ -313,24 +314,24 @@ export function ChatComposer({
         <span className="chat-status-live">
           <span className={`led ${anyWorking ? 'led-working' : 'led-idle'}`} />
           {anyWorking
-            ? `${mode === 'dm' ? label : 'Ekip'} çalışıyor${elapsed ? ` · ${elapsed}` : ''} · ${working.length} ajan`
+            ? L.composer.working(mode === 'dm' ? label : L.composer.team, elapsed, working.length)
             : mode === 'dm'
-              ? `${label} hazır`
-              : `Ekip hazır · ${members.length} ajan`}
+              ? L.composer.ready(label)
+              : L.composer.teamReady(members.length)}
         </span>
         <span className="chat-hints">
-          <kbd>Enter</kbd> gönder · <kbd>Shift+Enter</kbd> satır
+          <kbd>Enter</kbd> {L.composer.send} · <kbd>Shift+Enter</kbd> {L.composer.newline}
           {mode === 'group' ? (
             <>
-              {' '}· <kbd>@</kbd> ajana doğrudan yaz
+              {' '}· <kbd>@</kbd> {L.composer.mentionHint}
             </>
           ) : (
             <>
-              {' '}· <kbd>/</kbd> komut
+              {' '}· <kbd>/</kbd> {L.composer.commandHint}
             </>
           )}
         </span>
-        {budget && <span className="chat-spend">bugün {fmtCost(budget.spentUSD)}</span>}
+        {budget && <span className="chat-spend">{L.composer.today(fmtCost(budget.spentUSD))}</span>}
       </div>
     </div>
   );
@@ -339,5 +340,5 @@ export function ChatComposer({
 function fmtElapsed(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(s / 60);
-  return m ? `${m} dk ${String(s % 60).padStart(2, '0')} sn` : `${s} sn`;
+  return L.composer.elapsed(m, s % 60);
 }

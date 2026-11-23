@@ -21,6 +21,7 @@ import { api } from '../api';
 import type { AgentSnapshot } from '../types';
 import { canDelegate, leadOf } from '../teams';
 import { buildBrief } from '../brief';
+import { L } from '../i18n';
 
 interface Props {
   /** Seçili takımın ajanları — dağıtım havuzu budur. */
@@ -66,19 +67,19 @@ export function Orchestrator({ teamAgents, teamLabel, onOpenTerminal }: Props) {
         {lead ? (
           <>
             <span className={`led led-${lead.status}`} />
-            <span className="orch-lead-name" title={`${lead.config.name} işi bölüp dağıtacak`}>
+            <span className="orch-lead-name" title={L.orch.leadTitle(lead.config.name)}>
               {lead.config.name}
             </span>
             <span className="orch-lead-sub">
               {!delegates
-                ? 'dağıtamaz — doğrudan bu ajana gider'
+                ? L.orch.cannotDelegate
                 : workers > 0
-                  ? `+${workers} ajan`
-                  : 'tek başına'}
+                  ? L.orch.plusAgents(workers)
+                  : L.orch.alone}
             </span>
           </>
         ) : (
-          <span className="orch-lead-sub">ajan yok</span>
+          <span className="orch-lead-sub">{L.orch.noAgents}</span>
         )}
       </div>
 
@@ -88,10 +89,10 @@ export function Orchestrator({ teamAgents, teamLabel, onOpenTerminal }: Props) {
         disabled={!lead}
         placeholder={
           !lead
-            ? 'Bu takımda ajan yok.'
+            ? L.orch.teamEmpty
             : delegates
-              ? `${teamLabel} takımına yüksek seviyeli bir iş ver — ${lead.config.name} bölüp dağıtsın…`
-              : `${lead.config.name} ajanına doğrudan iş ver (bu takımda dağıtacak lider yok)…`
+              ? L.orch.placeholderTeam(teamLabel, lead.config.name)
+              : L.orch.placeholderDirect(lead.config.name)
         }
         onChange={(e) => {
           setText(e.target.value);
@@ -106,7 +107,7 @@ export function Orchestrator({ teamAgents, teamLabel, onOpenTerminal }: Props) {
       />
 
       <button className="orch-go primary" disabled={!lead || !text.trim() || busy} onClick={() => void dispatch()}>
-        {busy ? 'Gönderiliyor…' : delegates ? 'Ekibe dağıt' : 'Gönder'}
+        {busy ? L.common.sending : delegates ? L.orch.dispatch : L.common.send}
       </button>
 
       {error && <div className="orch-error">{error}</div>}

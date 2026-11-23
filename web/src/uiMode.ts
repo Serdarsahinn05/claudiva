@@ -12,19 +12,20 @@
  * tutulduğu için sohbete geçip dönmek yerleşimi bozmaz.
  */
 import { useSyncExternalStore } from 'react';
+import { L } from './i18n';
 
 export type UiMode = 'panels' | 'chat';
 
 export const UI_MODES: { id: UiMode; label: string; desc: string }[] = [
   {
     id: 'panels',
-    label: 'Paneller',
-    desc: 'Çok panelli çalışma alanı: terminaller, görev panosu, kod, harcama yan yana.',
+    label: L.uiMode.panels,
+    desc: L.uiMode.panelsDesc,
   },
   {
     id: 'chat',
-    label: 'Sohbet',
-    desc: 'Ekip bir grup sohbeti: ajanlar birbirine iş verir, sen istediğinde araya girersin.',
+    label: L.uiMode.chat,
+    desc: L.uiMode.chatDesc,
   },
 ];
 

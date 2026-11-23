@@ -11,6 +11,7 @@ import type { ChatItem, ToolCall } from '../../chatFeed';
 import { ROLE_LABEL, fmtCost } from '../../format';
 import { clock, initials, inlineParts } from './chatFormat';
 import { answerPermission, permissionSummary, PERMISSION_OPTIONS, type PermissionChoice } from '../../permissions';
+import { L } from '../../i18n';
 
 export function Avatar({ agent, size = 'md' }: { agent: AgentSnapshot | undefined; size?: 'sm' | 'md' }) {
   const name = agent?.config.name ?? '?';
@@ -39,7 +40,7 @@ interface Props {
 function ReplyBtn({ item, onReply }: { item: ChatItem; onReply?: (item: ChatItem) => void }) {
   if (!onReply) return null;
   return (
-    <button className="cm-reply-btn" onClick={() => onReply(item)} title="Bu mesajı yanıtla" aria-label="Yanıtla">
+    <button className="cm-reply-btn" onClick={() => onReply(item)} title={L.chat.replyTitle} aria-label={L.chat.reply}>
       ↩
     </button>
   );
@@ -59,7 +60,7 @@ export function Quote({
 }) {
   const body = (
     <>
-      <span className="cm-quote-author">{author || 'Mesaj'}</span>
+      <span className="cm-quote-author">{author || L.chat.quoteFallback}</span>
       <span className="cm-quote-text">{text}</span>
     </>
   );
@@ -67,14 +68,14 @@ export function Quote({
   // düğme genel kuralla soluklaşıyor ve yanıt şeridi okunmuyordu.
   if (!onClick) return <div className={`cm-quote${mine ? ' mine' : ''}`}>{body}</div>;
   return (
-    <button type="button" className={`cm-quote clickable${mine ? ' mine' : ''}`} onClick={onClick} title="Yanıtlanan mesaja git">
+    <button type="button" className={`cm-quote clickable${mine ? ' mine' : ''}`} onClick={onClick} title={L.chat.jumpTitle}>
       {body}
     </button>
   );
 }
 
 export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: Props) {
-  const name = (id: string) => (id === 'user' ? 'Sen' : byId.get(id)?.config.name ?? id);
+  const name = (id: string) => (id === 'user' ? L.chat.you : byId.get(id)?.config.name ?? id);
 
   switch (item.type) {
     case 'user': {
@@ -85,7 +86,7 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: 
           <div className="cm-bubble mine">
             <ReplyBtn item={item} onReply={onReply} />
             <div className="cm-meta">
-              <span>{item.briefed ? 'Ekibe' : direct ? `→ ${to?.config.name ?? item.agentId}` : 'Sen'}</span>
+              <span>{item.briefed ? L.chat.toTeam : direct ? `→ ${to?.config.name ?? item.agentId}` : L.chat.you}</span>
               <time>{clock(item.ts)}</time>
             </div>
             {item.reply && (
@@ -128,7 +129,7 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: 
                   <i />
                   <i />
                 </span>
-                {agent?.currentActivity ?? (speaking ? 'devam ediyor' : 'çalışıyor')}
+                {agent?.currentActivity ?? (speaking ? L.chat.continuing : L.chat.workingNow)}
               </div>
             )}
             {item.error && <div className="cm-error">{item.error}</div>}
@@ -150,15 +151,15 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: 
             <div className="cm-meta">
               <span className="cm-handoff">
                 <strong>{name(t.assignedBy)}</strong>
-                <span className="cm-arrow" aria-label="iş verdi">→</span>
+                <span className="cm-arrow" aria-label={L.chat.handedOff}>→</span>
                 <strong>{name(t.assignedTo)}</strong>
               </span>
-              <span className={`cm-status s-${t.status}`}>{STATUS[t.status]}</span>
+              <span className={`cm-status s-${t.status}`}>{L.taskStatus[t.status]}</span>
               <time>{clock(item.ts)}</time>
             </div>
             <div className="cm-event-title">{t.title}</div>
             <details className="cm-details">
-              <summary>Görev metni</summary>
+              <summary>{L.chat.taskText}</summary>
               <div className="cm-pre">{t.prompt}</div>
             </details>
           </div>
@@ -213,19 +214,13 @@ function RichText({ text }: { text: string }) {
   );
 }
 
-const STATUS: Record<string, string> = {
-  pending: 'sırada',
-  running: 'çalışıyor',
-  done: 'bitti',
-  failed: 'başarısız',
-};
 
 function Tools({ tools }: { tools: ToolCall[] }) {
   const errors = tools.filter((t) => t.isError).length;
   return (
     <details className="cm-details cm-tools">
       <summary>
-        Ayrıntılar ({tools.length} araç{errors ? `, ${errors} hata` : ''})
+        {L.chat.details(tools.length, errors)}
       </summary>
       <ol>
         {tools.map((t, i) => (
@@ -282,14 +277,14 @@ function ResultCard(props: {
             {agent?.config.name ?? fallbackName}
           </span>
           <span className="cm-role">→ {to}</span>
-          <span className={`cm-status s-${ok ? 'done' : 'failed'}`}>{ok ? 'teslim etti' : 'başaramadı'}</span>
+          <span className={`cm-status s-${ok ? 'done' : 'failed'}`}>{ok ? L.chat.delivered : L.chat.failed}</span>
           <time>{clock(ts)}</time>
         </div>
         <div className="cm-event-title">{title}</div>
         {text && <RichText text={open ? text : text.slice(0, LONG) + '…'} />}
         {text.length > LONG && (
           <button className="cm-link" onClick={() => setOpen((v) => !v)}>
-            {open ? 'Kısalt' : 'Tamamını göster'}
+            {open ? L.chat.showLess : L.chat.showAll}
           </button>
         )}
       </div>
@@ -316,10 +311,10 @@ function PermissionCard({
       <div className="cm-bubble cm-perm">
         <div className="cm-meta">
           <span className="cm-name">{agent?.config.name ?? item.agentId}</span>
-          <span className="cm-status s-waiting">onay bekliyor</span>
+          <span className="cm-status s-waiting">{L.chat.awaitingApproval}</span>
           <time>{clock(item.ts)}</time>
         </div>
-        <div className="cm-event-title">{item.req.title ?? `${shortTool(item.req.toolName)} çalıştırılsın mı?`}</div>
+        <div className="cm-event-title">{item.req.title ?? L.chat.runPrompt(shortTool(item.req.toolName))}</div>
         <div className="cm-pre">{permissionSummary(item.req)}</div>
         <div className="cm-perm-actions">
           <button className="primary" disabled={busy} onClick={() => void choose(0)}>

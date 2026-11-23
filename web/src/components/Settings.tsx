@@ -21,6 +21,7 @@ import { api } from '../api';
 import { fmtCost } from '../format';
 import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
 import { UI_MODES, setUiMode, useUiMode, type UiMode } from '../uiMode';
+import { L, LOCALES, locale, setLocale } from '../i18n';
 
 interface Props {
   budget: BudgetState | null;
@@ -34,10 +35,10 @@ interface Props {
 type Section = 'butce' | 'arayuz' | 'alan' | 'sistem';
 
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
-  { id: 'butce', label: 'Bütçe', hint: 'günlük sınır' },
-  { id: 'arayuz', label: 'Arayüz', hint: 'panel ya da sohbet' },
-  { id: 'alan', label: 'Çalışma alanı', hint: 'yerleşim, bu tarayıcı' },
-  { id: 'sistem', label: 'Sistem', hint: 'proje ve makine' },
+  { id: 'butce', label: L.settings.budget, hint: L.settings.budgetHint },
+  { id: 'arayuz', label: L.settings.ui, hint: L.settings.uiHint },
+  { id: 'alan', label: L.settings.workspace, hint: L.settings.workspaceHint },
+  { id: 'sistem', label: L.settings.system, hint: L.settings.systemHint },
 ];
 
 function fmtBytes(n: number): string {
@@ -96,8 +97,8 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
   return (
     <Modal onClose={onClose} wide>
       <div className="modal-head">
-        <h2>Ayarlar</h2>
-        <span className="modal-sub">bu projeye özel</span>
+        <h2>{L.settings.title}</h2>
+        <span className="modal-sub">{L.settings.subtitle}</span>
       </div>
 
       <div className="modal-body">
@@ -201,12 +202,36 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
 
           {section === 'arayuz' && (
             <>
-              <div className="set-note">
-                Aynı ekip, aynı görevler; yalnızca görünüm değişir. Seçim{' '}
-                <strong>bu tarayıcıda</strong> saklanır ve anında uygulanır. Panel
-                yerleşimin sohbete geçip dönünce olduğu gibi durur.
+              {/* Dil seçimi sayfayı yeniler (bkz. i18n/index.ts). Her dil kendi
+                  adıyla yazılır: dili bilmeyen kullanıcı da kendi dilini bulsun. */}
+              <div className="tb-field">
+                <span className="tb-field-label">
+                  {L.settings.language}
+                  <span className="tb-hint">{L.settings.languageHint}</span>
+                </span>
+                <div className="chat-seg" role="radiogroup" aria-label={L.settings.language}>
+                  {LOCALES.map((l) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={locale === l.id}
+                      lang={l.id}
+                      className={`chat-chip${locale === l.id ? ' on' : ''}`}
+                      onClick={() => setLocale(l.id)}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="mode-cards" role="radiogroup" aria-label="Arayüz modu">
+              <span className="tb-field-label">{L.settings.modeTitle}</span>
+              <div className="set-note">
+                {L.settings.modeNote1}
+                <strong>{L.settings.modeNoteStrong}</strong>
+                {L.settings.modeNote2}
+              </div>
+              <div className="mode-cards" role="radiogroup" aria-label={L.settings.modeAria}>
                 {UI_MODES.map((m) => (
                   <button
                     key={m.id}

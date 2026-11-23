@@ -16,6 +16,7 @@
  * tıklayınca o mesaja gidilir.
  */
 import type { ChatItem } from './chatFeed';
+import { L } from './i18n';
 
 const OPEN = '⟪yanıt:';
 const CLOSE = '⟫';
@@ -32,12 +33,12 @@ export interface ReplyRef {
 export function quoteOf(item: ChatItem, nameOf: (id: string) => string): ReplyRef | null {
   switch (item.type) {
     case 'user':
-      return { id: item.id, author: 'Sen', text: item.text };
+      return { id: item.id, author: L.chat.you, text: item.text };
     case 'turn':
       return {
         id: item.id,
         author: nameOf(item.agentId),
-        text: item.texts.at(-1) ?? `${item.tools.length} araç kullandı`,
+        text: item.texts.at(-1) ?? L.chat.usedTools(item.tools.length),
       };
     case 'delegation':
       return {

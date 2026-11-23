@@ -6,8 +6,9 @@
  */
 import { api } from './api';
 import type { PermissionRequestInfo } from './types';
+import { L } from './i18n';
 
-export const PERMISSION_OPTIONS = ['Evet', 'Evet, bu ajanda bir daha sorma', 'Hayır'] as const;
+export const PERMISSION_OPTIONS = [L.permission.allow, L.permission.allowAlways, L.permission.deny] as const;
 export type PermissionChoice = 0 | 1 | 2;
 
 export async function answerPermission(

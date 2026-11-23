@@ -33,6 +33,13 @@
           localStorage.removeItem('claude-manager.' + k);
         });
       } catch (e) {}
+      // Belge dili (ekran okuyucular doğru dili seslendirsin). Mantık
+      // i18n/index.ts'deki detect() ile AYNI olmak zorunda.
+      try {
+        var lc = localStorage.getItem('claudiva.locale');
+        if (lc !== 'tr' && lc !== 'en') lc = (navigator.language || '').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en';
+        document.documentElement.lang = lc;
+      } catch (e) {}
       try {
         var t = localStorage.getItem('claudiva.theme');
         document.documentElement.dataset.theme = t || 'obsidian';
@@ -150,6 +157,12 @@
         <div class="boot-mark">claudiva</div>
         <div class="boot-scan"></div>
         <div class="boot-status" id="boot-status">sunucuya bağlanılıyor</div>
+        <script>
+          // Perde bundle'dan önce çizilir; ilk metni de dile göre burada seçilir.
+          if (document.documentElement.lang === 'en') {
+            document.getElementById('boot-status').textContent = 'connecting to the server';
+          }
+        </script>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

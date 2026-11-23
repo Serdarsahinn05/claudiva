@@ -1,4 +1,5 @@
 import type { TokenUsage } from './types';
+import { L } from './i18n';
 
 export function fmtNum(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -14,16 +15,7 @@ export function fmtCost(usd: number): string {
   return '$' + usd.toFixed(usd >= 1 ? 2 : 4);
 }
 
-export const STATUS_LABEL: Record<string, string> = {
-  offline: 'kapalı',
-  idle: 'boşta',
-  working: 'çalışıyor',
-  waiting: 'onay bekliyor',
-};
+/** Etiket tabloları sözlükten gelir (bkz. i18n/index.ts: dil değişimi sayfayı yeniler). */
+export const STATUS_LABEL: Record<string, string> = L.status;
 
-export const ROLE_LABEL: Record<string, string> = {
-  boss: 'Patron',
-  manager: 'Yönetici',
-  'team-leader': 'Takım Lideri',
-  worker: 'Çalışan',
-};
+export const ROLE_LABEL: Record<string, string> = L.roles;
