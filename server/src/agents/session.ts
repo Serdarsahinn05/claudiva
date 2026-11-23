@@ -190,7 +190,7 @@ export class AgentSession extends EventEmitter {
    * `taskId` verilirse bu tur o göreve aittir ve sonucu `turn_complete` ile
    * birlikte geri döner. Sohbet mesajlarında verilmez.
    */
-  send(text: string, taskId?: string): void {
+  send(text: string, taskId?: string, opts: { replay?: boolean } = {}): void {
     /**
      * Bütçe kapısı. Burada olmak ZORUNDA: aşağıdaki satır ölü oturumu
      * kendiliğinden yeniden başlatıyor, dolayısıyla "ajanı durdur" biçiminde
@@ -202,7 +202,10 @@ export class AgentSession extends EventEmitter {
       return;
     }
     if (!this.backend) this.start();
-    this.pushEvent({ kind: 'user', text });
+    // Resume geri düşüşündeki yeniden gönderimde mesaj dökümde ZATEN var;
+    // tekrar yazmak aynı mesajı iki kez gösteriyordu (ölçüldü: başka cwd'de
+    // açılan oturumda her ajanın ilk mesajı çift çıkıyordu).
+    if (!opts.replay) this.pushEvent({ kind: 'user', text });
     this.inFlightTurns.push({ text, taskId });
     this.turnDepth += 1;
     this.setStatus('working');
@@ -351,7 +354,7 @@ export class AgentSession extends EventEmitter {
       this.start();
       // Görev kimliğiyle birlikte: aksi hâlde yeniden gönderilen görev
       // sohbet turu sanılır ve kuyrukta kapanmadan kalır.
-      for (const turn of replay) this.send(turn.text, turn.taskId);
+      for (const turn of replay) this.send(turn.text, turn.taskId, { replay: true });
     }
   }
 
