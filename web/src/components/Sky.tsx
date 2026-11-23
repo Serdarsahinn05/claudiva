@@ -21,6 +21,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AgentSnapshot, Task } from '../types';
 import { ROLE_LABEL, STATUS_LABEL, fmtNum, totalTokens } from '../format';
+import { L } from '../i18n';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -162,10 +163,9 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
       <div className="sky">
         <div className="sky-field" ref={boxRef}>
           <div className="sky-empty">
-            <h2>Gökyüzü boş</h2>
+            <h2>{L.sky.emptyTitle}</h2>
             <p>
-              Henüz çizilecek bir şey yok. Önce bir <strong>patron</strong> ajanı oluştur, sonra farklı
-              uzmanlıklarda çalışanlar ekle — patrona ne istediğini anlat, işi ekibe kendisi dağıtır.
+              {L.sky.emptyA}<strong>{L.sky.boss}</strong>{L.sky.emptyB}
             </p>
           </div>
         </div>
@@ -177,7 +177,7 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
     <div className="sky">
      <div className="sky-field" ref={boxRef}>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img"
-           aria-label={`${visible.length} ajan gökyüzünde, ${below.length} ajan kapalı`}>
+           aria-label={L.sky.aria(visible.length, below.length)}>
         {/* Rol bantları — plakanın ölçeği; her halka etiketlidir */}
         <g className="sky-band">
           {bands.map((b) => (
@@ -274,7 +274,7 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
           "veri gelmedi mi, herkes mi kapalı?" sorusunu açıkta bırakır. */}
       {visible.length === 0 && (
         <p className="sky-none">
-          Gözlenecek bir şey yok — bütün ajanlar ufkun altında.
+          {L.sky.none}
         </p>
       )}
 
@@ -286,7 +286,7 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
             {[10, 7.5, 5.5, 4].map((r, i) => (
               <span className="mag-legend-step" key={r}>
                 <span className="mag-legend-dot" style={{ width: r * 1.6, height: r * 1.6 }} />
-                <span>{['çok', '', '', 'az'][i]}</span>
+                <span>{[L.sky.many, '', '', L.sky.few][i]}</span>
               </span>
             ))}
           </div>
@@ -297,14 +297,14 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
       {/* Ufuk altı: kapalı ajanlar. Gözlenemezler ama vardırlar. */}
       {below.length > 0 && (
         <div className="sky-below">
-          <span className="sky-below-label">Ufuk altı · kapalı</span>
+          <span className="sky-below-label">{L.sky.below}</span>
           {below.map((a) => (
             <button
               key={a.config.id}
               type="button"
               className="sky-below-item"
               onClick={() => onOpen(a.config.id)}
-              title={`${a.config.name} — kapalı`}
+              title={L.sky.offlineTitle(a.config.name)}
             >
               <span className="led led-offline" />
               {a.config.name}

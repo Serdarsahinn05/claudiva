@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { L } from '../i18n';
 
 /**
  * Grafik ilkelleri — bu plakanın kendi çizim dili.
@@ -102,7 +103,7 @@ export function Meter({
         <span className="ub-meter-value">{value}</span>
       </div>
       {pct === null ? (
-        <div className="ub-meter-none">{note ?? 'sınır tanımlı değil'}</div>
+        <div className="ub-meter-none">{note ?? L.charts.noLimit}</div>
       ) : (
         <>
           <div
@@ -146,7 +147,7 @@ export interface BarDatum {
 export function BarList({
   data,
   max,
-  empty = 'Veri yok.',
+  empty = L.charts.noData,
 }: {
   data: BarDatum[];
   /** Ortak cetvelin üst sınırı; verilmezse en büyük değer. */
@@ -220,7 +221,7 @@ export function Donut({
   size?: number;
 }) {
   const total = slices.reduce((s, x) => s + x.value, 0);
-  if (total <= 0) return <div className="ub-empty">Henüz harcama yok.</div>;
+  if (total <= 0) return <div className="ub-empty">{L.charts.noSpend}</div>;
 
   const r = size / 2 - 12;
   const c = size / 2;
@@ -325,7 +326,7 @@ export function AreaChart({
   if (points.length < 2) {
     return (
       <div className="ub-empty">
-        Zaman çizgisi için en az iki tur gerekiyor (şu an {points.length}).
+        {L.charts.needTwo(points.length)}
       </div>
     );
   }

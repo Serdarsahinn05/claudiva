@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import type { BrowserState } from '../types';
+import { L } from '../i18n';
 
 /**
  * Browser paneli — sunucudaki headless Chromium'un canlı yüzü.
@@ -96,15 +97,14 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
         <div>
           <h2 className="plate-title">Browser</h2>
           <p className="pl-head-desc">
-            Sunucuda çalışan tarayıcı. Ajanlar da aynı sayfayı sürebilir — burada canlı
-            görür, istediğin an devralırsın.
+            {L.browser.desc}
           </p>
         </div>
       </section>
 
       {unavailable ? (
         <div className="empty">
-          <h2>Tarayıcı kullanılamıyor</h2>
+          <h2>{L.browser.unavailable}</h2>
           <p>{unavailable}</p>
         </div>
       ) : (
@@ -133,7 +133,7 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void run(() => api.browserNavigate(addr));
               }}
-              placeholder="adres yaz ve Enter’a bas (örn. example.com)"
+              placeholder={L.browser.address}
               aria-label="Adres"
             />
             <button className="primary" onClick={() => void run(() => api.browserNavigate(addr))} disabled={busy}>
@@ -159,7 +159,7 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
 
           {state?.running && (
             <div className="br-meta">
-              <span className="br-title">{state.title || '(başlıksız)'}</span>
+              <span className="br-title">{state.title || L.browser.untitled}</span>
               <span className="br-url">{state.url}</span>
             </div>
           )}
@@ -169,9 +169,9 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
               <img
                 ref={imgRef}
                 src={`/api/browser/screenshot?t=${stamp}`}
-                alt="Tarayıcı görüntüsü — tıklayarak sayfayla etkileşebilirsin"
+                alt={L.browser.shotAlt}
                 onClick={onImgClick}
-                onError={() => setError('Görüntü alınamadı.')}
+                onError={() => setError(L.browser.shotFailed)}
               />
             ) : (
               <div className="muted center">
@@ -184,22 +184,22 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
             <div className="br-keys">
               <input
                 className="br-type"
-                placeholder="odaktaki alana yaz — önce sayfada bir kutuya tıkla"
+                placeholder={L.browser.typePlaceholder}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return;
                   const v = e.currentTarget.value;
                   e.currentTarget.value = '';
                   void run(() => api.browserAct({ action: 'type', text: v, submit: true }));
                 }}
-                aria-label="Sayfaya yaz"
+                aria-label={L.browser.typeAria}
               />
               <button onClick={() => void run(() => api.browserAct({ action: 'scroll', dy: 600 }))} disabled={busy}>
-                ↓ kaydır
+                {L.browser.scrollDown}
               </button>
               <button onClick={() => void run(() => api.browserAct({ action: 'scroll', dy: -600 }))} disabled={busy}>
-                ↑ kaydır
+                {L.browser.scrollUp}
               </button>
-              <span className="br-hint">görüntüye tıklamak sayfaya tıklar</span>
+              <span className="br-hint">{L.browser.clickHint}</span>
             </div>
           )}
         </>

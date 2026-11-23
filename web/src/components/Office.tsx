@@ -12,6 +12,7 @@ import { renderOffice } from '../office/renderer';
 import { TILE_SIZE } from '../office/types';
 import { STATUS_LABEL } from '../format';
 import type { AgentSnapshot, AgentStatus, Task } from '../types';
+import { L } from '../i18n';
 
 const ZOOM = 3;
 
@@ -183,13 +184,13 @@ export function Office({ agents, tasks, onOpen }: Props) {
   if (assetError || agents.length === 0) {
     return assetError ? (
       <div className="empty">
-        <h2>Ofis yüklenemedi</h2>
+        <h2>{L.office.loadFailed}</h2>
         <p className="muted">{assetError}</p>
       </div>
     ) : (
       <div className="empty">
-        <h2>Ofis boş</h2>
-        <p>"Yeni ajan" ile ilk çalışanı işe al — masasına oturup seni bekleyecek.</p>
+        <h2>{L.office.emptyTitle}</h2>
+        <p>{L.office.emptyBody}</p>
       </div>
     );
   }
@@ -198,22 +199,22 @@ export function Office({ agents, tasks, onOpen }: Props) {
     <div className="office-wrap">
       {/* Tuval plakaya oturtulur: hafif renk uyumu + tarama çizgisi katmanı */}
       <div className="viewscreen">
-        <span className="viewscreen-label">Canlı ofis</span>
+        <span className="viewscreen-label">{L.office.live}</span>
         <canvas
           ref={canvasRef}
           onClick={handleClick}
           onMouseMove={handleMove}
           style={{ imageRendering: 'pixelated', maxWidth: '100%' }}
-          title="Bir karaktere tıklayınca terminali açılır"
+          title={L.office.clickTitle}
         />
       </div>
       {/* Efsane: durum işaretleri gökyüzündekiyle aynı dili konuşur */}
       <div className="office-legend">
-        <span><span className="led led-working" />çalışıyor</span>
-        <span><span className="led led-idle" />boşta</span>
-        <span><span className="led led-waiting" />onay bekliyor</span>
-        <span><span className="led led-offline" />kapalı</span>
-        <span className="muted">karaktere tıkla → terminal</span>
+        <span><span className="led led-working" />{L.status.working}</span>
+        <span><span className="led led-idle" />{L.status.idle}</span>
+        <span><span className="led led-waiting" />{L.status.waiting}</span>
+        <span><span className="led led-offline" />{L.status.offline}</span>
+        <span className="muted">{L.office.clickHint}</span>
       </div>
     </div>
   );

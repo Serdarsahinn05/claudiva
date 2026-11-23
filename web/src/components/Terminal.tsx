@@ -16,6 +16,7 @@ import { useCliSkin } from '../cliSkins';
 import { SkinnedTranscript } from './SkinnedTranscript';
 import { SkinnedPermission } from './SkinnedPermission';
 import { SkinnedComposer } from './SkinnedComposer';
+import { L, locale } from '../i18n';
 
 /** CLI'ın karşılama maskotunun piksel-art karşılığı (Claude skin). */
 const CAT_LOGO = ` ▄▄▄▄▄▄▄
@@ -68,12 +69,12 @@ function Readout({ agent, budget }: { agent: AgentSnapshot; budget: BudgetState 
   return (
     <>
       {turn && (
-        <span className="hint-turn" title={`son tur: ${turn.inputTokens} girdi + ${turn.outputTokens} çıktı token`}>
+        <span className="hint-turn" title={L.terminal.turnTitle(turn.inputTokens, turn.outputTokens)}>
           son tur +{fmtNum(totalTokens(turn))} · {fmtCost(turn.costUSD)}
         </span>
       )}
       <span className="hint-sep">·</span>
-      <span className="hint-total" title={`${agent.config.name}: tüm zamanlar, ${u.requests} istek`}>
+      <span className="hint-total" title={L.terminal.totalTitle(agent.config.name, u.requests)}>
         {fmtNum(totalTokens(u))} · {fmtCost(u.costUSD)}
       </span>
       {overBudget && budget && (
@@ -81,9 +82,9 @@ function Readout({ agent, budget }: { agent: AgentSnapshot; budget: BudgetState 
           <span className="hint-sep">·</span>
           <span
             className={`hint-budget ${overBudget}`}
-            title={`bugün ${fmtCost(budget.spentUSD)} / ${fmtCost(budget.limitUSD ?? 0)}`}
+            title={L.terminal.budgetTitle(fmtCost(budget.spentUSD), fmtCost(budget.limitUSD ?? 0))}
           >
-            bütçe %{Math.round(budget.pct ?? 0)}
+            {L.terminal.budget(Math.round(budget.pct ?? 0))}
           </span>
         </>
       )}
@@ -211,27 +212,27 @@ export function Terminal({
         {/* CLI'da olduğu gibi karşılama kutusu geçmişin en üstünde kalıcıdır;
             oturum başlayınca kaybolmaz, yukarı kaydırınca hep orada durur. */}
         <div className="cli-welcome">
-          <span className="cli-welcome-title">Claude Manager</span>
+          <span className="cli-welcome-title">Claudiva</span>
           <div className="cli-welcome-cols">
             <div className="cli-welcome-left">
-              <div className="cli-hello">Merhaba, {agent.config.name}!</div>
+              <div className="cli-hello">{L.terminal.hello(agent.config.name)}</div>
               <pre className={`cli-logo cli-logo-${skin}`}>{SKIN_LOGO[skin]}</pre>
               <div className="cli-meta">
-                {agent.currentModel ?? agent.config.model} · {(ROLE_LABEL[agent.config.role] ?? agent.config.role).toLocaleLowerCase('tr')}
+                {agent.currentModel ?? agent.config.model} · {(ROLE_LABEL[agent.config.role] ?? agent.config.role).toLocaleLowerCase(locale)}
               </div>
               <div className="cli-meta dim">{projectDir || '…'}</div>
             </div>
             <div className="cli-welcome-right">
-              <div className="cli-sec-title">Başlarken</div>
+              <div className="cli-sec-title">{L.terminal.gettingStarted}</div>
               <div className="cli-sec-line">
-                <kbd>/</kbd> yazıp komutları gör{cmdCount > 0 ? ` (${cmdCount} tane)` : ''}
+                <kbd>/</kbd> {L.terminal.seeCommands}{cmdCount > 0 ? L.terminal.commandCount(cmdCount) : ''}
               </div>
-              <div className="cli-sec-line">Aşağıya doğrudan görev yazabilirsin</div>
+              <div className="cli-sec-line">{L.terminal.typeTask}</div>
 
-              <div className="cli-sec-title">Ekip</div>
-              <div className="cli-sec-line">{agents.length} ajan tanımlı</div>
+              <div className="cli-sec-title">{L.terminal.team}</div>
+              <div className="cli-sec-line">{L.terminal.agentsDefined(agents.length)}</div>
               <div className="cli-sec-line dim">
-                {agent.status === 'offline' ? 'Bu ajan kapalı — başlatınca çalışır' : 'Bu ajan hazır'}
+                {agent.status === 'offline' ? L.terminal.offline : L.terminal.ready}
               </div>
             </div>
           </div>
@@ -252,7 +253,7 @@ export function Terminal({
         skin={skin}
         agent={agent}
         value={input}
-        placeholder={`${agent.config.name} ajanına görev ver…`}
+        placeholder={L.terminal.placeholder(agent.config.name)}
         inputRef={inputRef}
         onChange={setInput}
         onBlur={() => setMenuOpen(false)}
@@ -327,7 +328,7 @@ export function Terminal({
         <div className="spacer" />
         <label className="cli-toggle">
           <input type="checkbox" checked={showThinking} onChange={(e) => setShowThinking(e.target.checked)} />
-          düşünme
+          {L.terminal.thinking}
         </label>
         <span className="hint-sep">·</span>
         <Readout agent={agent} budget={budget} />

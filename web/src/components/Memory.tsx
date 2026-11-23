@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { MemoryNode } from '../types';
 import { api } from '../api';
+import { L } from '../i18n';
 
 /**
  * Ajan hafıza haritası — memory/<ajanId|shared>/*.md düğümleri, `[[link]]`
@@ -106,7 +107,7 @@ export function Memory() {
     <div className="mem">
       <div className="mem-head">
         <div>
-          <h2 className="mem-title">Ajan hafıza haritası</h2>
+          <h2 className="mem-title">{L.memory.title}</h2>
           <span className="mem-sub">
             {nodes.length} hafıza · {edges.length} bağlantı · ajana göre kümeli, <code>[[link]]</code> kenarları
           </span>
@@ -114,7 +115,7 @@ export function Memory() {
         <div className="spacer" />
         <input
           className="mem-search"
-          placeholder="hafızada ara…"
+          placeholder={L.memory.search}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -130,10 +131,9 @@ export function Memory() {
 
       {!loading && nodes.length === 0 && !err && (
         <div className="mem-empty">
-          <h3>Henüz hafıza yok</h3>
+          <h3>{L.memory.emptyTitle}</h3>
           <p>
-            Ajanlar <code>hafiza-yaz</code> skill'iyle kalıcı bilgi kaydettikçe (kararlar, tercihler, proje
-            bağlamı) burada ajana göre kümeli bir grafik olarak belirir. Kaydettikten sonra <strong>Yenile</strong>'ye bas.
+            {L.memory.emptyA}<code>hafiza-yaz</code>{L.memory.emptyB}<strong>{L.memory.refresh}</strong>{L.memory.emptyC}
           </p>
         </div>
       )}
@@ -141,7 +141,7 @@ export function Memory() {
       {nodes.length > 0 && (
         <div className="mem-body">
           <div className="mem-canvas">
-            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Hafıza grafiği">
+            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label={L.memory.graphAria}>
               {edges.map((e, i) => (
                 <line
                   key={i}
@@ -173,7 +173,7 @@ export function Memory() {
 
           <aside className="mem-side">
             <div className="mem-legend">
-              <div className="mem-legend-title">Ajan · tıkla → yalnız bildiği</div>
+              <div className="mem-legend-title">{L.memory.legend}</div>
               {agents.map((a) => (
                 <button
                   key={a.id}
@@ -206,7 +206,7 @@ export function Memory() {
                 <pre className="mem-detail-body">{selNode.content}</pre>
               </div>
             ) : (
-              <div className="mem-detail muted">Düğüme tıkla → içeriği gör.</div>
+              <div className="mem-detail muted">{L.memory.pickNode}</div>
             )}
           </aside>
         </div>

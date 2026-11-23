@@ -18,6 +18,7 @@ import { useState } from 'react';
 import type { AgentSnapshot } from '../types';
 import { fmtNum, STATUS_LABEL, ROLE_LABEL, fmtCost, totalTokens } from '../format';
 import { teamOf } from '../teams';
+import { L } from '../i18n';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -45,7 +46,7 @@ export function AgentCatalog({
     <div className={`catalog${showTeam ? ' with-team' : ''}`}>
       <div className="cat-bulk">
         <button className="cat-bulk-btn" disabled={busy || !agents.length} onClick={onToggleAll}>
-          {allOffline ? 'Tümünü başlat' : 'Tümünü durdur'}
+          {allOffline ? L.catalog.startAll : L.catalog.stopAll}
         </button>
         {/* Oto-onay açıkken düğme kendisi bir uyarı: izin istemeden araç
             çalıştıran bir durumun sürüp gittiğini hatırlatır. */}
@@ -53,19 +54,19 @@ export function AgentCatalog({
           className={`cat-bulk-btn${allAuto ? ' warn' : ''}`}
           disabled={busy || !agents.length}
           onClick={onToggleAllAutoApprove}
-          title="Araç izin isteklerini onay istemeden otomatik kabul et"
+          title={L.catalog.autoTitle}
         >
-          {allAuto ? 'Oto-onayı kapat' : 'Oto-onay aç'}
+          {allAuto ? L.catalog.autoOff : L.catalog.autoOn}
         </button>
         <span className="cat-bulk-count">{agents.length} ajan</span>
       </div>
 
       <div className="cat-head">
         <span />
-        <span>Ajan</span>
-        {showTeam && <span>Takım</span>}
-        <span>Rol</span>
-        <span>Model</span>
+        <span>{L.catalog.agent}</span>
+        {showTeam && <span>{L.catalog.team}</span>}
+        <span>{L.catalog.role}</span>
+        <span>{L.catalog.model}</span>
         <span>Durum</span>
         <span className="num">Token</span>
         <span className="num">Maliyet</span>
@@ -97,7 +98,7 @@ export function AgentCatalog({
               <span className="cat-role">{ROLE_LABEL[config.role] ?? config.role}</span>
               <span
                 className="cat-model"
-                title={switched ? `temel model: ${config.model} · aktif: ${currentModel}` : undefined}
+                title={switched ? L.catalog.modelSwitched(config.model, currentModel ?? '') : undefined}
               >
                 {switched ? `${config.model}→${currentModel}` : config.model}
               </span>
@@ -108,10 +109,10 @@ export function AgentCatalog({
                   <span className="badge warn">{pendingPermissions.length} izin bekliyor</span>
                 )}
               </span>
-              <span className="cat-tok num" title="giriş + önbellek / çıkış token">
+              <span className="cat-tok num" title={L.catalog.tokensTitle}>
                 {fmtNum(totalTokens(usage))}
               </span>
-              <span className="cat-cost num" title="tahmini maliyet">
+              <span className="cat-cost num" title={L.catalog.costTitle}>
                 {fmtCost(usage.costUSD)}
               </span>
               <button
@@ -121,8 +122,8 @@ export function AgentCatalog({
                   setOpenId(expanded ? null : config.id);
                 }}
                 aria-expanded={expanded}
-                aria-label={expanded ? 'Ayrıntıyı kapat' : 'Ayrıntıyı aç'}
-                title={expanded ? 'Ayrıntıyı kapat' : 'Ayrıntıyı aç'}
+                aria-label={expanded ? L.catalog.collapse : L.catalog.expand}
+                title={expanded ? L.catalog.collapse : L.catalog.expand}
               >
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                      strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -139,8 +140,8 @@ export function AgentCatalog({
                     IN {fmtNum(usage.inputTokens + usage.cacheReadTokens + usage.cacheCreationTokens)} · OUT{' '}
                     {fmtNum(usage.outputTokens)} · {usage.requests} istek
                   </span>
-                  <button onClick={() => onToggle(a)}>{status === 'offline' ? 'Başlat' : 'Durdur'}</button>
-                  <button onClick={() => onEdit(a)}>Düzenle</button>
+                  <button onClick={() => onToggle(a)}>{status === 'offline' ? L.catalog.start : L.catalog.stop}</button>
+                  <button onClick={() => onEdit(a)}>{L.catalog.edit}</button>
                   <button className="danger" onClick={() => onDelete(a)}>
                     Sil
                   </button>

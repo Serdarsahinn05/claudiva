@@ -8,6 +8,7 @@ import {
   CHAR_FRAMES_PER_ROW,
   WALL_COLOR,
 } from './constants';
+import { L } from '../i18n';
 
 export const FURNITURE_IMAGE_KEYS = [
   'DESK_FRONT',
@@ -41,7 +42,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Görsel yüklenemedi: ${src}`));
+    img.onerror = () => reject(new Error(L.office.imageFailed(src)));
     img.src = src;
   });
 }
