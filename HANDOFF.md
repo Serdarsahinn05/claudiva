@@ -1,16 +1,102 @@
-# Devir — panel revizyonu (4 fazlı)
+# Devir — Claudiva
+
+# ▶ GÜNCEL İŞ (2026-11-23): Sohbet modu + .claudiva + roller + skill'ler
+
+**Önce oku:** `docs/ANALIZ.md`. Proje analizi, eksikler, Orkas değerlendirmesi,
+videolar ve yol haritası orada. Bu bölüm yalnızca yürüyen işin durumunu tutar.
+
+## Kullanıcının bu turdaki kararları (yeniden sorma)
+
+| Konu | Karar |
+|---|---|
+| Panel modları | **2 mod:** mevcut çok panelli sistem (korunur) + **Sohbet** (grup sohbeti). Ayarlar → "Arayüz" bölümünden seçilir. |
+| Sohbet görünümü | WhatsApp *gibi* (grup sohbeti) ama WhatsApp *teması* DEĞİL; tema token'larıyla çizilir. Referans: `docs/Screenshot_…jpg`. Ajanlar kendi aralarında konuşur (delegasyon + sonuç), kullanıcı `@ajan` ile araya girer. **Footer'a özen**: çip satırı + durum satırı + ipucu satırı. |
+| Skill dışlaması | Kütüphane `claudiva` geçen yolu dışlıyordu; **daraltılacak**: yalnız `CLAUDIVA_AGENT=1` ortam değişkeni taşıyan ajan oturumları dışlanır. |
+| Kütüphane skill'leri | Proje `.claude/skills` altına junction ile (`skill-baglan.ps1 -Profil claudiva`). Pakete girmez. |
+| find-skills | Yalnız **boss** ve **tech-lead** rollerine (`agents/<rol>/skills/find-skills`), pakete girer. |
+| 3D ofis | **Sona bırakıldı.** Değerlendirmesi ANALIZ.md'de. three.js eklemeden önce kullanıcıya sor. |
+| Repo klasörü | Kullanıcı EN SON `claude-manager` → `claudiva` yapacak. Kontrol listesi aşağıda. |
+| Commit | Yalnız istenirse ve `Co-Authored-By` satırı OLMADAN. |
+
+## İlerleme (2026-11-23 sonu: §1-§5 BİTTİ, commit EDİLMEDİ)
+
+- [x] **§1 `.claude-manager` → `.claudiva`.** Yapılanlar:
+  - `paths.ts` `migrateLegacyDir()`: yeni yoksa ve eski varsa eski yeniden adlandırılır; kilitliyse eski adla devam edilir; ikisi birden varsa yeni kazanır.
+  - Ortam değişkenleri `CLAUDIVA_HOME` / `CLAUDIVA_PROJECT` (eskileri yedek olarak okunur).
+  - localStorage `claudiva.*` (eski anahtarlar `web/index.html` satır içi betiğinde, bundle'dan ÖNCE taşınır).
+  - `lang="tr"`. `.gitignore`, `.gitattributes` (bayat `bin/claude-manager.js` referansı), README, PRODUCT, YAYIN, CLAUDE.md güncellendi.
+  - **Ölçüldü** (scratchpad kopyalarıyla; gerçek `~/.claude-manager`'a DOKUNULMADI): ev ve proje taşındı; iki klasör birden varken yeni kullanıldı.
+  - **DİKKAT:** gerçek `~/.claude-manager` ve bu reponun `.claude-manager`'ı sunucu ilk açıldığında taşınacak. Bu bilerek böyle; kullanıcıya söylendi.
+- [x] **§2 Roller.**
+  - Türkçe unvanlar (`agents/*/config.json` ve `personality.md` başlıkları) ve tek kalıpta açıklamalar. `AgentForm` rol açıklamaları netleşti, `Terminal` içindeki yinelenen `ROLE_LABEL` silindi.
+  - `server/src/agentUpgrade.ts`: var olan kurulumlarda ad ve açıklama yalnız 0.1.x değerine BİREBİR eşitse yenilenir; yeni paket skill'leri `.seeded-skills` manifestiyle eklenir, silinen skill geri gelmez.
+  - **Ölçüldü:** eski ad güncellendi, elle değiştirilmiş ad korundu, silinmiş find-skills ve test-yaz geri gelmedi.
+  - `find-skills` (MIT, LICENSE ile) → `agents/boss` ve `agents/tech-lead`. İkisinin personality'sine "kurmadan önce kullanıcıya sor" satırı eklendi.
+- [x] **§3 Skill kütüphanesi.**
+  - `claudeBackend.ts` SDK `env`ine `CLAUDIVA_AGENT=1` eklendi (`process.env`in tamamı taşınıyor; `env` verilince SDK ortamı devralmıyor).
+  - Kütüphanede dışlama yalnız bu değişkene bakıyor (3 yer).
+  - Profil `D:\Claude\skills-library\_sistem\profiller\claudiva.txt`; 11 skill `.claude/skills` altına junction olarak bağlandı. `.skills-profile` dosyası `.git/info/exclude` içinde.
+  - **Doğrulanmadı:** hook'un ajan-DEĞİL yolu test dizinlerinde iki durumda da boş çıktı verdi, yani yalnız "ajan oturumunda sessiz" yarısı kanıtlı.
+- [x] **§4 Sohbet modu.** Dosyalar:
+  - Yeni: `web/src/uiMode.ts`, `brief.ts`, `permissions.ts`, `agentSend.ts`, `chatFeed.ts`
+  - Yeni: `components/chat/ChatShell.tsx`, `ChatMessage.tsx`, `ChatComposer.tsx`, `chatFormat.ts`
+  - Değişen: Ayarlar → **Arayüz** bölümü; `App.tsx` mod dallanması ve komut paletinde "Sohbet/Panel moduna geç".
+  - **Canlı doğrulandı** (4610, kopya veri):
+    - Ayarlardan mod değişti ve yenilemede kaldı.
+    - Geçmiş veri doğru çizildi: devir kartları, teslim kartları, katlanan araçlar, gün ayıracı.
+    - `@ara` önerisi gerçek gönderimle sınandı: cevap geldi, "yazıyor" göstergesi çıktı, durum satırı süre saydı.
+    - DM yolu ve okunmamış sayacı tabanı çalıştı.
+    - `@container` 900/600px kırılmaları doğrulandı, yatay taşma yok.
+    - Panellere dönüşte yerleşim kaydı birebir aynı kaldı.
+  - **Bu sırada bulunan ve düzeltilen 4 hata:**
+    1. Önizleme sınıfı `.chat`, sohbet ızgarasını miras aldı (`.center` tuzağının aynısı) → `mp-chat`.
+    2. `@container` öğenin kendisini ölçemez → `.chat-wrap` sarmalayıcısı.
+    3. İki efekt eski `seen`i okuyup birbirini eziyordu → işlevsel `markSeen`.
+    4. **Eski sunucu hatası:** resume geri düşüşü mesajı dökümde İKİ KEZ yazıyordu → `send(..., { replay: true })`.
+- [x] **§5** ANALIZ.md §10-13: ofis videoları, panel modları, 3D/Blender, repo rename.
+
+- [x] **Yanıtlama (WhatsApp tarzı alıntı)**, 2. tur. Dosyalar: `web/src/reply.ts`, `ChatMessage` (↩ düğmesi + `Quote`), `ChatComposer` (yanıt şeridi, Esc iptal), `ChatShell` (`reply`/`jump`).
+  - **Canlı doğrulandı:** yanıt gönderildi, ajan bağlamı anladı; alıntıya tıklayınca mesaja kaydırdı ve vurguladı.
+  - Bulunan hata: tıklanamaz alıntı `disabled` düğme olarak soluk çiziliyordu → `div`.
+- **Ölçüm, "Teknik Lider çok token yiyor":** Teknik Lider'e özgü bir durum yok.
+  - Her YENİ oturum sabit bağlamı önbelleğe YAZAR. Ölçüm: "5+5" turu = girdi 2, çıktı 3, **önbellek yazımı 37.043 token = $0.22**.
+  - Bu repoda bağlam dökümü 52.7k token. En büyük kalem proje `CLAUDE.md`, ajan başına **20.2k token** (hafıza dosyası). Geri kalanı CLI sistem istemi (11.2k) ve sistem araçları (13.6k).
+  - Sonnet, haiku'nun ~3-5 katı fiyatlı.
+  - Aynı oturumdaki sonraki turlar önbellekten OKUR (≈1/10 fiyat).
+  - Öneri (kullanıcı kararı bekliyor): `CLAUDE.md`yi geliştirici notları (`docs/DEV-NOTES.md`) + kısa dizin diye böl.
+- **DİKKAT:** inceleme için açılan bir sunucu bu reponun `.claude-manager` klasörünü `.claudiva`ya TAŞIDI (beklenen davranış, veri eksiksiz). Gerçek `~/.claude-manager` HÂLÂ taşınmadı.
+- `docs/*.mp4` `.gitignore`'a eklendi (~18 MB ikili dosya git geçmişine girmesin).
+
+## Sıradaki adımlar (öneri sırası)
+
+1. Kullanıcı isterse **commit** (Co-Authored-By satırı YOK).
+2. `impeccable audit` → sohbet modu (yapılmadı; build, kontrast ve lint temiz).
+3. Sohbet kartında Raporlar'daki **kanıt rozeti** (N dosya / dosya yok) henüz yok. `/api/reports` kök görevleri döndürüyor; alt görev için `Touch` sayımı gerekecek.
+4. **Plan: onaylı** kipi yalnız prompt ile çalışıyor (yeni araç yok). Liderin gerçekten beklediği canlı ekip işiyle sınanmadı.
+5. Üçüncü mod "Akış" (SVG, `chatFeed` veri kaynağı) → ANALIZ §11.
+6. 3D ofis → ANALIZ §12 (three.js eklemeden önce SOR).
+7. Repo klasörü rename → aşağıdaki liste.
+
+## Repo klasörünü `claudiva` yapmadan önce
+
+Kodda repo yoluna bağlı bir şey yok. Yola bağlı **dış durum** ise var:
+
+1. `~/.claude/projects/D--SoftwareProject-claude-manager/` (hafıza ve oturum geçmişi) → yeni `D--SoftwareProject-claudiva/` klasörüne KOPYALA.
+2. `~/.claude.json` proje girdisi: yeni yol bir kez yeniden güven ister.
+3. Ajan SDK oturumları cwd'ye bağlı → resume tutmaz. Geri düşüşle yeni oturum açılır, dökümler korunur.
+4. `npm install`, çünkü workspace bağlantıları mutlak yol taşıyabilir.
+5. `graphify update .`
+6. `.claude/settings.local.json`'da eski mutlak yolla yazılmış bir izin satırı var (zararsız).
+7. Bu oturum ve sunucu KAPALIYKEN yeniden adlandır (açık süreçler klasörü kilitler).
+
+---
+
+# Önceki iş: panel revizyonu (4 fazlı) — BİTTİ
 
 **Son güncelleme:** 2026-08-15 · **Durum:** Faz 1, 2 ve 3 BİTTİ, üstüne iki ek
 iş yapıldı (sözdizimi renklendirme + skill katalogu). **Faz 4 (ikinci
 sağlayıcı) sırada — ama kullanıcı onu bilerek ertelemişti; açmadan önce sor.**
-
-## ⚡ Sonraki oturum buradan başla
-
-1. Bu dosyayı ve `CLAUDE.md`'yi oku (ikisi de güncel).
-2. **Değişiklikler HÂLÂ COMMIT EDİLMEDİ.** Üç fazın tamamı + iki ek iş çalışma
-   ağacında duruyor. Kullanıcı isterse ilk iş commit olabilir.
-3. Yarım kalan iş YOK. Faz 3'ün dört paneli ve iki ek iş canlı doğrulandı.
-4. ~~Browser paneli kendiliğinden tazelenmiyor~~ **BİTTİ ✅** (aşağıda).
+(Not: aşağıdaki "commit edilmedi" notları eski; o işler 0.1.1 ile yayımlandı.)
 
 ## Ek iş (Faz 3 sonrası, kullanıcı isteği) — BİTTİ ✅
 
