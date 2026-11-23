@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { THEMES, THEME_GROUPS, getTheme, setTheme } from '../themes';
 import { CLI_MARKS, CLI_SKINS, getCliSkin, setCliSkin } from '../cliSkins';
 import type { CliSkin } from '../cliSkins';
+import { L } from '../i18n';
 
 interface Props {
   onClose: () => void;
@@ -32,14 +33,14 @@ export function ThemePicker({ onClose }: Props) {
   return (
     <Modal onClose={onClose} wide>
       <div className="modal-head">
-        <h2>Görünüm</h2>
-        <span className="modal-sub">seçim anında uygulanır</span>
+        <h2>{L.themePicker.title}</h2>
+        <span className="modal-sub">{L.themePicker.subtitle}</span>
       </div>
 
       <div className="modal-pane">
         {/* Terminal tipi: temadan AYRI eksen; tüm terminalleri birden etkiler. */}
         <div>
-          <div className="theme-group-label">Terminal tipi</div>
+          <div className="theme-group-label">{L.themePicker.terminalType}</div>
           <div className="theme-grid">
             {CLI_SKINS.map((s) => (
               <button
@@ -63,7 +64,7 @@ export function ThemePicker({ onClose }: Props) {
 
         {THEME_GROUPS.map((group) => (
           <div key={group}>
-            <div className="theme-group-label">{group}</div>
+            <div className="theme-group-label">{L.themePicker.groups[group] ?? group}</div>
             <div className="theme-grid">
               {THEMES.filter((t) => t.group === group).map((t) => (
                 <button

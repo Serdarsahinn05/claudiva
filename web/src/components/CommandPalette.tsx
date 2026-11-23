@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from './Modal';
 import { THEMES, setTheme } from '../themes';
 import type { AgentSnapshot } from '../types';
+import { L } from '../i18n';
 
 export interface Command {
   id: string;
@@ -71,10 +72,10 @@ export function CommandPalette({ commands, onClose }: Props) {
           className="pal-input"
           autoFocus
           value={query}
-          placeholder="Komut, ajan veya bölüm ara…"
+          placeholder={L.cmdPalette.placeholder}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
-          aria-label="Komut ara"
+          aria-label={L.cmdPalette.aria}
         />
         <div className="pal-list" ref={listRef}>
           {shown.map((c, i) => (
@@ -91,12 +92,12 @@ export function CommandPalette({ commands, onClose }: Props) {
               {c.hint && <span className="cmd-desc">{c.hint}</span>}
             </div>
           ))}
-          {shown.length === 0 && <div className="muted small pal-empty">Eşleşen komut yok.</div>}
+          {shown.length === 0 && <div className="muted small pal-empty">{L.cmdPalette.empty}</div>}
         </div>
         <div className="pal-foot">
           <span>↑↓ gez</span>
-          <span>⏎ çalıştır</span>
-          <span>esc kapat</span>
+          <span>⏎ {L.cmdPalette.run}</span>
+          <span>esc {L.cmdPalette.close}</span>
         </div>
       </div>
     </Modal>
@@ -123,14 +124,14 @@ export function agentCommands(
   for (const a of agents) {
     out.push({
       id: `open:${a.config.id}`,
-      label: `${a.config.name} — terminali aç`,
+      label: L.cmdPalette.openTerminal(a.config.name),
       hint: a.status,
       keywords: `ajan terminal ${a.config.id} ${a.config.role}`,
       run: () => open(a.config.id),
     });
     out.push({
       id: `toggle:${a.config.id}`,
-      label: `${a.config.name} — ${a.status === 'offline' ? 'başlat' : 'durdur'}`,
+      label: a.status === 'offline' ? L.cmdPalette.start(a.config.name) : L.cmdPalette.stop(a.config.name),
       hint: a.status,
       keywords: `ajan başlat durdur ${a.config.id}`,
       run: () => toggle(a),

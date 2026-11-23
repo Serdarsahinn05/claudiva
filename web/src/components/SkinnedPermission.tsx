@@ -5,6 +5,7 @@ import { answerPermission, PERMISSION_OPTIONS, type PermissionChoice } from '../
 import { ClaudePermission } from './brainless/claude/claude-permission';
 import { CodexPermissions } from './brainless/codex/codex-permissions';
 import { GrokPermission } from './brainless/grok/grok-permission';
+import { L } from '../i18n';
 
 /**
  * İzin istekleri skin'e göre gerçek brainless permission bileşenleriyle çizilir.
@@ -26,7 +27,7 @@ export function SkinnedPermission({
   skin: CliSkin;
 }) {
   const done = useRef(false);
-  const title = req.title ?? `${req.toolName} çalıştırılsın mı?`;
+  const title = req.title ?? L.chat.runPrompt(req.toolName);
   const command = JSON.stringify(req.input).slice(0, 300);
 
   async function choose(i: number) {
@@ -41,8 +42,8 @@ export function SkinnedPermission({
         title={title}
         options={[
           { label: OPTIONS[0], description: command },
-          { label: OPTIONS[1], description: 'Bu ajanda otomatik onayı açar.' },
-          { label: OPTIONS[2], description: 'İsteği reddeder.' },
+          { label: OPTIONS[1], description: L.permissionDesc.always },
+          { label: OPTIONS[2], description: L.permissionDesc.deny },
         ]}
         onChoose={choose}
       />

@@ -23,6 +23,7 @@ import {
   type DockState,
   type PanelId,
 } from '../workspace';
+import { L } from '../i18n';
 
 /* ─────────────────────────────────────────────────────────── ikonlar
    Panel çerçevesindeki eylemler. 13px, tek renk, 1.6px çizgi — başlık
@@ -45,7 +46,7 @@ const I = {
   chevR: mini(<path d="M9 6l6 6-6 6" />),
 };
 
-const DOCK_LABEL: Record<DockId, string> = { left: 'Sol yuva', center: 'Çalışma alanı', right: 'Sağ yuva' };
+const DOCK_LABEL: Record<DockId, string> = { left: L.dock.left, center: L.dock.center, right: L.dock.right };
 const DOCK_ICON: Record<DockId, ReactNode> = { left: I.dockLeft, center: I.dockCenter, right: I.dockRight };
 
 /* ═══════════════════════════════════════════════ sürükleme yardımcıları */
@@ -167,15 +168,15 @@ export function PanelFrame({
                   key={d}
                   className="pf-act"
                   onClick={() => onDock(d)}
-                  title={`${DOCK_LABEL[d]}na taşı`}
-                  aria-label={`${DOCK_LABEL[d]}na taşı`}
+                  title={L.dock.moveTo(DOCK_LABEL[d])}
+                  aria-label={L.dock.moveTo(DOCK_LABEL[d])}
                 >
                   {DOCK_ICON[d]}
                 </button>
               ))}
           {onToggleMax && (
-            <button className="pf-act" onClick={onToggleMax} title={maximized ? 'Küçült' : 'Genişlet'}
-                    aria-label={maximized ? 'Küçült' : 'Genişlet'}>
+            <button className="pf-act" onClick={onToggleMax} title={maximized ? L.dock.minimize : L.dock.maximize}
+                    aria-label={maximized ? L.dock.minimize : L.dock.maximize}>
               {maximized ? I.collapse : I.expand}
             </button>
           )}
@@ -228,12 +229,12 @@ export function SideDock({
       <button
         className={`dock-stub ${side}${zone.over ? ' drop-over' : ''}`}
         onClick={onToggle}
-        title={dock.panels.length ? `${side === 'left' ? 'Sol' : 'Sağ'} yuvayı aç` : 'Buraya panel sürükle'}
+        title={dock.panels.length ? L.dock.open(side === 'left') : L.dock.dragHere}
         {...zone.props}
       >
         {side === 'left' ? I.chevR : I.chevL}
         <span className="dock-stub-label">
-          {dock.panels.map((p) => PANELS[p].title).join(' · ') || 'buraya sürükle'}
+          {dock.panels.map((p) => PANELS[p].title).join(' · ') || L.dock.dragHereShort}
         </span>
       </button>
     );
@@ -257,7 +258,7 @@ export function SideDock({
               key={p}
               className={`dock-tab${active === p ? ' sel' : ''}${dropAt === i ? ' drop-before' : ''}`}
               onClick={() => onActivate(p)}
-              title={`${PANELS[p].hint} · sürükleyerek taşı`}
+              title={L.dock.dragToMove(PANELS[p].hint)}
               draggable
               onDragStart={(e) => startPanelDrag(e, p)}
               onDragOver={(e) => {
@@ -281,7 +282,7 @@ export function SideDock({
               setDropAt(dock.panels.length);
             }}
           />
-          <button className="dock-collapse" onClick={onToggle} title="Yuvayı daralt" aria-label="Yuvayı daralt">
+          <button className="dock-collapse" onClick={onToggle} title={L.dock.collapse} aria-label={L.dock.collapse}>
             {side === 'left' ? I.chevL : I.chevR}
           </button>
         </nav>
@@ -299,7 +300,7 @@ export function SideDock({
           </PanelFrame>
         )}
 
-        {zone.over && <div className="dock-drop-hint">{side === 'left' ? 'Sol yuva' : 'Sağ yuva'}</div>}
+        {zone.over && <div className="dock-drop-hint">{side === 'left' ? L.dock.left : L.dock.right}</div>}
       </aside>
       {side === 'left' && <Splitter side={side} width={dock.width} onWidth={onWidth} />}
     </>

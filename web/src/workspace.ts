@@ -1,3 +1,4 @@
+import { L } from './i18n';
 /**
  * Çalışma alanı yerleşimi.
  *
@@ -49,18 +50,18 @@ export interface PanelDef {
 }
 
 export const PANELS: Record<PanelId, PanelDef> = {
-  survey: { id: 'survey', title: 'Genel Durum', hint: 'projenin şu anki aşaması' },
-  office: { id: 'office', title: 'Ofis', hint: 'ajanların canlı yerleşimi' },
-  agents: { id: 'agents', title: 'Ajanlar', hint: 'ekip dizini' },
-  usage: { id: 'usage', title: 'Harcama', hint: 'token ve maliyet dökümü' },
-  tasks: { id: 'tasks', title: 'Görevler', hint: 'dağıtım ve zincirler' },
-  code: { id: 'code', title: 'Kod', hint: 'proje ağacı ve dosya içeriği' },
-  reports: { id: 'reports', title: 'Raporlar', hint: 'ajan sonuçları ve kanıtı' },
-  skills: { id: 'skills', title: 'Skill’ler', hint: 'kur, kaldır, aç/kapat' },
-  browser: { id: 'browser', title: 'Browser', hint: 'ajanların da sürdüğü tarayıcı' },
-  changes: { id: 'changes', title: 'Değişiklikler', hint: 'dosya farkları' },
-  memory: { id: 'memory', title: 'Hafıza', hint: 'ajan hafıza haritası' },
-  prompts: { id: 'prompts', title: 'Promptlar', hint: 'kayıtlı şablonlar' },
+  survey: { id: 'survey', ...L.panels.survey },
+  office: { id: 'office', ...L.panels.office },
+  agents: { id: 'agents', ...L.panels.agents },
+  usage: { id: 'usage', ...L.panels.usage },
+  tasks: { id: 'tasks', ...L.panels.tasks },
+  code: { id: 'code', ...L.panels.code },
+  reports: { id: 'reports', ...L.panels.reports },
+  skills: { id: 'skills', ...L.panels.skills },
+  browser: { id: 'browser', ...L.panels.browser },
+  changes: { id: 'changes', ...L.panels.changes },
+  memory: { id: 'memory', ...L.panels.memory },
+  prompts: { id: 'prompts', ...L.panels.prompts },
 };
 
 export const PANEL_IDS = Object.keys(PANELS) as PanelId[];

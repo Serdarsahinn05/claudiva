@@ -14,6 +14,7 @@
 import { fmtNum, totalTokens } from '../format';
 import type { AgentSnapshot } from '../types';
 import { PANEL_IDS, PANELS, type PanelId } from '../workspace';
+import { L } from '../i18n';
 
 interface Props {
   /** Şu an ekranda görünen paneller. */
@@ -44,7 +45,7 @@ export function Rail({
   foot,
 }: Props) {
   return (
-    <nav className="rail" aria-label="Paneller ve ekip">
+    <nav className="rail" aria-label={L.rail.aria}>
       <div className="rail-sec">Paneller</div>
       {PANEL_IDS.map((id) => {
         const on = visible.has(id);
@@ -82,7 +83,7 @@ export function Rail({
               onClick={() => onOpenTerminal(a.config.id)}
               role="button"
               tabIndex={0}
-              title={open ? `${a.config.name} terminali açık` : `${a.config.name} terminalini aç`}
+              title={open ? L.rail.terminalOpen(a.config.name) : L.rail.openTerminal(a.config.name)}
               draggable
               onDragStart={(e) => {
                 onDragState(a.config.id, null);
@@ -118,7 +119,7 @@ export function Rail({
             </div>
           );
         })}
-        {agents.length === 0 && <div className="muted center rail-empty">Bu takımda ajan yok.</div>}
+        {agents.length === 0 && <div className="muted center rail-empty">{L.rail.teamEmpty}</div>}
       </div>
 
       {foot && (

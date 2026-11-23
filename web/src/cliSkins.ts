@@ -14,6 +14,7 @@
  */
 
 import { useSyncExternalStore } from 'react';
+import { L } from './i18n';
 
 export type CliSkin = 'claude' | 'codex' | 'grok';
 
@@ -25,9 +26,9 @@ export interface CliSkinDef {
 }
 
 export const CLI_SKINS: CliSkinDef[] = [
-  { id: 'claude', name: 'Claude Code', desc: 'Mercan vurgu, ● işaretleri, logo kutusu' },
-  { id: 'codex', name: 'Codex', desc: 'Grayscale, › işareti, minimal başlangıç kartı' },
-  { id: 'grok', name: 'Grok', desc: 'Kehribar, ◆ işareti, braille spinner, nokta-matris' },
+  { id: 'claude', name: 'Claude Code', desc: L.cliSkins.claude },
+  { id: 'codex', name: 'Codex', desc: L.cliSkins.codex },
+  { id: 'grok', name: 'Grok', desc: L.cliSkins.grok },
 ];
 
 /**

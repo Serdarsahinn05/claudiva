@@ -1,3 +1,4 @@
+import { L } from './i18n';
 /**
  * Plaka kayıt defteri.
  *
@@ -38,40 +39,40 @@ export interface ThemeDef {
 export const THEMES: ThemeDef[] = [
   {
     id: 'night',
-    name: 'Gece',
-    desc: 'Gece mürekkebi zemin, yıldız tozu metin, vermilyon ek açıklama',
+    name: L.themes.night.name,
+    desc: L.themes.night.desc,
     group: 'Plakalar',
   },
   {
     id: 'redlight',
-    name: 'Kırmızı Fener',
-    desc: 'Gözlemci feneri: kırmızı monokrom, karanlığa uyumu bozmaz',
+    name: L.themes.redlight.name,
+    desc: L.themes.redlight.desc,
     group: 'Plakalar',
   },
   {
     id: 'day',
-    name: 'Gündüz',
-    desc: 'Basılı plaka: kağıt zemin, siyah mürekkep, aydınlık oda',
+    name: L.themes.day.name,
+    desc: L.themes.day.desc,
     group: 'Plakalar',
   },
 
   // --- Premium baskılar: işlenmiş yüzey, soğuk vurgu (bkz. themes.css) ---
   {
     id: 'obsidian',
-    name: 'Obsidyen',
-    desc: 'Mürekkep siyahı obsidyen, tek soğuk kaynak: cyan',
+    name: L.themes.obsidian.name,
+    desc: L.themes.obsidian.desc,
     group: 'Premium',
   },
   {
     id: 'carbon',
-    name: 'Karbon',
-    desc: 'Anodize grafit gövde, buz cyanı — uzun oturum için nötr',
+    name: L.themes.carbon.name,
+    desc: L.themes.carbon.desc,
     group: 'Premium',
   },
   {
     id: 'aurora',
-    name: 'Aurora',
-    desc: 'Menekşeli siyah, cyan vurgu; düşünme kanalı tonla ayrışır',
+    name: L.themes.aurora.name,
+    desc: L.themes.aurora.desc,
     group: 'Premium',
   },
 ];

@@ -241,6 +241,94 @@ export const en: Dict = {
     modeAria: 'Interface mode',
   },
 
+  rail: {
+    aria: 'Panels and team',
+    terminalOpen: (name) => `${name} terminal is open`,
+    openTerminal: (name) => `Open ${name} terminal`,
+    teamEmpty: 'This team has no agents.',
+  },
+
+  teamTabs: {
+    aria: 'Teams',
+    all: 'All',
+    working: (n) => `${n} ${n === 1 ? 'agent' : 'agents'} working`,
+    summary: (count, active, pending) =>
+      `${count} ${count === 1 ? 'agent' : 'agents'} · ${active} working${pending ? ` · ${pending} awaiting approval` : ''}`,
+  },
+
+  dock: {
+    left: 'Left dock',
+    center: 'Workspace',
+    right: 'Right dock',
+    moveTo: (dock) => `Move to ${dock.toLowerCase()}`,
+    minimize: 'Restore',
+    maximize: 'Maximize',
+    open: (left) => `Open ${left ? 'left' : 'right'} dock`,
+    dragHere: 'Drag a panel here',
+    dragHereShort: 'drag here',
+    dragToMove: (hint) => `${hint} · drag to move`,
+    collapse: 'Collapse dock',
+  },
+
+  cmdPalette: {
+    placeholder: 'Search commands, agents or sections…',
+    aria: 'Search commands',
+    empty: 'No matching command.',
+    run: 'run',
+    close: 'close',
+    openTerminal: (name) => `${name} — open terminal`,
+    start: (name) => `${name} — start`,
+    stop: (name) => `${name} — stop`,
+  },
+
+  themePicker: {
+    title: 'Appearance',
+    subtitle: 'applies instantly',
+    terminalType: 'Terminal style',
+    groups: { Premium: 'Premium', Plakalar: 'Plates' },
+  },
+
+  themes: {
+    night: { name: 'Night', desc: 'Night-ink ground, stardust text, vermilion annotations' },
+    redlight: { name: 'Red Lantern', desc: 'Observer lamp: red monochrome that keeps your dark adaptation' },
+    day: { name: 'Day', desc: 'Printed plate: paper ground, black ink, a bright room' },
+    obsidian: { name: 'Obsidian', desc: 'Ink-black obsidian with a single cool light: cyan' },
+    carbon: { name: 'Carbon', desc: 'Anodized graphite with ice cyan — neutral for long sessions' },
+    aurora: { name: 'Aurora', desc: 'Violet-tinted black with cyan accents; thinking stands apart by tone' },
+  },
+
+  cliSkins: {
+    claude: 'Coral accent, ● markers, logo box',
+    codex: 'Grayscale, › marker, minimal welcome card',
+    grok: 'Amber, ◆ marker, braille spinner, dot matrix',
+  },
+
+  composerMode: {
+    pending: (n) => `${n} awaiting approval`,
+    auto: 'auto-approve on — tools run without asking',
+    manual: 'permission is asked for every tool',
+  },
+
+  permissionDesc: {
+    always: 'Turns on auto-approve for this agent.',
+    deny: 'Rejects the request.',
+  },
+
+  panels: {
+    survey: { title: 'Overview', hint: 'where the project stands now' },
+    office: { title: 'Office', hint: 'live layout of the agents' },
+    agents: { title: 'Agents', hint: 'team directory' },
+    usage: { title: 'Spending', hint: 'token and cost breakdown' },
+    tasks: { title: 'Tasks', hint: 'delegation and chains' },
+    code: { title: 'Code', hint: 'project tree and file contents' },
+    reports: { title: 'Reports', hint: 'agent results and evidence' },
+    skills: { title: 'Skills', hint: 'install, remove, enable' },
+    browser: { title: 'Browser', hint: 'the browser agents drive too' },
+    changes: { title: 'Changes', hint: 'file diffs' },
+    memory: { title: 'Memory', hint: 'agent memory map' },
+    prompts: { title: 'Prompts', hint: 'saved templates' },
+  },
+
   boot: {
     waiting: 'waiting for the server — retrying',
     noAnswer: 'the server is not responding · make sure it was started with `npm run dev`',

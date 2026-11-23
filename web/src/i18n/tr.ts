@@ -252,6 +252,94 @@ export const tr = {
     modeAria: 'Arayüz modu',
   },
 
+  rail: {
+    aria: 'Paneller ve ekip',
+    terminalOpen: (name: string) => `${name} terminali açık`,
+    openTerminal: (name: string) => `${name} terminalini aç`,
+    teamEmpty: 'Bu takımda ajan yok.',
+  },
+
+  teamTabs: {
+    aria: 'Takımlar',
+    all: 'Tümü',
+    working: (n: number) => `${n} ajan çalışıyor`,
+    summary: (count: number, active: number, pending: number) =>
+      `${count} ajan · ${active} çalışıyor${pending ? ` · ${pending} izin bekliyor` : ''}`,
+  },
+
+  dock: {
+    left: 'Sol yuva',
+    center: 'Çalışma alanı',
+    right: 'Sağ yuva',
+    moveTo: (dock: string) => `${dock}na taşı`,
+    minimize: 'Küçült',
+    maximize: 'Genişlet',
+    open: (left: boolean) => `${left ? 'Sol' : 'Sağ'} yuvayı aç`,
+    dragHere: 'Buraya panel sürükle',
+    dragHereShort: 'buraya sürükle',
+    dragToMove: (hint: string) => `${hint} · sürükleyerek taşı`,
+    collapse: 'Yuvayı daralt',
+  },
+
+  cmdPalette: {
+    placeholder: 'Komut, ajan veya bölüm ara…',
+    aria: 'Komut ara',
+    empty: 'Eşleşen komut yok.',
+    run: 'çalıştır',
+    close: 'kapat',
+    openTerminal: (name: string) => `${name} — terminali aç`,
+    start: (name: string) => `${name} — başlat`,
+    stop: (name: string) => `${name} — durdur`,
+  },
+
+  themePicker: {
+    title: 'Görünüm',
+    subtitle: 'seçim anında uygulanır',
+    terminalType: 'Terminal tipi',
+    groups: { Premium: 'Premium', Plakalar: 'Plakalar' } as Record<string, string>,
+  },
+
+  themes: {
+    night: { name: 'Gece', desc: 'Gece mürekkebi zemin, yıldız tozu metin, vermilyon ek açıklama' },
+    redlight: { name: 'Kırmızı Fener', desc: 'Gözlemci feneri: kırmızı monokrom, karanlığa uyumu bozmaz' },
+    day: { name: 'Gündüz', desc: 'Basılı plaka: kağıt zemin, siyah mürekkep, aydınlık oda' },
+    obsidian: { name: 'Obsidyen', desc: 'Mürekkep siyahı obsidyen, tek soğuk kaynak: cyan' },
+    carbon: { name: 'Karbon', desc: 'Anodize grafit gövde, buz cyanı — uzun oturum için nötr' },
+    aurora: { name: 'Aurora', desc: 'Menekşeli siyah, cyan vurgu; düşünme kanalı tonla ayrışır' },
+  },
+
+  cliSkins: {
+    claude: 'Mercan vurgu, ● işaretleri, logo kutusu',
+    codex: 'Grayscale, › işareti, minimal başlangıç kartı',
+    grok: 'Kehribar, ◆ işareti, braille spinner, nokta-matris',
+  },
+
+  composerMode: {
+    pending: (n: number) => `${n} izin bekliyor`,
+    auto: 'oto onay açık — araçlar sorulmadan çalışır',
+    manual: 'her araç için izin sorulur',
+  },
+
+  permissionDesc: {
+    always: 'Bu ajanda otomatik onayı açar.',
+    deny: 'İsteği reddeder.',
+  },
+
+  panels: {
+    survey: { title: 'Genel Durum', hint: 'projenin şu anki aşaması' },
+    office: { title: 'Ofis', hint: 'ajanların canlı yerleşimi' },
+    agents: { title: 'Ajanlar', hint: 'ekip dizini' },
+    usage: { title: 'Harcama', hint: 'token ve maliyet dökümü' },
+    tasks: { title: 'Görevler', hint: 'dağıtım ve zincirler' },
+    code: { title: 'Kod', hint: 'proje ağacı ve dosya içeriği' },
+    reports: { title: 'Raporlar', hint: 'ajan sonuçları ve kanıtı' },
+    skills: { title: 'Skill’ler', hint: 'kur, kaldır, aç/kapat' },
+    browser: { title: 'Browser', hint: 'ajanların da sürdüğü tarayıcı' },
+    changes: { title: 'Değişiklikler', hint: 'dosya farkları' },
+    memory: { title: 'Hafıza', hint: 'ajan hafıza haritası' },
+    prompts: { title: 'Promptlar', hint: 'kayıtlı şablonlar' },
+  },
+
   boot: {
     waiting: 'sunucu bekleniyor — yeniden deneniyor',
     noAnswer: 'sunucu yanıt vermiyor · `npm run dev` ile başlattığından emin ol',

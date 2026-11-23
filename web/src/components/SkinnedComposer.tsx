@@ -2,6 +2,7 @@ import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import type { AgentSnapshot } from '../types';
 import type { CliSkin } from '../cliSkins';
 import { CLI_MARKS } from '../cliSkins';
+import { L } from '../i18n';
 
 /**
  * Giriş kutusu — her CLI'ın kendi composer'ı.
@@ -34,11 +35,11 @@ interface Props {
 /** Kip: gerçek `autoApprove` ayarı + bekleyen izin sayısı. */
 function modeOf(agent: AgentSnapshot): { glyph: string; label: string; tone: 'auto' | 'manual' | 'wait' } {
   if (agent.pendingPermissions.length > 0) {
-    return { glyph: '⏸', label: `${agent.pendingPermissions.length} izin bekliyor`, tone: 'wait' };
+    return { glyph: '⏸', label: L.composerMode.pending(agent.pendingPermissions.length), tone: 'wait' };
   }
   return agent.config.autoApprove
-    ? { glyph: '⏵⏵', label: 'oto onay açık — araçlar sorulmadan çalışır', tone: 'auto' }
-    : { glyph: '⏸', label: 'her araç için izin sorulur', tone: 'manual' };
+    ? { glyph: '⏵⏵', label: L.composerMode.auto, tone: 'auto' }
+    : { glyph: '⏸', label: L.composerMode.manual, tone: 'manual' };
 }
 
 export function SkinnedComposer({
