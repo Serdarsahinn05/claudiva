@@ -137,7 +137,7 @@ export function TaskBoard({ tasks, agents }: Props) {
           {t.chainId && <span className="task-step">{(t.stepIndex ?? 0) + 1}.</span>}
           <strong className="task-title">{t.title}</strong>
           <span className="task-meta">
-            → {agentName(t.assignedTo)} · {t.assignedBy === 'user' ? 'sen' : agentName(t.assignedBy)}
+            → {agentName(t.assignedTo)} · {t.assignedBy === 'user' ? L.chat.you.toLocaleLowerCase() : agentName(t.assignedBy)}
           </span>
           <span className="task-time">{new Date(t.createdAt).toLocaleTimeString('tr-TR')}</span>
           <span className={`task-caret${expanded === t.id ? ' open' : ''}`}>›</span>

@@ -46,7 +46,7 @@ export function Rail({
 }: Props) {
   return (
     <nav className="rail" aria-label={L.rail.aria}>
-      <div className="rail-sec">Paneller</div>
+      <div className="rail-sec">{L.rail.panels}</div>
       {PANEL_IDS.map((id) => {
         const on = visible.has(id);
         const badge = panelBadge?.(id);
@@ -65,7 +65,7 @@ export function Rail({
       })}
 
       <div className="rail-sec rail-sec-2">
-        Ekip
+        {L.rail.team}
         <span className="rail-sec-hint">{agents.length}</span>
       </div>
 

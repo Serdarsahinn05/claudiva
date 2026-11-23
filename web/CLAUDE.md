@@ -34,6 +34,29 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
 - **Giriş animasyonlarında `animation-fill-mode: backwards` kullan, `both` değil.**
   `both` bitişte `transform: none`'ı kalıcı uygular ve hover hareketini tamamen öldürür.
 
+## Arayüz dili (i18n)
+
+- **Kütüphane YOK.** `web/src/i18n/tr.ts` KAYNAK sözlük, `en.ts` `Dict` tipine
+  bağlı: anahtar eksik, fazla ya da parametre imzası farklıysa `tsc -b` KIRILIR
+  (ölçüldü: `en.ts`ten bir anahtar silmek TS2741 verdi). Yeni dil = yeni dosya +
+  `i18n/index.ts`teki `LOCALES`/`DICTS`e birer satır + `index.html`deki betikte dil kodu.
+- **Parametreli metin FONKSİYONDUR** (`L.chat.typing(ad)`); `{name}` gibi yer
+  tutucu ayrıştırma yok, çoğul İngilizcede fonksiyonun içinde çözülür.
+- **Dil değişimi SAYFAYI YENİLER** (`setLocale`). Bu yüzden `L` modül yüklenirken
+  bir kez çözülür ve her yerde sabit gibi okunur: modül seviyesindeki tablolar
+  (`ROLE_LABEL`, `STATUS_LABEL`, `PANELS`, tema adları) da dili izler. Bunu
+  "canlı" yapmaya kalkmak her tabloyu fonksiyona çevirmeyi gerektirir; değmez.
+- **Kod içi kimlikler ÇEVRİLMEZ**, yalnız görünen etiket: tema `group` değeri
+  (`'Plakalar'`) filtre anahtarı olarak kalır, ekranda `L.themePicker.groups[g]`.
+  Aynı şekilde `BRIEF_MARKER`, `⟪yanıt:` ve görev kuyruğunun `# Görev (id:`
+  öneki sabittir — eski dökümleri tanımak için.
+- **Ekip talimatı (`L.brief`) arayüz diliyle gider**: İngilizce isteğin altına
+  Türkçe çerçeve eklenirse ajanın cevap dili karışırdı. Ajanların kişilik ve
+  skill dosyaları AYRI konu (sunucu tarafı, henüz Türkçe).
+- Tarih/saat biçimi `dateLocale` ile (`'tr-TR'` yazma). Belge dili ve açılış
+  perdesi metni `index.html`deki satır içi betikte, `detect()` ile AYNI kuralla.
+- Yeni metin eklerken: önce `tr.ts`e, sonra `en.ts`e; derleme eksik olanı söyler.
+
 ## Sözdizimi renklendirme (Kod paneli)
 
 - **"Highlighter paketi şişirir" ölçüldü ve DOĞRU ÇIKMADI.** Eski karar

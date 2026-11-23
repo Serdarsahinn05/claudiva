@@ -257,6 +257,8 @@ export const tr = {
     terminalOpen: (name: string) => `${name} terminali açık`,
     openTerminal: (name: string) => `${name} terminalini aç`,
     teamEmpty: 'Bu takımda ajan yok.',
+    panels: 'Paneller',
+    team: 'Ekip',
   },
 
   teamTabs: {
@@ -856,6 +858,31 @@ export const tr = {
     downloading: 'İndiriliyor…',
     installOne: 'Kur',
   },
+
+  commands: {
+    help: 'Komutları listeler',
+    status: 'Ajanın tam durumu (model, oturum, kullanım, bütçe)',
+    context: 'Bağlam penceresi dökümü',
+    usage: 'Token/maliyet sayımı ve hesabın plan kotası',
+    model: 'Modeli gösterir veya değiştirir',
+    agents: 'Panel ajanları + oturumun alt ajanları',
+    mcp: 'MCP sunucularının bağlantı durumu',
+    config: 'Ajan ve panel yapılandırması',
+    doctor: 'Tanılama: bağlantı, oturum, MCP, bağlam, bütçe',
+    memory: 'Bu ajanın hafıza kayıtları',
+    todos: 'Bu ajana atanmış görevler',
+    export: 'Dökümü dosya olarak indirir',
+    resume: 'Oturum bilgisi; "yeniden" ile oturumu yeniden başlatır',
+    clear: 'Terminal dökümünü temizler (ajanın bağlamı korunur)',
+    modelArg: '[ad]',
+    resumeArg: '[yeniden]',
+  },
+
+  toolVerbs: {
+    Read: 'oku', Write: 'yaz', Edit: 'düzenle', MultiEdit: 'düzenle', NotebookEdit: 'düzenle',
+    Bash: 'çalıştır', Grep: 'ara', Glob: 'bul', WebFetch: 'getir', WebSearch: 'ara', Task: 'görev', TodoWrite: 'todo',
+  } as Record<string, string>,
+  awaitingReply: 'Yanıt bekleniyor…',
 
   boot: {
     waiting: 'sunucu bekleniyor — yeniden deneniyor',

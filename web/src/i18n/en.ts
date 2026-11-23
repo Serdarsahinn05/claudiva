@@ -246,6 +246,8 @@ export const en: Dict = {
     terminalOpen: (name) => `${name} terminal is open`,
     openTerminal: (name) => `Open ${name} terminal`,
     teamEmpty: 'This team has no agents.',
+    panels: 'Panels',
+    team: 'Team',
   },
 
   teamTabs: {
@@ -843,6 +845,31 @@ export const en: Dict = {
     downloading: 'Downloading…',
     installOne: 'Install',
   },
+
+  commands: {
+    help: 'Lists the commands',
+    status: 'Full agent status (model, session, usage, budget)',
+    context: 'Context window breakdown',
+    usage: 'Token/cost counts and the account plan quota',
+    model: 'Shows or changes the model',
+    agents: 'Panel agents + the session’s subagents',
+    mcp: 'Connection status of MCP servers',
+    config: 'Agent and panel configuration',
+    doctor: 'Diagnostics: connection, session, MCP, context, budget',
+    memory: 'This agent’s memory records',
+    todos: 'Tasks assigned to this agent',
+    export: 'Downloads the transcript as a file',
+    resume: 'Session info; "yeniden" restarts the session',
+    clear: 'Clears the terminal transcript (the agent’s context is kept)',
+    modelArg: '[name]',
+    resumeArg: '[yeniden]',
+  },
+
+  toolVerbs: {
+    Read: 'read', Write: 'write', Edit: 'edit', MultiEdit: 'edit', NotebookEdit: 'edit',
+    Bash: 'run', Grep: 'search', Glob: 'find', WebFetch: 'fetch', WebSearch: 'search', Task: 'task', TodoWrite: 'todo',
+  },
+  awaitingReply: 'Waiting for a reply…',
 
   boot: {
     waiting: 'waiting for the server — retrying',

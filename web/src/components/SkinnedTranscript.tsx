@@ -17,6 +17,7 @@ import { GrokThought } from './brainless/grok/grok-thought';
 import { GrokTool } from './brainless/grok/grok-tool';
 import { GrokWrite } from './brainless/grok/grok-write';
 import { GrokWorking } from './brainless/grok/grok-working';
+import { L } from '../i18n';
 
 const MAX_DIFF = 60;
 
@@ -211,7 +212,7 @@ export function SkinnedTranscript({
       {working && skin === 'claude' && <ClaudeThinking />}
       {working && skin === 'codex' && <CodexWorking />}
       {working && skin === 'grok' && (
-        <GrokWorking label={agent.currentActivity ? `${agent.currentActivity}…` : 'Yanıt bekleniyor…'} />
+        <GrokWorking label={agent.currentActivity ? `${agent.currentActivity}…` : L.awaitingReply} />
       )}
     </div>
   );

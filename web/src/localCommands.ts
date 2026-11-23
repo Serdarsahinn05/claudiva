@@ -7,6 +7,7 @@ import type {
   TranscriptEvent,
   UsageSummary,
 } from './types';
+import { L } from './i18n';
 
 /**
  * YERLEŞİK SLASH KOMUTLARI — panelde çalışan katman.
@@ -96,10 +97,7 @@ function kv(rows: [string, string][], pad = 16): string[] {
 }
 
 const STATUS_TR: Record<string, string> = {
-  offline: 'kapalı',
-  idle: 'boşta',
-  working: 'çalışıyor',
-  waiting: 'onay bekliyor',
+  ...L.status,
 };
 
 /**
@@ -490,7 +488,7 @@ async function exportOutput(ctx: LocalContext): Promise<string> {
       `- Ajan: \`${a.config.id}\` (${a.config.role})`,
       `- Model: ${a.currentModel ?? a.config.model}`,
       `- Proje: ${ctx.projectDir}`,
-      `- Dışa aktarma: ${new Date().toLocaleString('tr-TR')}`,
+      `- Dışa aktarma: ${new Date().toLocaleString()}`,
       '',
       '---',
       '',
@@ -579,22 +577,22 @@ async function helpOutput(ctx: LocalContext): Promise<string> {
 }
 
 export const LOCAL_COMMANDS: LocalCommand[] = [
-  { name: 'help', description: 'Komutları listeler', run: helpOutput },
-  { name: 'status', description: 'Ajanın tam durumu (model, oturum, kullanım, bütçe)', run: statusOutput },
-  { name: 'context', description: 'Bağlam penceresi dökümü', run: contextOutput },
-  { name: 'usage', aliases: ['cost'], description: 'Token/maliyet sayımı ve hesabın plan kotası', run: usageOutput },
-  { name: 'model', argumentHint: '[ad]', description: 'Modeli gösterir veya değiştirir', run: modelOutput },
-  { name: 'agents', description: 'Panel ajanları + oturumun alt ajanları', run: agentsOutput },
-  { name: 'mcp', description: 'MCP sunucularının bağlantı durumu', run: mcpOutput },
-  { name: 'config', description: 'Ajan ve panel yapılandırması', run: configOutput },
-  { name: 'doctor', description: 'Tanılama: bağlantı, oturum, MCP, bağlam, bütçe', run: doctorOutput },
-  { name: 'memory', description: 'Bu ajanın hafıza kayıtları', run: memoryOutput },
-  { name: 'todos', description: 'Bu ajana atanmış görevler', run: todosOutput },
-  { name: 'export', argumentHint: '[md|json]', description: 'Dökümü dosya olarak indirir', run: exportOutput },
-  { name: 'resume', argumentHint: '[yeniden]', description: 'Oturum bilgisi; "yeniden" ile oturumu yeniden başlatır', run: resumeOutput },
+  { name: 'help', description: L.commands.help, run: helpOutput },
+  { name: 'status', description: L.commands.status, run: statusOutput },
+  { name: 'context', description: L.commands.context, run: contextOutput },
+  { name: 'usage', aliases: ['cost'], description: L.commands.usage, run: usageOutput },
+  { name: 'model', argumentHint: L.commands.modelArg, description: L.commands.model, run: modelOutput },
+  { name: 'agents', description: L.commands.agents, run: agentsOutput },
+  { name: 'mcp', description: L.commands.mcp, run: mcpOutput },
+  { name: 'config', description: L.commands.config, run: configOutput },
+  { name: 'doctor', description: L.commands.doctor, run: doctorOutput },
+  { name: 'memory', description: L.commands.memory, run: memoryOutput },
+  { name: 'todos', description: L.commands.todos, run: todosOutput },
+  { name: 'export', argumentHint: '[md|json]', description: L.commands.export, run: exportOutput },
+  { name: 'resume', argumentHint: L.commands.resumeArg, description: L.commands.resume, run: resumeOutput },
   {
     name: 'clear',
-    description: 'Terminal dökümünü temizler (ajanın bağlamı korunur)',
+    description: L.commands.clear,
     run: async (ctx) => {
       await ctx.clearTranscript();
       return null;

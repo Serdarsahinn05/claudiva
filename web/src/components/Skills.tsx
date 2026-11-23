@@ -420,7 +420,7 @@ function Discover({
         </span>
         <div className="tb-filters">
           <button className={`tb-filter${repo === '' ? ' sel' : ''}`} onClick={() => setRepo('')}>
-            Tümü
+            {L.skills.all}
           </button>
           {view.sources.map((s) => (
             <button

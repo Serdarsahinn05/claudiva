@@ -322,7 +322,7 @@ export function ChatShell(props: Props) {
             <h2>{title}</h2>
             <span className="chat-head-sub">
               {conv.kind === 'team'
-                ? `${members.length} ajan${lead ? ` · lider ${lead.config.name}` : ''}${workingCount ? ` · ${workingCount} çalışıyor` : ''}`
+                ? L.chat.headTeam(members.length, lead?.config.name ?? null, workingCount)
                 : members[0]
                   ? `${ROLE_LABEL[members[0].config.role] ?? members[0].config.role} · ${STATUS_LABEL[members[0].status]}`
                   : ''}

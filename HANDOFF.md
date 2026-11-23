@@ -72,7 +72,21 @@ videolar ve yol haritası orada. Bu bölüm yalnızca yürüyen işin durumunu t
 - [x] **GitHub:** 6 commit `claudiva-sohbet` dalında, push edildi. `main`e birleştirme kullanıcı kararı. **npm publish EN SONA** (kullanıcı isteği); commit/push npm'i etkilemez.
 - Rakip ürün ekran görüntüsü (`docs/Screenshot_…jpg`) bilerek commit edilmedi.
 
-## Çok dil önerisi (kullanıcıya sunuldu, karar bekliyor)
+## Çok dil (i18n) — ARAYÜZ BİTTİ, ajan tarafı bekliyor
+
+- [x] Altyapı + TR + EN: `web/src/i18n/` (kurallar `web/CLAUDE.md` → "Arayüz dili").
+  Ayarlar → Arayüz'de dil seçici, komut paletinde "Dili değiştir".
+  Bütün paneller, sohbet modu, terminal kabuğu, modallar çevrildi; canlı
+  doğrulandı (EN'de sohbet ve panel modu). Eksik çeviri derlemeyi kırıyor (ölçüldü).
+- [ ] **Kalan arayüz metni:** `web/src/localCommands.ts` içindeki `/status`,
+  `/doctor`, `/usage`, `/context`… ÇIKTI metinleri (~100 satır; komut
+  açıklamaları ve etiketler çevrildi). Sunucudan gelen hata metinleri
+  (`server/src/api/routes.ts`, ~21 dizge) de Türkçe.
+- [ ] **Ajan tarafı:** kullanıcı skill'lerin İngilizceye çevrilmesini istedi
+  (token tasarrufu gerekçesiyle) ama tokeni az kaldığı için ERTELEDİ — "iş bitince
+  bana tekrar sor". 54 skill + 8 personality, ~54 KB. Açmadan önce sor.
+
+## (eski) Çok dil önerisi
 
 - **İki ayrı dil var, karıştırma:**
   - (1) **arayüz dili**: düğmeler, etiketler, paneldeki metinler;

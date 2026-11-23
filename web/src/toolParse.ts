@@ -1,3 +1,4 @@
+import { L } from './i18n';
 /**
  * Araç çağrısı input'unu (tool_use olayındaki JSON string) çözer. Terminal
  * skinleri (Claude/Codex/Grok) bunu ortak kullanır: her biri farklı gösterir
@@ -16,20 +17,7 @@ export interface ParsedTool {
   diff?: { removed: string[]; added: string[] };
 }
 
-const VERBS: Record<string, string> = {
-  Read: 'oku',
-  Write: 'yaz',
-  Edit: 'düzenle',
-  MultiEdit: 'düzenle',
-  NotebookEdit: 'düzenle',
-  Bash: 'çalıştır',
-  Grep: 'ara',
-  Glob: 'bul',
-  WebFetch: 'getir',
-  WebSearch: 'ara',
-  Task: 'görev',
-  TodoWrite: 'todo',
-};
+const VERBS: Record<string, string> = L.toolVerbs;
 
 export function parseTool(toolName: string, inputStr: string): ParsedTool {
   let input: Record<string, unknown> = {};
