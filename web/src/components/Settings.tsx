@@ -7,8 +7,9 @@
  * sınır kararını belirleyen tek şey o dağılım. Ekran artık önce ölçümü
  * gösterir, sonra ayarı sorar.
  *
- * Üç bölüm var ve üçü de farklı bir şeye ait:
+ * Dört bölüm var ve her biri farklı bir şeye ait:
  *   · Bütçe        — bu projeye (sunucudaki settings.json)
+ *   · Arayüz       — bu tarayıcıya: panel mi sohbet mi (localStorage)
  *   · Çalışma alanı — bu tarayıcıya (localStorage; sunucuya hiç gitmez)
  *   · Sistem       — makineye ve projeye (salt okunur)
  * Ayrım görünür durmalı, yoksa "yerleşimi sıfırla"nın ekibi etkileyeceği
@@ -19,6 +20,7 @@ import { Modal } from './Modal';
 import { api } from '../api';
 import { fmtCost } from '../format';
 import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
+import { UI_MODES, setUiMode, useUiMode, type UiMode } from '../uiMode';
 
 interface Props {
   budget: BudgetState | null;
@@ -29,10 +31,11 @@ interface Props {
   onSaved: () => void;
 }
 
-type Section = 'butce' | 'alan' | 'sistem';
+type Section = 'butce' | 'arayuz' | 'alan' | 'sistem';
 
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
   { id: 'butce', label: 'Bütçe', hint: 'günlük sınır' },
+  { id: 'arayuz', label: 'Arayüz', hint: 'panel ya da sohbet' },
   { id: 'alan', label: 'Çalışma alanı', hint: 'yerleşim, bu tarayıcı' },
   { id: 'sistem', label: 'Sistem', hint: 'proje ve makine' },
 ];
@@ -53,6 +56,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sys, setSys] = useState<SystemInfo | null>(null);
+  const uiMode = useUiMode();
 
   // Sistem bilgisi yalnızca o bölüm açılınca istenir: ayarları açmak
   // her seferinde bir dosya sayımı tetiklemesin.
@@ -195,6 +199,32 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
             </>
           )}
 
+          {section === 'arayuz' && (
+            <>
+              <div className="set-note">
+                Aynı ekip, aynı görevler; yalnızca görünüm değişir. Seçim{' '}
+                <strong>bu tarayıcıda</strong> saklanır ve anında uygulanır. Panel
+                yerleşimin sohbete geçip dönünce olduğu gibi durur.
+              </div>
+              <div className="mode-cards" role="radiogroup" aria-label="Arayüz modu">
+                {UI_MODES.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={uiMode === m.id}
+                    className={`mode-card${uiMode === m.id ? ' sel' : ''}`}
+                    onClick={() => setUiMode(m.id)}
+                  >
+                    <ModePreview mode={m.id} />
+                    <span className="mode-card-label">{m.label}</span>
+                    <span className="mode-card-desc">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           {section === 'alan' && (
             <>
               <div className="set-note">
@@ -275,5 +305,34 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Modun şematik minyatürü: gerçek bileşen değil, yerleşimin iskeleti. */
+function ModePreview({ mode }: { mode: UiMode }) {
+  if (mode === 'chat') {
+    return (
+      <span className="mode-prev mp-chat" aria-hidden>
+        <span className="mp-list" />
+        <span className="mp-thread">
+          <span className="mp-msg" />
+          <span className="mp-msg mine" />
+          <span className="mp-msg" />
+          <span className="mp-foot" />
+        </span>
+      </span>
+    );
+  }
+  return (
+    <span className="mode-prev mp-panels" aria-hidden>
+      <span className="mp-dock" />
+      <span className="mp-grid">
+        <span />
+        <span />
+        <span />
+        <span />
+      </span>
+      <span className="mp-dock" />
+    </span>
   );
 }

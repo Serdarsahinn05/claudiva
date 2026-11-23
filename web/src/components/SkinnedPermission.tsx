@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import type { CliSkin } from '../cliSkins';
 import type { PermissionRequestInfo } from '../types';
-import { api } from '../api';
+import { answerPermission, PERMISSION_OPTIONS, type PermissionChoice } from '../permissions';
 import { ClaudePermission } from './brainless/claude/claude-permission';
 import { CodexPermissions } from './brainless/codex/codex-permissions';
 import { GrokPermission } from './brainless/grok/grok-permission';
@@ -14,7 +14,7 @@ import { GrokPermission } from './brainless/grok/grok-permission';
  *  dayatıyoruz.) CodexPermissions aslında `/permissions` mod seçicisidir; görsel
  *  Codex olduğu için kendi 3 seçeneğimizle onaya çeviriyoruz.
  */
-const OPTIONS = ['Evet', 'Evet, bu ajanda bir daha sorma', 'Hayır'];
+const OPTIONS = [...PERMISSION_OPTIONS];
 
 export function SkinnedPermission({
   agentId,
@@ -32,8 +32,7 @@ export function SkinnedPermission({
   async function choose(i: number) {
     if (done.current) return;
     done.current = true;
-    if (i === 1) await api.updateAgent(agentId, { autoApprove: true }).catch(() => {});
-    await api.permission(agentId, req.id, i !== 2).catch(() => {});
+    await answerPermission(agentId, req, i as PermissionChoice);
   }
 
   if (skin === 'codex') {

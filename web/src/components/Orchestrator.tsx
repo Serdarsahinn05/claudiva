@@ -19,8 +19,8 @@
 import { useState } from 'react';
 import { api } from '../api';
 import type { AgentSnapshot } from '../types';
-import { ROLE_LABEL } from '../format';
 import { canDelegate, leadOf } from '../teams';
+import { buildBrief } from '../brief';
 
 interface Props {
   /** Seçili takımın ajanları — dağıtım havuzu budur. */
@@ -28,49 +28,6 @@ interface Props {
   teamLabel: string;
   /** Komut gönderilince liderin terminalini aç. */
   onOpenTerminal: (agentId: string) => void;
-}
-
-/**
- * Lidere giden talimat. Kullanıcının cümlesi AYNEN korunur ve en başta
- * durur; altındaki çerçeve yalnızca "kim var, nasıl dağıt" bilgisidir.
- * Kullanıcı metnini yeniden yazmak (özetlemek, İngilizceye çevirmek)
- * niyeti bozardı.
- */
-function buildBrief(request: string, lead: AgentSnapshot, pool: AgentSnapshot[]): string {
-  // Dağıtamayan bir lidere dağıtım talimatı vermek onu var olmayan bir araca
-  // yollar; o zaman istek olduğu gibi, çerçevesiz gider.
-  if (!canDelegate(lead)) return request;
-
-  const roster = pool
-    .filter((a) => a.config.id !== lead.config.id)
-    .map((a) => {
-      const role = ROLE_LABEL[a.config.role] ?? a.config.role;
-      const desc = a.config.description?.trim();
-      return `- ${a.config.id} · ${a.config.name} (${role})${desc ? ` — ${desc}` : ''}`;
-    });
-
-  return [
-    request,
-    '',
-    '---',
-    '',
-    `Bu bir EKİP İŞİDİR. Sen takımın liderisin; işi kendin baştan sona yapma, böl ve dağıt.`,
-    '',
-    roster.length ? `Emrindeki ajanlar:\n${roster.join('\n')}` : 'Emrinde başka ajan yok — işi kendin yap.',
-    '',
-    roster.length
-      ? [
-          'Nasıl yapacaksın:',
-          '1. İsteği BİRBİRİNDEN BAĞIMSIZ parçalara böl (her parça tek bir ajanın tek başına bitirebileceği bir iş olsun).',
-          '2. Her parçayı uzmanlığına en uygun ajana eşle.',
-          '3. `delegate_tasks` aracını TEK ÇAĞRIDA, tüm parçaların dizisiyle çağır — parça başına ayrı ayrı `delegate_task` ÇAĞIRMA, o zaman ekip seri çalışır ve süre parçaların toplamı olur.',
-          '4. Yalnızca bir parça gerçekten bir öncekinin çıktısına bağlıysa onu `delegate_task after_task_id` ile zincirle.',
-          '5. Sonuçlar gelince hepsini tek bir özet halinde birleştir ve bana ne yapıldığını söyle.',
-        ].join('\n')
-      : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
 }
 
 export function Orchestrator({ teamAgents, teamLabel, onOpenTerminal }: Props) {

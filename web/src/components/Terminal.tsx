@@ -8,19 +8,14 @@ import type {
   UsageSummary,
 } from '../types';
 import { api } from '../api';
-import { fmtCost, fmtNum, STATUS_LABEL, totalTokens } from '../format';
-import { isLocal, localAsSlashCommands, matchLocal } from '../localCommands';
+import { fmtCost, fmtNum, ROLE_LABEL, STATUS_LABEL, totalTokens } from '../format';
+import { isLocal, localAsSlashCommands } from '../localCommands';
+import { sendToAgent } from '../agentSend';
 import type { CliSkin } from '../cliSkins';
 import { useCliSkin } from '../cliSkins';
 import { SkinnedTranscript } from './SkinnedTranscript';
 import { SkinnedPermission } from './SkinnedPermission';
 import { SkinnedComposer } from './SkinnedComposer';
-
-const ROLE_LABEL: Record<string, string> = {
-  boss: 'patron',
-  manager: 'yönetici',
-  worker: 'çalışan',
-};
 
 /** CLI'ın karşılama maskotunun piksel-art karşılığı (Claude skin). */
 const CAT_LOGO = ` ▄▄▄▄▄▄▄
@@ -184,50 +179,28 @@ export function Terminal({
     inputRef.current?.focus();
   }
 
-  /**
-   * Panelin kendi ürettiği satırı sunucudaki döküme yazar (ajana gitmez).
-   * Bileşen state'inde tutulsaydı başka ajana geçince kaybolurdu.
-   */
-  async function pushLocal(kind: 'user' | 'local' | 'error', text: string) {
-    await api.pushLocal(id, kind, text).catch(() => {});
-  }
-
   async function send() {
     const text = input.trim();
     if (!text) return;
     setInput('');
     setMenuOpen(false);
 
-    // /usage, /clear, /help gibi komutlar CLI'da da istemci tarafında işlenir;
-    // ajana gönderilirse "ben bunu çalıştıramam" cevabı gelir.
-    const local = matchLocal(text);
-    if (local) {
-      await pushLocal('user', text);
-      try {
-        const out = await local.cmd.run({
-          agent,
-          args: local.args,
-          agents,
-          tasks,
-          usage,
-          budget,
-          projectDir,
-          connected,
-          events,
-          clearTranscript: async () => {
-            await api.clearTranscript(id);
-            onCleared();
-          },
-          refreshAgents: async () => onAgentsChanged(),
-        });
-        if (out) await pushLocal('local', out);
-      } catch (e) {
-        await pushLocal('error', (e as Error).message);
-      }
-      return;
-    }
-
-    await api.sendMessage(id, text).catch((e) => alert((e as Error).message));
+    // Yerel komut / ajana mesaj ayrımı tek yerde: agentSend.ts.
+    await sendToAgent(text, {
+      agent,
+      agents,
+      tasks,
+      usage,
+      budget,
+      projectDir,
+      connected,
+      events,
+      clearTranscript: async () => {
+        await api.clearTranscript(id);
+        onCleared();
+      },
+      refreshAgents: async () => onAgentsChanged(),
+    }).catch((e) => alert((e as Error).message));
   }
 
   const visible = showThinking ? events : events.filter((e) => e.kind !== 'thinking');
@@ -244,7 +217,7 @@ export function Terminal({
               <div className="cli-hello">Merhaba, {agent.config.name}!</div>
               <pre className={`cli-logo cli-logo-${skin}`}>{SKIN_LOGO[skin]}</pre>
               <div className="cli-meta">
-                {agent.currentModel ?? agent.config.model} · {ROLE_LABEL[agent.config.role] ?? agent.config.role}
+                {agent.currentModel ?? agent.config.model} · {(ROLE_LABEL[agent.config.role] ?? agent.config.role).toLocaleLowerCase('tr')}
               </div>
               <div className="cli-meta dim">{projectDir || '…'}</div>
             </div>

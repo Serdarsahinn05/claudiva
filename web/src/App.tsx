@@ -21,6 +21,8 @@ import { ThemePicker } from './components/ThemePicker';
 import { Settings } from './components/Settings';
 import { TeamTabs } from './components/TeamTabs';
 import { Orchestrator } from './components/Orchestrator';
+import { ChatShell } from './components/chat/ChatShell';
+import { setUiMode, useUiMode } from './uiMode';
 import { CenterGrid, SideDock, type CenterTile } from './components/Workspace';
 import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
 import { useHotkey } from './useHotkey';
@@ -33,6 +35,7 @@ import type { AgentSnapshot } from './types';
 export default function App() {
   const store = useStore();
   const L = useLayout();
+  const uiMode = useUiMode();
 
   const [team, setTeam] = useState<string>(ALL_TEAMS);
   const [focusedTile, setFocusedTile] = useState<string | null>(null);
@@ -350,6 +353,13 @@ export default function App() {
       { id: 'team-all', label: 'Tüm takımlar', hint: 'kapsam', keywords: 'tumu hepsi takim', run: () => setTeam(ALL_TEAMS) },
       { id: 'new-agent', label: 'Yeni ajan', hint: 'oluştur', keywords: 'ekle create', run: () => setFormAgent('new') },
       { id: 'settings', label: 'Ayarlar', hint: 'bütçe', keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
+      {
+        id: 'ui-mode',
+        label: uiMode === 'chat' ? 'Panel moduna geç' : 'Sohbet moduna geç',
+        hint: 'arayüz',
+        keywords: 'mod arayuz sohbet chat panel grup',
+        run: () => setUiMode(uiMode === 'chat' ? 'panels' : 'chat'),
+      },
       { id: 'theme-picker', label: 'Görünüm…', hint: 'plaka', keywords: 'tema renk plaka premium', run: () => setThemeOpen(true) },
       { id: 'layout-reset', label: 'Yerleşimi sıfırla', hint: 'düzen', keywords: 'duzen yerlesim reset panel', run: () => L.reset() },
       {
@@ -370,7 +380,7 @@ export default function App() {
       ...themeCommands(),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [teamAgents, teams, visiblePanels, allOffline, allAutoApprove, teamLabel],
+    [teamAgents, teams, visiblePanels, allOffline, allAutoApprove, teamLabel, uiMode],
   );
 
   const panelBadge = useCallback(
@@ -425,14 +435,33 @@ export default function App() {
         <button className="icon-btn" onClick={() => setThemeOpen(true)} title="Görünüm" aria-label="Görünüm">
           {ICONS.plate}
         </button>
-        <button className="icon-btn" onClick={L.reset} title="Yerleşimi sıfırla" aria-label="Yerleşimi sıfırla">
-          {ICONS.layout}
-        </button>
+        {uiMode === 'panels' && (
+          <button className="icon-btn" onClick={L.reset} title="Yerleşimi sıfırla" aria-label="Yerleşimi sıfırla">
+            {ICONS.layout}
+          </button>
+        )}
         <button className="primary" onClick={() => setFormAgent('new')}>
           Yeni ajan
         </button>
       </header>
 
+      {uiMode === 'chat' ? (
+        <ChatShell
+          agents={store.agents}
+          tasks={store.tasks}
+          transcripts={store.transcripts}
+          permissions={store.permissions}
+          usage={store.usage}
+          budget={store.budget}
+          connected={store.connected}
+          projectDir={store.projectDir}
+          team={team}
+          onTeam={setTeam}
+          loadTranscript={store.loadTranscript}
+          refreshAgents={store.refreshAgents}
+        />
+      ) : (
+      <>
       <div className="layout">
         <Rail
           visible={visiblePanels}
@@ -500,6 +529,8 @@ export default function App() {
       </div>
 
       <Orchestrator teamAgents={teamAgents} teamLabel={teamLabel} onOpenTerminal={openTerminal} />
+      </>
+      )}
 
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
 
