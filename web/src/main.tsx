@@ -5,6 +5,7 @@ import './themes.css'
 import './styles.css'
 import './brainless.css'
 import App from './App.tsx'
+import './appStyle' // stil↔palet uyumunu açılışta düzeltir (bkz. syncPalette)
 import { watchSlowBoot } from './boot'
 
 // Sunucu geç kalırsa perdedeki durum metni sebebini söylesin.

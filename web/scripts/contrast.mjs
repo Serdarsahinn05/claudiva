@@ -135,6 +135,7 @@ const plates = [
   // Stüdyo paletleri (nötr ürün yüzeyi).
   plate('paper', themesCss, "[data-theme='paper']"),
   plate('graphite', themesCss, "[data-theme='graphite']"),
+  plate('phosphor', themesCss, "[data-theme='phosphor']"),
 ];
 
 let failed = 0;

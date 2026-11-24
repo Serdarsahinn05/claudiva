@@ -23,25 +23,42 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════
-   STÜDYO — gerçek bir SaaS gibi (Linear, Vercel)
-   Sade sans-serif, 6/10px köşe, doku yok, gök süsü yok, sakin etiket.
+   STÜDYO — modern bir ürün sohbeti gibi (referans: docs/Screenshot_…jpg)
+   Beyaz kart, çok açık gri kenar, 8/12px köşe, hap rozetler, büyük harf
+   yok, meta yazı da sans. Çalışan devir kartının kenarı vurgu renginde.
 
    Font: SİSTEM yığını. Bilerek paket fontu değil: 0 bayt, çevrimdışı da
-   çalışır (Segoe UI / SF Pro her makinede var) ve dinamik font yüklemeye
-   gerek bırakmaz. Inter gibi bir paket fontu istenirse @fontsource ile
-   yalnız bu stil seçilince yüklenecek biçimde eklenir.
+   çalışır (Segoe UI / SF Pro her makinede var). Inter gibi bir paket fontu
+   istenirse @fontsource ile yalnız bu stil seçilince yüklenecek biçimde eklenir.
    ═══════════════════════════════════════════════════════════════════ */
 :root[data-style='studio'] {
   --font-ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system,
     BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system,
     BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  /* Sohbet meta yazısı (saat, çip, durum satırı) da sans; kod/terminal mono kalır. */
+  --font-meta: var(--font-ui);
   --title-style: normal;
   --title-weight: 600;
-  --track: 0.06em;
 
-  --radius: 6px;
-  --radius-lg: 10px;
+  /* Büyük harf yok: küçük etiketler cümle düzeninde ve bir tık büyük. */
+  --upper: none;
+  --track: 0;
+  --caps-scale: 1.2;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --chip-radius: 999px;     /* rozet ve durum hapları */
+  --bubble-tail: 12px;      /* balonda kuyruk köşesi yok */
+
+  /* Devir kartı: düz kenarlı beyaz kart, çalışırken kenar vurgu renginde,
+     durum rozeti kendi renginin hafif tonunda dolu. */
+  --event-border-style: solid;
+  --event-bg: var(--hull-1);
+  --event-shadow: var(--shadow-card);
+  --live-border: rgb(var(--accent-rgb) / 0.55);
+  --status-tint: 12%;
+  --status-border: transparent;
 
   /* Doku ve gök yok: düz zemin, ışık halesi yok, yıldız alanı kapalı. */
   --texture: var(--hull-0);
@@ -53,4 +70,67 @@
 :root[data-style='studio'] [data-theme] {
   /* Etiket vermilyon ek açıklama değil, sakin bir bölüm başlığı. */
   --label-fg: var(--muted);
+  /* Birincil eylem koyu (referanstaki gönder düğmesi), vurgu rengi değil. */
+  --btn-primary-bg: var(--fg);
+  --btn-primary-border: var(--fg);
+  --btn-primary-fg: var(--hull-1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FOSFOR — gece yarısı ürün sayfası (referans: docs/ altındaki
+   "Drop Cloude" videosu). Grafit-siyah zemin, köşeden sızan limon ışık,
+   kalın grotesk başlık + italik serif VURGU kelimesi, küçük harf mono
+   etiketler, limon hap birincil düğme.
+
+   Font: pakette zaten olanlar (Archivo, Bodoni Moda, JetBrains Mono),
+   yeni yükleme yok.
+   ═══════════════════════════════════════════════════════════════════ */
+:root[data-style='phosphor'] {
+  --font-display: 'Archivo', system-ui, -apple-system, sans-serif;
+  --title-style: normal;
+  --title-weight: 600;
+  /* Sans başlığın içinde tek italik serif kelime. */
+  --em-font: 'Bodoni Moda', Georgia, serif;
+  --em-style: italic;
+  --em-weight: 400;
+  --em-color: var(--fg);
+
+  /* Etiket: küçük harf mono ("open beta / 249 apps connected" gibi). */
+  --upper: lowercase;
+  --track: 0.01em;
+  --caps-scale: 1.1;
+  --caps-font: var(--font-mono);
+  /* Düğmeler küçük harfe dönmez: "Start free" gibi cümle düzeninde. */
+  --btn-case: none;
+
+  --radius: 6px;
+  --radius-lg: 12px;
+  --btn-radius: 999px;
+  --chip-radius: 999px;
+  --bubble-tail: 12px;
+
+  --event-border-style: solid;
+  --event-bg: var(--hull-1);
+  --event-shadow: none;
+  --live-border: rgb(var(--accent-rgb) / 0.6);
+  --status-tint: 14%;
+  --status-border: transparent;
+
+  /* Doku yok, ışık var: sağ üstten limon, sol alttan soğuk mavi sızma.
+     Yıldız alanı kapalı, gök ızgarası yok. */
+  --texture:
+    radial-gradient(900px 520px at 92% -8%, rgb(var(--accent-rgb) / 0.16), transparent 70%),
+    radial-gradient(700px 460px at 4% 108%, rgb(var(--aux-rgb) / 0.07), transparent 70%),
+    var(--hull-0);
+  --texture-blend: normal, normal, normal;
+  --starfield-a: 0;
+  --glow-a: 1;
+}
+:root[data-style='phosphor'],
+:root[data-style='phosphor'] [data-theme] {
+  --label-fg: var(--muted);
+  /* Limon hap, koyu yazı. */
+  --btn-primary-bg: var(--hud);
+  --btn-primary-border: var(--hud);
+  --btn-primary-fg: rgb(var(--bg-rgb));
 }

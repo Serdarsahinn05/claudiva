@@ -43,13 +43,21 @@
       // Stil (styles.css). Yedek ad appStyle.ts DEFAULT_STYLE ile AYNI olmalı.
       try {
         var st = localStorage.getItem('claudiva.style');
-        document.documentElement.dataset.style = st === 'studio' ? st : 'observatory';
+        document.documentElement.dataset.style = st === 'studio' || st === 'phosphor' ? st : 'observatory';
       } catch (e) {
         document.documentElement.dataset.style = 'observatory';
       }
       try {
-        var t = localStorage.getItem('claudiva.theme');
-        document.documentElement.dataset.theme = t || 'obsidian';
+        var t = localStorage.getItem('claudiva.theme') || 'obsidian';
+        // Stil↔palet uyumu (appStyle.ts syncPalette ile AYNI kural): Stüdyo
+        // yalnız kendi paletleriyle, Gözlemevi onlarsız açılır.
+        var ds = document.documentElement.dataset.style;
+        var own = { studio: ['paper', 'graphite'], phosphor: ['phosphor'] };
+        var dflt = { studio: 'paper', phosphor: 'phosphor' };
+        var foreign = t === 'paper' || t === 'graphite' || t === 'phosphor';
+        if (own[ds] && own[ds].indexOf(t) < 0) t = dflt[ds];
+        if (!own[ds] && foreign) t = 'obsidian';
+        document.documentElement.dataset.theme = t;
       } catch (e) {
         document.documentElement.dataset.theme = 'obsidian';
       }

@@ -168,6 +168,41 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   sayılır. Güncelleme İŞLEVSEL olmak zorunda (`markSeen`): aynı karede iki
   efekt yazıyor, eski durumu okuyan ikincisi birincinin yazdığını eziyordu.
 
+## Pano modu (üçüncü arayüz modu)
+
+- `uiMode` = `board`. Kabuk `components/board/BoardShell.tsx`, widget'lar
+  `widgets.tsx` (14 tür), galeri `WidgetGallery.tsx`, saf yerleşim modeli
+  `board.ts` (`claudiva.board.v2`). Sohbet gibi yalnız GÖRÜNÜM: aynı store,
+  yeni uç yok. Takım kapsamı üst çubuktaki takım sekmesinden gelir.
+- **12 sütun × SABİT satır (`ROW_PX` 56, `GAP_PX` 16); widget `w` (2-12) ve
+  `h` (2-12) taşır.** İlk sürümde yükseklik içerikten geliyordu, kartlar
+  arasında düzensiz boşluk kaldı ("hizalamak çok zor"). Sabit satırla aynı
+  sıradaki kartlar eşit boyda, içerik `.bw-body` içinde kayar. Varsayılan
+  dizilim satırları tam doldurur; v1 kaydı bu yüzden TAŞINMAZ.
+- **Taşıma: işaretçi (pointer) olaylarıyla, HTML5 sürükle-bırak DEĞİL.**
+  HTML5 yolu sentetik olaylarla hiç tetiklenmedi ve dokunmatikte çalışmaz.
+  Tutamak (⠿) → imlecin altındaki kart `elementsFromPoint` ile bulunur
+  (sürüklenen hariç), yarısına göre önüne/arkasına CANLI yerleşir; bırakma
+  anı da değerlendirilir (hızlı hareket son yarıya varmadan bitiyordu).
+  Ölçüm: 20 ara adımlı sürükleme kartı tam hedefin sağına koydu; test
+  aracının kaba sürüklemesi yanıltıcıydı.
+- **Boyut: sağ alt köşeden**, imleç farkı sütun/satır birimine yuvarlanır;
+  sürerken `w×h` rozeti görünür. Klavye: tutamak odaklıyken ← → taşı,
+  Shift + oklar boyutlandır. Ayrı "düzenle" kipi YOK.
+- **Galeri önizlemesi gerçek widget'ı çizmez** (ağ isteği, ölçü): `Thumb`
+  token renkli ilkellerle biçimi taklit eder. Her tür panoda en fazla bir kez.
+- **Gönderim/izin tek yoldan:** "Ekibe yaz" = `buildBrief` + `api.sendMessage`
+  (Orchestrator ile aynı); onay = `answerPermission`; "Son mesajlar" =
+  `buildFeed` + `previewOf` (sohbetle aynı akış).
+- **Buzlu cam ancak arkasında renk varsa okunur:** `.board` zemininde tema
+  token'larından üç ışık lekesi, kartlar `backdrop-filter`. Her stilde çalışır.
+- **İki ölçülmüş tuzak:** kartın sınıfı `w-<tür>`, `bw-<tür>` DEĞİL
+  (`bw-stats`/`bw-agents` içerideki ızgaralar). Kart başlığı `div`, `header`
+  DEĞİL (genel header kuralı bant çekti).
+- **Stil önizlemesi (ThemePicker) kendi paletinde çizilir:** `.style-prev`
+  `data-theme={STYLE_DEFAULT_THEME[stil]}` taşır; yoksa üç kart da o anki
+  paletle boyanıyor, stilin rengi görünmüyordu.
+
 ## Çok panelli kabuk (yerleşim)
 
 - **Sekme yok, üç yuva var.** `workspace.ts` şekli (PanelId, Tile, Layout) ve
@@ -282,7 +317,13 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
 - **İki eksen:** `data-theme` = palet (`themes.css`), `data-style` = tasarım dili
   (`styles.css`: yazı tipi, başlık biçimi, köşe, doku, gök süsü, etiket tonu).
   Varsayılan stil `observatory` (Gözlemevi) index.css'in kendisidir, blok almaz.
-  Şu an ikinci stil `studio` (Stüdyo). Seçim Ayarlar → Arayüz → Stil.
+  Şu an ikinci stil `studio` (Stüdyo).
+- **Stil ve palet TEK yerden seçilir: Görünüm menüsü** (`ThemePicker`: Stil →
+  paletler → Terminal tipi). Önce stil Ayarlar'daydı ve iki menü birbirinin
+  üstüne yazıyordu (Stüdyo + Obsidyen gibi yarım karışımlar; kullanıcı fark etti).
+  Her stilin palet grupları `appStyle.ts` `STYLE_GROUPS`; Görünüm yalnız onları
+  gösterir. Uyumsuz kayıt açılışta düzeltilir: `syncPalette` (main.tsx import)
+  + `index.html` satır içi betik, ikisi AYNI kural.
 - **Stil seçicisi `:root[data-style=…]` (0,2,0) OLMAK ZORUNDA:** premium temalar
   da köşe/doku/yıldız alanı yazıyor (`[data-theme]`, 0,1,0); stil onları yenmeli.
   Türetilmiş ad (`--label-fg`) için ikinci seçici `:root[data-style] [data-theme]`,
@@ -292,14 +333,36 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   ya da etikete `color: var(--hud)` YAZMA, token'ı kullan; yoksa Stüdyo'da
   sentetik italik Segoe çıkar (ölçüldü: `.phase-line em`, `.chat-list-head`,
   açılış perdesi bu yüzden kaçmıştı).
+- **Stüdyo'nun referansı `docs/Screenshot_…jpg`** (beyaz kart, açık gri kenar,
+  hap rozet, büyük harf yok, koyu birincil düğme, mor vurgu). İlk sürüm (çivit,
+  büyük harf etiketler, mono meta, koyu Grafit varsayılanı) kullanıcı tarafından
+  "aşırı kötü" bulundu. Bunu sağlayan token'lar: `--upper`/`--track`/`--caps-scale`
+  (büyük harf kuralları `calc(Npx * var(--caps-scale))`), `--font-meta` (sohbet
+  meta yazısı; kod/araç/terminal `--font-mono` KALIR), `--chip-radius`,
+  `--bubble-tail`, `--event-*`, `--live-border`, `--status-tint`/`--status-border`.
+  Son grup kural içinde `var(--x, varsayılan)` ile okunur; Gözlemevi değişmez.
+- **Kâğıt'ta çalışıyor (aux) turuncu, onay bekliyor (warn) kehribar:** ilk
+  denemede ikisi aynı tona düştü, durumlar ayrışmalı.
 - **Varsayılan stil İKİ YERDE** (tema ile aynı tuzak): `index.html` satır içi
   betik + `appStyle.ts` `DEFAULT_STYLE`.
-- **Stil seçmek paleti eşler** (`appStyle.ts`): Stüdyo'ya geçerken palet
-  Stüdyo grubundan değilse `paper`/`graphite` (sistem koyu tercihine göre);
-  Gözlemevi'ne dönerken Stüdyo paleti varsa `obsidian`. Sonra elle değiştirilebilir.
+- **Stil değişince palet stilin varsayılanına çekilir** (Stüdyo → `paper`,
+  Gözlemevi → `obsidian`), yalnız mevcut palet o stile uymuyorsa.
 - **Stüdyo fontu SİSTEM yığını** (Segoe UI Variable / SF): 0 bayt, çevrimdışı.
   Paket fontu (Inter) istenirse yalnız o stil seçilince yüklenmeli.
 - **Stil önizleme kartı kendi `data-style`ını taşıyamaz** (token kökte yaşar);
   `.style-prev-*` yazıyı ve köşeyi satır içi örnekler.
 - Bilinen eksik: Genel Durum'daki gökyüzü haritası (`Sky.tsx`) Stüdyo'da da
   gök çizimi; doku/yıldız alanı kapalı ama harita aynı.
+- **Üçüncü stil `phosphor` (Fosfor)**, referans `docs/` altındaki "Drop Cloude"
+  videosu (gece yarısı ürün sayfası): grafit-siyah + limon, kalın Archivo başlık
+  + **yalnız son kelime** italik Bodoni (`--em-font/--em-style/--em-color`),
+  küçük harf mono etiket (`--upper: lowercase`, `--caps-font`), hap düğme
+  (`--btn-radius`), düğmeler küçük harfe dönmez (`--btn-case: none`). Fontlar
+  zaten pakette, yeni yükleme yok. Kendi paleti `phosphor` (grup `Fosfor`).
+- **Stil yalnız token değil, BİLEŞEN de değiştirebilir:** Fosfor'da Genel Durum
+  gökyüzü haritası yerine `PhosphorHero.tsx` çizer (mono durum rozeti, başlık,
+  iki gerçek eylem, son devirler akış kartı; hepsi gerçek veri). Dal
+  `Survey.tsx`'te `useAppStyle() === 'phosphor'`; CSS `.survey.px` altında,
+  öteki stiller görmez. Yeni stil eklerken: `AppStyle` türü + `APP_STYLES` +
+  `STYLE_GROUPS`/`STYLE_DEFAULT_THEME` + `index.html` betiğindeki `own`/`dflt`
+  tabloları + `isKnown`.

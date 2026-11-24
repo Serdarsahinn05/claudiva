@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
-import { THEMES, THEME_GROUPS, getTheme, setTheme } from '../themes';
+import { THEMES, getTheme, setTheme } from '../themes';
+import { APP_STYLES, STYLE_DEFAULT_THEME, STYLE_GROUPS, setAppStyle, useAppStyle, type AppStyle } from '../appStyle';
 import { CLI_MARKS, CLI_SKINS, getCliSkin, setCliSkin } from '../cliSkins';
 import type { CliSkin } from '../cliSkins';
 import { L } from '../i18n';
@@ -19,6 +20,13 @@ interface Props {
 export function ThemePicker({ onClose }: Props) {
   const [current, setCurrent] = useState(getTheme);
   const [cli, setCli] = useState<CliSkin>(getCliSkin);
+  const style = useAppStyle();
+
+  function pickStyle(id: AppStyle) {
+    setAppStyle(id);
+    // Stil değişince palet stilin varsayılanına çekilmiş olabilir.
+    setCurrent(getTheme());
+  }
 
   function pick(id: string) {
     setTheme(id);
@@ -38,31 +46,52 @@ export function ThemePicker({ onClose }: Props) {
       </div>
 
       <div className="modal-pane">
-        {/* Terminal tipi: temadan AYRI eksen; tüm terminalleri birden etkiler. */}
+        {/* Stil: tasarım dili. Aşağıdaki paletler YALNIZ bu stile uyanlar. */}
         <div>
-          <div className="theme-group-label">{L.themePicker.terminalType}</div>
-          <div className="theme-grid">
-            {CLI_SKINS.map((s) => (
+          <div className="theme-group-label">{L.themePicker.style}</div>
+          <div className="theme-grid" role="radiogroup" aria-label={L.themePicker.style}>
+            {APP_STYLES.map((st) => (
               <button
-                key={s.id}
+                key={st.id}
                 type="button"
-                className={`theme-card${cli === s.id ? ' sel' : ''}`}
-                onClick={() => pickCli(s.id)}
-                aria-pressed={cli === s.id}
+                role="radio"
+                aria-checked={style === st.id}
+                className={`theme-card${style === st.id ? ' sel' : ''}`}
+                onClick={() => pickStyle(st.id)}
               >
-                <span className={`cli-skin-swatch cli-skin-swatch-${s.id}`}>
-                  {CLI_MARKS[s.id].text}
-                  {CLI_MARKS[s.id].thinking}
-                  {CLI_MARKS[s.id].toolresult}
+                {/* Önizleme stilin KENDİ paletiyle çizilir (data-theme): o anki
+                    palet her üç kartı da aynı renge boyuyordu, Stüdyo'nun açık
+                    yüzeyi ve Fosfor'un limonu görünmüyordu. Stil token'ları
+                    kökte yaşadığı için yazı ve köşe satır içi örneklenir. */}
+                <span
+                  className={`style-prev style-prev-${st.id}`}
+                  data-theme={STYLE_DEFAULT_THEME[st.id]}
+                  aria-hidden="true"
+                >
+                  <span className="style-prev-title">
+                    {st.id === 'phosphor' ? (
+                      <>
+                        A<em>a</em>
+                      </>
+                    ) : (
+                      'Aa'
+                    )}
+                  </span>
+                  <span className="style-prev-lines">
+                    <i />
+                    <i />
+                  </span>
+                  <span className="style-prev-chip" />
+                  <span className="style-prev-chip" />
                 </span>
-                <span className="theme-card-name">{s.name}</span>
-                <span className="theme-card-desc">{s.desc}</span>
+                <span className="theme-card-name">{st.label}</span>
+                <span className="theme-card-desc">{st.desc}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {THEME_GROUPS.map((group) => (
+        {STYLE_GROUPS[style].map((group) => (
           <div key={group}>
             <div className="theme-group-label">{L.themePicker.groups[group] ?? group}</div>
             <div className="theme-grid">
@@ -93,10 +122,34 @@ export function ThemePicker({ onClose }: Props) {
             </div>
           </div>
         ))}
+
+        {/* Terminal tipi: temadan AYRI eksen; tüm terminalleri birden etkiler. */}
+        <div>
+          <div className="theme-group-label">{L.themePicker.terminalType}</div>
+          <div className="theme-grid">
+            {CLI_SKINS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`theme-card${cli === s.id ? ' sel' : ''}`}
+                onClick={() => pickCli(s.id)}
+                aria-pressed={cli === s.id}
+              >
+                <span className={`cli-skin-swatch cli-skin-swatch-${s.id}`}>
+                  {CLI_MARKS[s.id].text}
+                  {CLI_MARKS[s.id].thinking}
+                  {CLI_MARKS[s.id].toolresult}
+                </span>
+                <span className="theme-card-name">{s.name}</span>
+                <span className="theme-card-desc">{s.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="modal-actions">
-        <button onClick={onClose}>Kapat</button>
+        <button onClick={onClose}>{L.common.close}</button>
       </div>
     </Modal>
   );

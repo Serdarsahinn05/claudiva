@@ -22,7 +22,8 @@ import { Settings } from './components/Settings';
 import { TeamTabs } from './components/TeamTabs';
 import { Orchestrator } from './components/Orchestrator';
 import { ChatShell } from './components/chat/ChatShell';
-import { setUiMode, useUiMode } from './uiMode';
+import { UI_MODES, setUiMode, useUiMode } from './uiMode';
+import { BoardShell } from './components/board/BoardShell';
 import { CenterGrid, SideDock, type CenterTile } from './components/Workspace';
 import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
 import { useHotkey } from './useHotkey';
@@ -353,13 +354,14 @@ export default function App() {
       { id: 'team-all', label: T.palette.allTeams, hint: T.palette.scopeHint, keywords: 'tumu hepsi takim', run: () => setTeam(ALL_TEAMS) },
       { id: 'new-agent', label: T.header.newAgent, hint: T.palette.newAgentHint, keywords: 'ekle create', run: () => setFormAgent('new') },
       { id: 'settings', label: T.header.settings, hint: T.palette.settingsHint, keywords: 'bütçe limit sınır', run: () => setSettingsOpen(true) },
-      {
-        id: 'ui-mode',
-        label: uiMode === 'chat' ? T.palette.toPanels : T.palette.toChat,
+      // Bulunulan mod dışındaki her mod için bir geçiş komutu.
+      ...UI_MODES.filter((m) => m.id !== uiMode).map((m) => ({
+        id: `ui-mode:${m.id}`,
+        label: m.id === 'panels' ? T.palette.toPanels : m.id === 'chat' ? T.palette.toChat : T.palette.toBoard,
         hint: T.palette.uiHint,
-        keywords: 'mod arayuz sohbet chat panel grup',
-        run: () => setUiMode(uiMode === 'chat' ? 'panels' : 'chat'),
-      },
+        keywords: 'mod arayuz sohbet chat panel grup pano widget board',
+        run: () => setUiMode(m.id),
+      })),
       ...LOCALES.filter((l) => l.id !== locale).map((l) => ({
         id: `locale:${l.id}`,
         label: `${T.palette.language}: ${l.label}`,
@@ -452,7 +454,19 @@ export default function App() {
         </button>
       </header>
 
-      {uiMode === 'chat' ? (
+      {uiMode === 'board' ? (
+        <BoardShell
+          agents={teamAgents}
+          tasks={teamTasks}
+          budget={store.budget}
+          transcripts={store.transcripts}
+          permissions={store.permissions}
+          teamLabel={teamLabel}
+          onOpenSettings={() => setSettingsOpen(true)}
+          refreshAgents={store.refreshAgents}
+          loadTranscript={store.loadTranscript}
+        />
+      ) : uiMode === 'chat' ? (
         <ChatShell
           agents={store.agents}
           tasks={store.tasks}

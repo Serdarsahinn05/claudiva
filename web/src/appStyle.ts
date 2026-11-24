@@ -3,32 +3,37 @@
  *
  *  · `observatory` — Gözlemevi, gök plakası (varsayılan; index.css'in kendisi).
  *  · `studio`      — Stüdyo, sade SaaS yüzeyi.
+ *  · `phosphor`    — Fosfor, gece yarısı ürün sayfası (limon ışık).
  *
  * `data-style` <html>'e yazılır. İlk boyamadan önce `index.html`'deki satır
  * içi betik uygular (tema ile aynı sebep: React'e bırakılırsa bir kare eski
  * stil görünür). Buradaki DEFAULT_STYLE ile o betikteki yedek ad AYNI olmalı.
  *
- * Stil seçmek ona uyan paleti de uygular: Stüdyo gök plakasının mürekkep
- * renkleriyle yarım kalır, Gözlemevi de nötr paletle düz görünür. Kullanıcı
- * sonra Görünüm'den başka bir palet seçebilir; eşleştirme yalnızca stil
- * DEĞİŞTİĞİ anda ve palet o stile yabancıysa yapılır.
+ * Stil ve palet TEK yerden seçilir: Görünüm menüsü (ThemePicker). Önce
+ * Ayarlar'da ayrı bir stil seçicisi vardı ve iki menü birbirinin üstüne
+ * yazıyordu (Stüdyo + Obsidyen gibi yarım karışımlar). Artık her stilin kendi
+ * palet grupları var (`STYLE_GROUPS`); Görünüm yalnız onları gösterir, stil
+ * değişince ya da açılışta uyumsuz bir kayıt bulunursa palet stilin
+ * varsayılanına çekilir. Aynı kural `index.html`deki satır içi betikte de var
+ * (ilk karede yanlış palet görünmesin).
  */
 import { useSyncExternalStore } from 'react';
 import { L } from './i18n';
-import { DEFAULT_THEME, THEMES, getTheme, setTheme } from './themes';
+import { DEFAULT_THEME, THEMES, getTheme, setTheme, type ThemeGroup } from './themes';
 
-export type AppStyle = 'observatory' | 'studio';
+export type AppStyle = 'observatory' | 'studio' | 'phosphor';
 
 export const APP_STYLES: { id: AppStyle; label: string; desc: string }[] = [
   { id: 'observatory', label: L.appStyle.observatory, desc: L.appStyle.observatoryDesc },
   { id: 'studio', label: L.appStyle.studio, desc: L.appStyle.studioDesc },
+  { id: 'phosphor', label: L.appStyle.phosphor, desc: L.appStyle.phosphorDesc },
 ];
 
 const STORAGE_KEY = 'claudiva.style';
 export const DEFAULT_STYLE: AppStyle = 'observatory';
 
 function isKnown(v: string | null): v is AppStyle {
-  return v === 'observatory' || v === 'studio';
+  return v === 'observatory' || v === 'studio' || v === 'phosphor';
 }
 
 function load(): AppStyle {
@@ -48,9 +53,32 @@ export function getAppStyle(): AppStyle {
   return current;
 }
 
-function isStudioPalette(id: string): boolean {
-  return THEMES.find((t) => t.id === id)?.group === 'Stüdyo';
+/** Her stilin seçilebilir palet grupları (Görünüm menüsü bunları gösterir). */
+export const STYLE_GROUPS: Record<AppStyle, ThemeGroup[]> = {
+  observatory: ['Premium', 'Plakalar'],
+  studio: ['Stüdyo'],
+  phosphor: ['Fosfor'],
+};
+
+/** Stilin varsayılan paleti. index.html'deki satır içi betikle AYNI olmalı. */
+export const STYLE_DEFAULT_THEME: Record<AppStyle, string> = {
+  observatory: DEFAULT_THEME,
+  studio: 'paper',
+  phosphor: 'phosphor',
+};
+
+function paletteFits(style: AppStyle, themeId: string): boolean {
+  const group = THEMES.find((t) => t.id === themeId)?.group;
+  return !!group && STYLE_GROUPS[style].includes(group);
 }
+
+/** Palet stile uymuyorsa stilin varsayılanına çeker. */
+function syncPalette(style: AppStyle): void {
+  if (!paletteFits(style, getTheme())) setTheme(STYLE_DEFAULT_THEME[style]);
+}
+
+// Açılışta: eski bir kayıt (ör. Stüdyo + Obsidyen) kalmışsa düzelt.
+syncPalette(current);
 
 export function setAppStyle(style: AppStyle): void {
   if (!isKnown(style) || style === current) return;
@@ -62,13 +90,7 @@ export function setAppStyle(style: AppStyle): void {
     /* yukarıdaki gerekçe */
   }
 
-  const theme = getTheme();
-  if (style === 'studio' && !isStudioPalette(theme)) {
-    const dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-    setTheme(dark ? 'graphite' : 'paper');
-  } else if (style === 'observatory' && isStudioPalette(theme)) {
-    setTheme(DEFAULT_THEME);
-  }
+  syncPalette(style);
 
   for (const l of listeners) l();
 }

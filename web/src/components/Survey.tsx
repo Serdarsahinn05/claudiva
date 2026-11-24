@@ -10,6 +10,8 @@ import type { AgentSnapshot, BudgetState, SystemInfo, Task, UsageSummary } from 
 import { api } from '../api';
 import { fmtCost, fmtNum, totalTokens } from '../format';
 import { Sky } from './Sky';
+import { PhosphorHero } from './PhosphorHero';
+import { useAppStyle } from '../appStyle';
 import { L } from '../i18n';
 
 interface Props {
@@ -152,6 +154,8 @@ export function Survey({
   onOpenSettings,
 }: Props) {
   const [sys, setSys] = useState<SystemInfo | null>(null);
+  // Fosfor stili Genel Durum'u ürün sayfası düzeniyle çizer (bkz. PhosphorHero).
+  const phosphor = useAppStyle() === 'phosphor';
   const [plan, setPlan] = useState<Record<string, RateWindow | null> | null>(null);
   const [planAvailable, setPlanAvailable] = useState(false);
 
@@ -190,7 +194,17 @@ export function Survey({
   const p = phrase(agents, tasks, budget);
 
   return (
-    <div className="survey">
+    <div className={`survey${phosphor ? ' px' : ''}`}>
+      {phosphor ? (
+        <PhosphorHero
+          agents={agents}
+          tasks={tasks}
+          budget={budget}
+          sentence={`${p.lead}${p.count}${p.tail}`}
+          onOpenAgent={onOpenAgent}
+          onOpenSettings={onOpenSettings}
+        />
+      ) : (
       <div className="phase">
         <h2 className="phase-line">
           {p.lead}
@@ -203,9 +217,10 @@ export function Survey({
           {budget && L.survey.subToday(fmtCost(budget.spentUSD))}
         </div>
       </div>
+      )}
 
       <div className="survey-body">
-        <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />
+        {!phosphor && <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />}
 
         <div className="eph">
           <Mod label={L.survey.dailyBudget} onClick={onOpenSettings}>

@@ -26,7 +26,7 @@ import { L } from './i18n';
  * fg ≥7, muted ≥4.5, dim/accent/err/ok/warn/aux ≥3.
  */
 
-export type ThemeGroup = 'Plakalar' | 'Premium' | 'Stüdyo';
+export type ThemeGroup = 'Plakalar' | 'Premium' | 'Stüdyo' | 'Fosfor';
 
 export interface ThemeDef {
   id: string;
@@ -89,10 +89,18 @@ export const THEMES: ThemeDef[] = [
     desc: L.themes.graphite.desc,
     group: 'Stüdyo',
   },
+
+  // --- Fosfor paleti: grafit-siyah + limon (bkz. styles.css "FOSFOR") ---
+  {
+    id: 'phosphor',
+    name: L.themes.phosphor.name,
+    desc: L.themes.phosphor.desc,
+    group: 'Fosfor',
+  },
 ];
 
 /** Grup sırası — seçicide bu düzende listelenir. */
-export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar', 'Stüdyo'];
+export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar', 'Stüdyo', 'Fosfor'];
 
 export const DEFAULT_THEME = 'obsidian';
 const STORAGE_KEY = 'claudiva.theme';
