@@ -21,6 +21,7 @@ import { api } from '../api';
 import { fmtCost } from '../format';
 import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
 import { UI_MODES, setUiMode, useUiMode, type UiMode } from '../uiMode';
+import { APP_STYLES, setAppStyle, useAppStyle } from '../appStyle';
 import { L, LOCALES, locale, setLocale, dateLocale } from '../i18n';
 
 interface Props {
@@ -58,6 +59,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
   const [error, setError] = useState('');
   const [sys, setSys] = useState<SystemInfo | null>(null);
   const uiMode = useUiMode();
+  const appStyle = useAppStyle();
 
   // Sistem bilgisi yalnızca o bölüm açılınca istenir: ayarları açmak
   // her seferinde bir dosya sayımı tetiklemesin.
@@ -242,6 +244,31 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                     <ModePreview mode={m.id} />
                     <span className="mode-card-label">{m.label}</span>
                     <span className="mode-card-desc">{m.desc}</span>
+                  </button>
+                ))}
+              </div>
+              <span className="tb-field-label">{L.settings.styleTitle}</span>
+              <div className="set-note">{L.settings.styleNote}</div>
+              {/* Önizleme kartın KENDİ data-style'ını taşımaz: stil token'ları
+                  `:root[data-style]` üzerinde, alt öğede ezilemez. Kart bu
+                  yüzden stilin harflerini ve köşesini satır içi örnekler. */}
+              <div className="mode-cards" role="radiogroup" aria-label={L.settings.styleAria}>
+                {APP_STYLES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={appStyle === s.id}
+                    className={`mode-card${appStyle === s.id ? ' sel' : ''}`}
+                    onClick={() => setAppStyle(s.id)}
+                  >
+                    <span className={`style-prev style-prev-${s.id}`} aria-hidden="true">
+                      <span className="style-prev-title">Aa</span>
+                      <span className="style-prev-chip" />
+                      <span className="style-prev-chip" />
+                    </span>
+                    <span className="mode-card-label">{s.label}</span>
+                    <span className="mode-card-desc">{s.desc}</span>
                   </button>
                 ))}
               </div>

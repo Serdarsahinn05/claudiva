@@ -616,3 +616,22 @@ stays put when the curtain leaves.
 - **Don't** draw geometry the data does not support. No invented coordinates, no
   unlabelled grid, no decorative constellation. Every mark on the sky maps to a field.
 - **Don't** rebuild a repeating list as a card grid.
+
+## Styles (design language, separate from palette)
+
+The sky-plate identity above is the **Observatory** style, the default. A
+second style, **Studio**, re-skins the same tokens for users who want a plain
+product surface. Style lives on `data-style` (`src/styles.css`); palette stays
+on `data-theme`.
+
+| | Observatory | Studio |
+|---|---|---|
+| Display type | Bodoni Moda italic | system sans (Segoe UI Variable / SF), 600 |
+| UI type | Archivo | system sans |
+| Corners | 2/3px (premium 4/6px) | 6/10px |
+| Texture | grain, graticule, starfield | none, flat ground |
+| Labels | vermilion/cyan small caps | muted small caps, 0.06em |
+| Palettes | Night, Red Lantern, Day, Obsidian, Carbon, Aurora | Paper (light), Graphite (dark), single indigo accent |
+
+Studio rules: no ornament that is not data; status colors stay distinct from
+the accent; contrast is measured with `scripts/contrast.mjs` like every plate.

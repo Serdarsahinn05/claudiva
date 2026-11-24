@@ -1,0 +1,56 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════
+ * STİL KATMANI — renk değil, tasarım dili
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * İki eksen ayrı tutulur:
+ *   · RENK  → `data-theme` (themes.css): palet.
+ *   · STİL  → `data-style` (bu dosya): yazı tipi, başlık biçimi, köşe,
+ *             doku, gök süslemesi, etiket tonu.
+ *
+ * Kural themes.css ile aynı: bu dosya yalnızca TOKEN EZER, kural yazmaz.
+ *
+ * Varsayılan stil "Gözlemevi" (gök plakası) index.css'in kendisidir; burada
+ * blok almaz. Seçiciler `:root[data-style=…]` (0,2,0): tema bloklarını
+ * (`[data-theme=…]`, 0,1,0) her hâlükârda yener, çünkü premium temalar da
+ * köşe/doku/yıldız alanı yazıyor ve stilin onları ezmesi gerekiyor.
+ *
+ * Türetilmiş adlar (ör. `--label-fg`) için ikinci seçici
+ * `:root[data-style=…] [data-theme]` şart: index.css'teki `[data-theme]`
+ * bloğu onları her `data-theme` taşıyan öğede (tema önizlemesi) yeniden
+ * türetiyor; stil bu yeniden türetmeyi de ezmezse önizleme Gözlemevi
+ * etiketleri çizer.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   STÜDYO — gerçek bir SaaS gibi (Linear, Vercel)
+   Sade sans-serif, 6/10px köşe, doku yok, gök süsü yok, sakin etiket.
+
+   Font: SİSTEM yığını. Bilerek paket fontu değil: 0 bayt, çevrimdışı da
+   çalışır (Segoe UI / SF Pro her makinede var) ve dinamik font yüklemeye
+   gerek bırakmaz. Inter gibi bir paket fontu istenirse @fontsource ile
+   yalnız bu stil seçilince yüklenecek biçimde eklenir.
+   ═══════════════════════════════════════════════════════════════════ */
+:root[data-style='studio'] {
+  --font-ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system,
+    BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --title-style: normal;
+  --title-weight: 600;
+  --track: 0.06em;
+
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  /* Doku ve gök yok: düz zemin, ışık halesi yok, yıldız alanı kapalı. */
+  --texture: var(--hull-0);
+  --texture-blend: normal;
+  --starfield-a: 0;
+  --glow-a: 0;
+}
+:root[data-style='studio'],
+:root[data-style='studio'] [data-theme] {
+  /* Etiket vermilyon ek açıklama değil, sakin bir bölüm başlığı. */
+  --label-fg: var(--muted);
+}

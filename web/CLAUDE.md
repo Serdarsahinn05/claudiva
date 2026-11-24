@@ -52,7 +52,8 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   öneki sabittir — eski dökümleri tanımak için.
 - **Ekip talimatı (`L.brief`) arayüz diliyle gider**: İngilizce isteğin altına
   Türkçe çerçeve eklenirse ajanın cevap dili karışırdı. Ajanların kişilik ve
-  skill dosyaları AYRI konu (sunucu tarafı, henüz Türkçe).
+  skill dosyaları AYRI konu: 2026-11-24'ten beri İngilizce (token), ajan
+  kullanıcının dilinde cevap verir (bkz. `server/CLAUDE.md`).
 - Tarih/saat biçimi `dateLocale` ile (`'tr-TR'` yazma). Belge dili ve açılış
   perdesi metni `index.html`deki satır içi betikte, `detect()` ile AYNI kuralla.
 - Yeni metin eklerken: önce `tr.ts`e, sonra `en.ts`e; derleme eksik olanı söyler.
@@ -275,3 +276,30 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
 - Yerleşim gerçeği: solda plaka indeksi, ortada plaka, Genel Durum'da sağda efemeris
   okumaları. Ekip listesi yalnızca Terminal plakasında — Ajanlar plakasında liste
   sayfanın kendisidir, ikinci bir kopya aynı adları tekrarlıyordu.
+
+## Stil katmanı (renkten ayrı eksen)
+
+- **İki eksen:** `data-theme` = palet (`themes.css`), `data-style` = tasarım dili
+  (`styles.css`: yazı tipi, başlık biçimi, köşe, doku, gök süsü, etiket tonu).
+  Varsayılan stil `observatory` (Gözlemevi) index.css'in kendisidir, blok almaz.
+  Şu an ikinci stil `studio` (Stüdyo). Seçim Ayarlar → Arayüz → Stil.
+- **Stil seçicisi `:root[data-style=…]` (0,2,0) OLMAK ZORUNDA:** premium temalar
+  da köşe/doku/yıldız alanı yazıyor (`[data-theme]`, 0,1,0); stil onları yenmeli.
+  Türetilmiş ad (`--label-fg`) için ikinci seçici `:root[data-style] [data-theme]`,
+  yoksa tema önizlemesi Gözlemevi etiketini yeniden türetir.
+- **Başlık biçimi token:** `--title-style` (italik/normal), `--title-weight`;
+  etiket rengi `--label-fg`. Yeni başlık/etiket kuralında `font-style: italic`
+  ya da etikete `color: var(--hud)` YAZMA, token'ı kullan; yoksa Stüdyo'da
+  sentetik italik Segoe çıkar (ölçüldü: `.phase-line em`, `.chat-list-head`,
+  açılış perdesi bu yüzden kaçmıştı).
+- **Varsayılan stil İKİ YERDE** (tema ile aynı tuzak): `index.html` satır içi
+  betik + `appStyle.ts` `DEFAULT_STYLE`.
+- **Stil seçmek paleti eşler** (`appStyle.ts`): Stüdyo'ya geçerken palet
+  Stüdyo grubundan değilse `paper`/`graphite` (sistem koyu tercihine göre);
+  Gözlemevi'ne dönerken Stüdyo paleti varsa `obsidian`. Sonra elle değiştirilebilir.
+- **Stüdyo fontu SİSTEM yığını** (Segoe UI Variable / SF): 0 bayt, çevrimdışı.
+  Paket fontu (Inter) istenirse yalnız o stil seçilince yüklenmeli.
+- **Stil önizleme kartı kendi `data-style`ını taşıyamaz** (token kökte yaşar);
+  `.style-prev-*` yazıyı ve köşeyi satır içi örnekler.
+- Bilinen eksik: Genel Durum'daki gökyüzü haritası (`Sky.tsx`) Stüdyo'da da
+  gök çizimi; doku/yıldız alanı kapalı ama harita aynı.

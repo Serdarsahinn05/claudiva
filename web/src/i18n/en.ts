@@ -100,6 +100,13 @@ export const en: Dict = {
     chatDesc: 'The team as a group chat: agents hand work to each other, you step in when you want.',
   },
 
+  appStyle: {
+    observatory: 'Observatory',
+    observatoryDesc: 'A star atlas: engraved headings, paper grain, a starfield.',
+    studio: 'Studio',
+    studioDesc: 'A clean product surface: sans-serif, soft corners, no texture or ornament.',
+  },
+
   permission: {
     allow: 'Yes',
     allowAlways: "Yes, and don't ask again for this agent",
@@ -239,6 +246,9 @@ export const en: Dict = {
     modeNoteStrong: 'in this browser',
     modeNote2: ' and applies instantly. Your panel layout stays as it was when you come back from chat.',
     modeAria: 'Interface mode',
+    styleTitle: 'Style',
+    styleNote: 'Style changes typefaces, corners and texture; pick the color palette separately under Appearance. Choosing a style also applies its matching palette.',
+    styleAria: 'Design style',
   },
 
   rail: {
@@ -287,7 +297,7 @@ export const en: Dict = {
     title: 'Appearance',
     subtitle: 'applies instantly',
     terminalType: 'Terminal style',
-    groups: { Premium: 'Premium', Plakalar: 'Plates' },
+    groups: { Premium: 'Premium', Plakalar: 'Plates', Stüdyo: 'Studio' },
   },
 
   themes: {
@@ -297,6 +307,8 @@ export const en: Dict = {
     obsidian: { name: 'Obsidian', desc: 'Ink-black obsidian with a single cool light: cyan' },
     carbon: { name: 'Carbon', desc: 'Anodized graphite with ice cyan — neutral for long sessions' },
     aurora: { name: 'Aurora', desc: 'Violet-tinted black with cyan accents; thinking stands apart by tone' },
+    paper: { name: 'Paper', desc: 'Light neutral surface, a single indigo accent: a bright office' },
+    graphite: { name: 'Graphite', desc: 'Dark neutral surface, soft indigo accent: long sessions' },
   },
 
   cliSkins: {

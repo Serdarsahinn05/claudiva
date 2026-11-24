@@ -26,7 +26,7 @@ import { L } from './i18n';
  * fg ≥7, muted ≥4.5, dim/accent/err/ok/warn/aux ≥3.
  */
 
-export type ThemeGroup = 'Plakalar' | 'Premium';
+export type ThemeGroup = 'Plakalar' | 'Premium' | 'Stüdyo';
 
 export interface ThemeDef {
   id: string;
@@ -75,10 +75,24 @@ export const THEMES: ThemeDef[] = [
     desc: L.themes.aurora.desc,
     group: 'Premium',
   },
+
+  // --- Stüdyo paletleri: nötr ürün yüzeyi (bkz. themes.css, styles.css) ---
+  {
+    id: 'paper',
+    name: L.themes.paper.name,
+    desc: L.themes.paper.desc,
+    group: 'Stüdyo',
+  },
+  {
+    id: 'graphite',
+    name: L.themes.graphite.name,
+    desc: L.themes.graphite.desc,
+    group: 'Stüdyo',
+  },
 ];
 
 /** Grup sırası — seçicide bu düzende listelenir. */
-export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar'];
+export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar', 'Stüdyo'];
 
 export const DEFAULT_THEME = 'obsidian';
 const STORAGE_KEY = 'claudiva.theme';

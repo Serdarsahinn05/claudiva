@@ -6,9 +6,9 @@ bekleyen" bölümünü sor, sonra seçilen işe geç.
 
 ## Karar bekleyen (oturum başında sor)
 
-1. **Hangisiyle başlanacak:** Stüdyo teması mı (§1), JEV yönlendiricisi mi (§2)?
-2. **Skill'lerin İngilizceye çevrilmesi** (54 skill + 8 personality, ~54 KB).
-   Kullanıcı istedi ama tokeni az olduğu için erteledi: "iş bitince tekrar sor".
+1. ~~Hangisiyle başlanacak~~ → 2026-11-24: §1 adım 1-2 (token + Stüdyo) BİTTİ.
+   Sırada: Atölye / Sade stilleri, gök haritasının Stüdyo karşılığı ya da JEV (§2).
+2. ~~Skill'lerin İngilizceye çevrilmesi~~ → 2026-11-24 BİTTİ (bkz. HANDOFF.md).
 3. Panel paketi 500 KB uyarısı veriyor (521 KB, gzip 158 KB). Bölünsün mü?
 
 ---

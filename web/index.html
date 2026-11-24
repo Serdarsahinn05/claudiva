@@ -40,6 +40,13 @@
         if (lc !== 'tr' && lc !== 'en') lc = (navigator.language || '').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en';
         document.documentElement.lang = lc;
       } catch (e) {}
+      // Stil (styles.css). Yedek ad appStyle.ts DEFAULT_STYLE ile AYNI olmalı.
+      try {
+        var st = localStorage.getItem('claudiva.style');
+        document.documentElement.dataset.style = st === 'studio' ? st : 'observatory';
+      } catch (e) {
+        document.documentElement.dataset.style = 'observatory';
+      }
       try {
         var t = localStorage.getItem('claudiva.theme');
         document.documentElement.dataset.theme = t || 'obsidian';
@@ -81,7 +88,7 @@
          devralır — aynı karakter, aynı eğim. */
       #boot .boot-mark {
         font-family: var(--font-display, 'Bodoni Moda', Georgia, serif);
-        font-style: italic; font-size: 26px; letter-spacing: 0;
+        font-style: var(--title-style, italic); font-weight: var(--title-weight, 400); font-size: 26px; letter-spacing: 0;
         color: rgb(var(--fg-rgb, 233 240 246));
       }
       /* Belirsiz ilerleme: sahte yüzde göstermek yalan olurdu — yalnızca

@@ -5,6 +5,27 @@
 Stil temaları (Stüdyo/Atölye/Sade) ve JEV model yönlendiricisi orada planlı;
 hangisiyle başlanacağını oturum başında kullanıcıya sor.
 
+## 2026-11-24 turu (commit EDİLMEDİ)
+
+- [x] **Ajan dosyaları İngilizce:** 8 personality, bütün SKILL.md'ler,
+  plugin.json açıklamaları. Skill DİZİN adları ve `name:` Türkçe kaldı (kimlik:
+  `/durum-ozeti`, `.seeded-skills` manifesti). `config.json` (ad/açıklama,
+  arayüzde görünür) Türkçe kaldı. Her personality'de "kullanıcının dilinde
+  cevap ver" satırı var.
+  - Mevcut kurulumlar: `agentUpgrade.ts` artık içerik de günceller. Diskteki
+    dosya eski paket sürümünün (v0.1.1 veya çeviri öncesi HEAD) BİREBİR
+    kopyasıysa yenisiyle değişir, elle düzenlenmişse dokunulmaz
+    (`server/src/agentLegacyContent.ts`, hash tablosu). Scratch kopyada ölçüldü.
+  - Gerçek `~/.claudiva/agents` sunucu ilk açıldığında İngilizceye geçecek.
+  - Ölçülmedi: çeviriden sonra yeni oturum açılış tokeni (önceki 35.0k).
+- [x] **Stil katmanı + Stüdyo** (`docs/SONRAKI-ISLER.md` §1 adım 1-2):
+  `web/src/styles.css`, `appStyle.ts`, Stüdyo paletleri `paper`/`graphite`
+  (`themes.css`), Ayarlar → Arayüz → Stil. Kurallar `web/CLAUDE.md` →
+  "Stil katmanı". 4611 portunda scratch veriyle canlı doğrulandı (Gözlemevi
+  değişmedi; Stüdyo açık/koyu, panel ve sohbet modu; stil↔palet eşleşmesi;
+  kontrast betiği temiz).
+  - Kalan: Atölye ve Sade stilleri; Genel Durum gök haritasının Stüdyo karşılığı.
+
 # Tamamlanan iş (2026-11-23): Sohbet modu + .claudiva + roller + skill'ler + i18n
 
 **Önce oku:** `docs/ANALIZ.md`. Proje analizi, eksikler, Orkas değerlendirmesi,

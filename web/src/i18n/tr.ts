@@ -109,6 +109,13 @@ export const tr = {
     chatDesc: 'Ekip bir grup sohbeti: ajanlar birbirine iş verir, sen istediğinde araya girersin.',
   },
 
+  appStyle: {
+    observatory: 'Gözlemevi',
+    observatoryDesc: 'Gök atlası: gravür başlıklar, kağıt dokusu, yıldız alanı.',
+    studio: 'Stüdyo',
+    studioDesc: 'Sade bir ürün yüzeyi: sans-serif, yumuşak köşe, doku ve süs yok.',
+  },
+
   permission: {
     allow: 'Evet',
     allowAlways: 'Evet, bu ajanda bir daha sorma',
@@ -250,6 +257,9 @@ export const tr = {
     modeNoteStrong: 'bu tarayıcıda',
     modeNote2: ' saklanır ve anında uygulanır. Panel yerleşimin sohbete geçip dönünce olduğu gibi durur.',
     modeAria: 'Arayüz modu',
+    styleTitle: 'Stil',
+    styleNote: "Stil yazı tipini, köşeleri ve dokuyu değiştirir; renk paletini Görünüm'den ayrıca seçebilirsin. Stil seçince ona uyan palet de uygulanır.",
+    styleAria: 'Tasarım stili',
   },
 
   rail: {
@@ -298,7 +308,7 @@ export const tr = {
     title: 'Görünüm',
     subtitle: 'seçim anında uygulanır',
     terminalType: 'Terminal tipi',
-    groups: { Premium: 'Premium', Plakalar: 'Plakalar' } as Record<string, string>,
+    groups: { Premium: 'Premium', Plakalar: 'Plakalar', Stüdyo: 'Stüdyo' } as Record<string, string>,
   },
 
   themes: {
@@ -308,6 +318,8 @@ export const tr = {
     obsidian: { name: 'Obsidyen', desc: 'Mürekkep siyahı obsidyen, tek soğuk kaynak: cyan' },
     carbon: { name: 'Karbon', desc: 'Anodize grafit gövde, buz cyanı — uzun oturum için nötr' },
     aurora: { name: 'Aurora', desc: 'Menekşeli siyah, cyan vurgu; düşünme kanalı tonla ayrışır' },
+    paper: { name: 'Kâğıt', desc: 'Açık nötr yüzey, tek çivit vurgu: aydınlık ofis' },
+    graphite: { name: 'Grafit', desc: 'Koyu nötr yüzey, yumuşak çivit vurgu: uzun oturum' },
   },
 
   cliSkins: {

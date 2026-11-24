@@ -132,6 +132,9 @@ const plates = [
   plate('obsidian', themesCss, "[data-theme='obsidian']"),
   plate('carbon', themesCss, "[data-theme='carbon']"),
   plate('aurora', themesCss, "[data-theme='aurora']"),
+  // Stüdyo paletleri (nötr ürün yüzeyi).
+  plate('paper', themesCss, "[data-theme='paper']"),
+  plate('graphite', themesCss, "[data-theme='graphite']"),
 ];
 
 let failed = 0;
