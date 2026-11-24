@@ -133,12 +133,18 @@ export class AgentManager extends EventEmitter {
     fs.mkdirSync(path.join(dir, 'skills'), { recursive: true });
     // Ajan dizini aynı zamanda yerel bir Claude Code plugin'idir; manifest olmadan
     // skills/ klasörü yüklenmez (bkz. AgentSession.buildOptions).
+    // Manifest YALNIZ yoksa yazılır. Eskiden her güncellemede (ad değişimi, oto-onay
+    // düğmesi…) yeniden yazılıp paketteki açıklamayı eziyordu; agentUpgrade bu
+    // üretilmiş kalıbı tanıyıp onarır (isGeneratedManifest).
     fs.mkdirSync(path.join(dir, '.claude-plugin'), { recursive: true });
-    fs.writeFileSync(
-      path.join(dir, '.claude-plugin', 'plugin.json'),
-      JSON.stringify({ name: config.id, description: `${config.name} skill'leri`, version: '1.0.0' }, null, 2),
-      'utf-8'
-    );
+    const manifest = path.join(dir, '.claude-plugin', 'plugin.json');
+    if (!fs.existsSync(manifest)) {
+      fs.writeFileSync(
+        manifest,
+        JSON.stringify({ name: config.id, description: `${config.name} agent skills`, version: '1.0.0' }, null, 2) + '\n',
+        'utf-8'
+      );
+    }
     fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(config, null, 2), 'utf-8');
     fs.writeFileSync(path.join(dir, 'personality.md'), personality, 'utf-8');
   }

@@ -173,15 +173,38 @@ function upgradeSkills(
   }
 }
 
-/** CRLF → LF normalize edilmiş içeriğin sha256 özetinin ilk 16 hex karakteri. */
+/**
+ * İçerik özeti: CRLF → LF ve sondaki boşluk kırpılır, sha256'nın ilk 16 hex
+ * karakteri. Kırpma şart: eski bir kurulumun plugin.json'ları paketteki eski
+ * sürümle birebir aynı içerikteydi ama sondaki satır sonu eksikti; tek bir
+ * `\n` yüzünden hiç güncellenmedi (ölçüldü). Üretici betik
+ * (server/scripts/legacy-hashes.mjs) AYNI kuralı kullanır.
+ */
 function contentHash(text: string): string {
-  return crypto.createHash('sha256').update(text.replace(/\r\n/g, '\n')).digest('hex').slice(0, 16);
+  return crypto.createHash('sha256').update(text.replace(/\r\n/g, '\n').trimEnd()).digest('hex').slice(0, 16);
 }
 
 /**
  * Kural 3: dokunulmamış eski içerikleri paketteki sürümle değiştirir.
  * Dosya başına ayrı try: biri okunamazsa diğerleri yine güncellenir.
  */
+/**
+ * Sunucunun kendi ürettiği plugin manifesti mi? Eski `writeAgentFiles` ajan
+ * HER güncellendiğinde `{ name, description: "<ad> skill'leri", version }`
+ * yazıyordu; açıklama ajan adına göre değiştiği için özet tablosu bunu
+ * tanıyamaz (ölçüldü: 7 kurulu manifest hiç güncellenmedi). Bu kalıp
+ * kullanıcının elle yazacağı bir şey değil, güvenle değiştirilir.
+ */
+function isGeneratedManifest(text: string): boolean {
+  try {
+    const m = JSON.parse(text) as Record<string, unknown>;
+    const keys = Object.keys(m).sort().join(',');
+    return keys === 'description,name,version' && typeof m.description === 'string' && m.description.endsWith(" skill'leri");
+  } catch {
+    return false;
+  }
+}
+
 function upgradeContent(bundledDir: string, targetDir: string, id: string): void {
   // LEGACY_CONTENT anahtarlarıyla aynı biçim: `/` ayraçlı, ajan dizinine göre göreli.
   const rels = ['personality.md', '.claude-plugin/plugin.json'];
@@ -193,16 +216,18 @@ function upgradeContent(bundledDir: string, targetDir: string, id: string): void
   }
 
   for (const rel of rels) {
-    const known = LEGACY_CONTENT[`${id}/${rel}`];
+    const known = LEGACY_CONTENT[`${id}/${rel}`] ?? [];
     const source = path.join(bundledDir, rel);
-    if (!known || !fs.existsSync(source)) continue;
+    if (!fs.existsSync(source)) continue;
     // Pasif skill `SKILL.md.disabled` olarak durur; adı korunarak güncellenir.
     const target = path.join(targetDir, rel);
     for (const file of [target, target + '.disabled']) {
       try {
         if (!fs.existsSync(file)) continue;
-        const current = contentHash(fs.readFileSync(file, 'utf8'));
-        if (!known.includes(current)) continue;
+        const text = fs.readFileSync(file, 'utf8');
+        const current = contentHash(text);
+        const generated = rel === '.claude-plugin/plugin.json' && isGeneratedManifest(text);
+        if (!known.includes(current) && !generated) continue;
         const bundled = fs.readFileSync(source, 'utf8');
         if (current !== contentHash(bundled)) fs.writeFileSync(file, bundled, 'utf8');
       } catch (err) {

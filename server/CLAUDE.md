@@ -259,7 +259,10 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   - ad ve açıklama yalnız 0.1.x değerine BİREBİR eşitse yenilenir;
   - skill'ler `<ajan>/.seeded-skills` manifestiyle izlenir; manifest yoksa başlangıç 0.1.x skill listesidir, aksi hâlde kullanıcının sildiği eski skill "yeni" sanılıp geri gelirdi.
   - `personality.md`, `plugin.json` ve `SKILL.md` (pasifse `SKILL.md.disabled`, adı korunur) yalnız içerik özeti eski bir paket sürümüne eşitse paketteki sürümle değiştirilir (`agentLegacyContent.ts`: CRLF→LF sha256, ilk 16 hex). Bilinmeyen özet = kullanıcı düzenlemesi, dokunulmaz; yalnız var olan dosya yazılır.
-  - Paket ajanının adı ya da açıklaması değişirse eski değeri `LEGACY` tablosuna EKLE; bir paket dosyasının içeriği değişirse yayımlanmış eski özetini `LEGACY_CONTENT`e EKLE.
+  - Paket ajanının adı ya da açıklaması değişirse eski değeri `LEGACY` tablosuna EKLE.
+  - **`agentLegacyContent.ts` ÜRETİLİR:** `node server/scripts/legacy-hashes.mjs` git geçmişindeki BÜTÜN sürümleri tarar (ilk tablo yalnız v0.1.1 + HEAD biliyordu; v0.1.1 öncesi kurulumlar hiç güncellenmedi, ölçüldü). Paket ajan dosyası değişince commit'ten SONRA yeniden çalıştır. Commit'te hiç olmamış ama sahada görülen eski içerik betikteki `SAHADA_GORULEN`e girer (yalnız paketin eski hâli olduğu doğrulanmışsa).
+  - **Özet sondaki boşluğu kırpar** (`trimEnd`): eski manifestler aynı içerikte ama sondaki satır sonu eksikti, tek bayt yüzünden eşleşmiyordu.
+  - **`writeAgentFiles` plugin.json'u yalnız YOKSA yazar.** Eskiden her ajan güncellemesinde (oto-onay düğmesi dahil) `"<ad> skill'leri"` diye yeniden yazıp paketteki açıklamayı eziyordu; bu üretilmiş kalıp ada göre değiştiği için özetle tanınamaz, `isGeneratedManifest` onu ayrıca tanıyıp onarır.
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
   `env` verilince SDK süreç ortamını devralmaz, bu yüzden `process.env`in
   tamamı taşınıyor. Kullanıcının skill kütüphanesi bu değişkene bakıp ajan
