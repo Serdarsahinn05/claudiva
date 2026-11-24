@@ -1,25 +1,25 @@
 ---
 name: kod-inceleme
-description: Kod inceleme kontrol listesi: dogruluk, guvenlik, performans, bakim.
+description: Code review checklist: correctness, security, performance, maintainability.
 ---
 
-# Kod İnceleme Kontrol Listesi
+# Code Review Checklist
 
-## Doğruluk
-- [ ] Sınır koşulları: boş dizi, null/undefined, 0, negatif, çok büyük girdi.
-- [ ] Hata yolları: throw/reject yakalanıyor mu, kaynaklar (dosya, bağlantı, timer) kapanıyor mu?
-- [ ] Eşzamanlılık: paylaşılan durum, yarış koşulu, await unutulmuş promise.
-- [ ] Değişiklik, çağıran TÜM yerlerle uyumlu mu (imza/sözleşme değiştiyse)?
+## Correctness
+- [ ] Edge cases: empty array, null/undefined, 0, negative, very large input.
+- [ ] Error paths: are throw/reject caught, are resources (file, connection, timer) closed?
+- [ ] Concurrency: shared state, race conditions, promises missing an await.
+- [ ] Is the change compatible with ALL callers (if a signature/contract changed)?
 
-## Güvenlik
-- [ ] Kullanıcı girdisi doğrulanıyor mu (injection, path traversal, XSS)?
-- [ ] Gizli bilgi (anahtar, şifre) kodda/logda mı?
-- [ ] Yetki kontrolü doğru katmanda mı?
+## Security
+- [ ] Is user input validated (injection, path traversal, XSS)?
+- [ ] Are secrets (keys, passwords) in code/logs?
+- [ ] Is the authorization check in the right layer?
 
-## Performans
-- [ ] Döngü içinde IO/sorgu var mı? N+1?
-- [ ] Büyüyebilen veri yapısı sınırsız mı (bellek sızıntısı)?
+## Performance
+- [ ] IO/queries inside a loop? N+1?
+- [ ] Is any growable data structure unbounded (memory leak)?
 
-## Bakım
-- [ ] Adlandırma yanıltıcı mı? Ölü kod kaldı mı?
-- [ ] Test: kritik yol testsiz mi kalmış?
+## Maintainability
+- [ ] Misleading names? Dead code left behind?
+- [ ] Tests: is a critical path left untested?

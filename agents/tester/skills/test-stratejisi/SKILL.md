@@ -1,31 +1,31 @@
 ---
 name: test-stratejisi
-description: Test stratejisi: ne test edilir, AAA yapisi, adlandirma, hata raporu sablonu.
+description: Test strategy: what to test, AAA structure, naming, bug report template.
 ---
 
-# Test Stratejisi
+# Test Strategy
 
-## Ne test edilir (öncelik sırasıyla)
-1. Para/veri kaybettiren yollar (kayıt, silme, ödeme, yetki)
-2. Karmaşık saf mantık (hesaplama, ayrıştırma, durum makinesi)
-3. Sözleşmeler (API girdi/çıktı şekilleri)
-4. Regresyonlar (düzeltilen her hata bir test bırakır)
+## What to test (in priority order)
+1. Paths that lose money/data (save, delete, payment, authorization)
+2. Complex pure logic (calculation, parsing, state machines)
+3. Contracts (API input/output shapes)
+4. Regressions (every fixed bug leaves a test behind)
 
-## Ne test edilmez
-- Framework'ün kendisi, basit getter/setter, üçüncü parti kütüphane davranışı.
+## What not to test
+- The framework itself, trivial getters/setters, third-party library behavior.
 
-## Test yapısı: AAA
+## Test structure: AAA
 ```
-Arrange  // durumu kur
-Act      // TEK eylem
-Assert   // sonucu doğrula (1-3 anlamlı assertion)
+Arrange  // set up the state
+Act      // ONE action
+Assert   // verify the result (1-3 meaningful assertions)
 ```
 
-## Adlandırma
-`<fonksiyon> _ <koşul> _ <beklenen>` — ör. `dispatch_bilinmeyenAjan_hataFirlatir`.
+## Naming
+`<function> _ <condition> _ <expected>` - e.g. `dispatch_unknownAgent_throws`.
 
-## Hata raporu şablonu
-- Başlık: tek cümle, belirti değil davranış ("X girilince Y kayboluyor")
-- Adımlar: 1-2-3, en küçük yeniden üretme
-- Beklenen / Gerçekleşen
-- Ortam + dosya:satır (biliniyorsa)
+## Bug report template
+- Title: one sentence, behavior not symptom ("Y disappears when X is entered")
+- Steps: 1-2-3, smallest reproduction
+- Expected / Actual
+- Environment + file:line (if known)

@@ -1,29 +1,29 @@
 ---
 name: inceleme-yap
-description: Belirtilen degisiklik veya dosyalar icin kanitli, karar bildiren inceleme raporu uretir.
+description: Produces an evidence-backed review report with a verdict for the given change or files.
 ---
 
-# Inceleme Yap
+# Review
 
-Belirtilen degisikligi/dosyalari incele.
+Review the given change/files.
 
-## Her bulgu icin zorunlu ucu
-1. **Iddia** — tek cumlelik kusur ifadesi
-2. **dosya:satir** — tam konum
-3. **Somut hata senaryosu** — hangi girdi/durumda ne yanlis olur
+## Three things required for every finding
+1. **Claim** - the flaw in one sentence
+2. **file:line** - exact location
+3. **Concrete failure scenario** - which input/state makes what go wrong
 
-Senaryosunu yazamadigin bulguyu rapora **koyma**.
+Do **not** put a finding in the report if you cannot write its scenario.
 
-## Siralama
-Onem sirasina diz: dogruluk > guvenlik > performans > bakim.
+## Ordering
+Order by severity: correctness > security > performance > maintainability.
 
-## Karar
-Sonunda net karar ver, ucunden biri:
-- **Onay**
-- **Kucuk duzeltmelerle onay** (maddeleri say)
-- **Ret** (gerekce)
+## Verdict
+End with a clear verdict, one of three:
+- **Approve**
+- **Approve with minor fixes** (list them)
+- **Reject** (reason)
 
-Kontrol listesi icin `kod-inceleme` skill'ine bak.
+For the checklist, see the `kod-inceleme` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

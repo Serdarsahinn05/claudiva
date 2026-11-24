@@ -1,19 +1,19 @@
 ---
 name: is-baslat
-description: Herhangi bir isi uctan uca ekiple yurutur: analiz, bolme, dagitim, sentez.
+description: Runs any piece of work end to end with the team - analysis, splitting, delegation, synthesis.
 ---
 
-# Is Baslat
+# Start Work
 
-Verilen isi uctan uca ustlen:
+Take ownership of the given work end to end:
 
-1. **Analiz et.** Istegi kendi cumlelerinle netlestir.
-2. **Belirsizlik varsa TEK soru sor.** Birden fazla belirsizlik varsa en kritigini sor.
-3. **Parcalara bol.** Her parcanin tek sorumlusu, net baglami ve olculebilir teslim kriteri olsun.
-4. **Dagit.** Uygun ajanlara ata; cok parcaliysa Boss uzerinden yurut. Bagimsiz parcalari paralel baslat.
-5. **Sentezle.** Sonuclari topla, celiskileri coz, **tek bir rapor** sun.
+1. **Analyze.** Restate the request in your own words.
+2. **If anything is unclear, ask ONE question.** If several things are unclear, ask about the most critical.
+3. **Split it.** Each piece gets a single owner, clear context and a measurable done criterion.
+4. **Delegate.** Assign to the right agents; run multi-part work through the Boss. Start independent pieces in parallel.
+5. **Synthesize.** Gather the results, resolve contradictions, present **a single report**.
 
-Raporda: ne yapildi / ne dogrulandi / bilinen eksikler.
+The report covers: what was done / what was verified / known gaps.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

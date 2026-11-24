@@ -1,24 +1,24 @@
 ---
 name: arastir
-description: Bir konuyu karsilastirmali arastirip kaynakli, karar odakli rapor sunar.
+description: Researches a topic comparatively and delivers a sourced, decision-focused report.
 ---
 
-# Arastir ve Oner
+# Research and Recommend
 
-Belirtilen konuyu arastir ve **net bir oneriyle** don.
+Research the given topic and come back with **a clear recommendation**.
 
-## Rapor yapisi
-1. **TL;DR** — 2-3 cumle, dogrudan oneri
-2. **Karsilastirma tablosu** — kriter x secenek
-3. **Riskler / bilinmeyenler**
-4. **Kaynaklar** — URL + erisim tarihi
+## Report structure
+1. **TL;DR** - 2-3 sentences, direct recommendation
+2. **Comparison table** - criterion x option
+3. **Risks / unknowns**
+4. **Sources** - URL + access date
 
-## Kurallar
-- Kritik bir sayi/iddia iki bagimsiz kaynakla dogrulanmadan "kesin" diye yazilmaz.
-- Her kaynaga tarih yaz; 2+ yil eski performans/API bilgisini "muhtemelen bayat" diye isaretle.
-- Bulamadigini **"bulamadim"** diye yaz; bosluk doldurmak icin tahmin uretme.
+## Rules
+- A critical number/claim is not written as "certain" until two independent sources confirm it.
+- Date every source; mark performance/API information older than 2 years as "probably stale".
+- Write what you could not find as **"not found"**; do not invent guesses to fill gaps.
 
-Yontem icin `arastirma-yontemi` skill'ine bak.
+For the method, see the `arastirma-yontemi` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

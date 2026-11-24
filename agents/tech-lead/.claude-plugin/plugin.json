@@ -1,5 +1,5 @@
 {
   "name": "tech-lead",
-  "description": "Tech Lead ajanının skill'leri: plan çıkarma, ara çıktıları kalite kontrolünden geçirme, durum özeti ve hafızaya yazma.",
+  "description": "Tech Lead agent skills: planning, quality-checking intermediate output, status summary and writing to memory.",
   "version": "1.0.0"
 }

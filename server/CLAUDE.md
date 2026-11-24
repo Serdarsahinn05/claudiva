@@ -258,7 +258,8 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   kullanıcıya hiç ulaşmıyordu. `agentUpgrade.ts`:
   - ad ve açıklama yalnız 0.1.x değerine BİREBİR eşitse yenilenir;
   - skill'ler `<ajan>/.seeded-skills` manifestiyle izlenir; manifest yoksa başlangıç 0.1.x skill listesidir, aksi hâlde kullanıcının sildiği eski skill "yeni" sanılıp geri gelirdi.
-  - Paket ajanının adı ya da açıklaması değişirse eski değeri `LEGACY` tablosuna EKLE.
+  - `personality.md`, `plugin.json` ve `SKILL.md` (pasifse `SKILL.md.disabled`, adı korunur) yalnız içerik özeti eski bir paket sürümüne eşitse paketteki sürümle değiştirilir (`agentLegacyContent.ts`: CRLF→LF sha256, ilk 16 hex). Bilinmeyen özet = kullanıcı düzenlemesi, dokunulmaz; yalnız var olan dosya yazılır.
+  - Paket ajanının adı ya da açıklaması değişirse eski değeri `LEGACY` tablosuna EKLE; bir paket dosyasının içeriği değişirse yayımlanmış eski özetini `LEGACY_CONTENT`e EKLE.
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
   `env` verilince SDK süreç ortamını devralmaz, bu yüzden `process.env`in
   tamamı taşınıyor. Kullanıcının skill kütüphanesi bu değişkene bakıp ajan

@@ -1,24 +1,24 @@
 ---
 name: gorev-bolme
-description: Gorevi ajanlara bolme rehberi ve gorev metni sablonu.
+description: Guide for splitting work across agents, with a task-brief template.
 ---
 
-# Görev Bölme Rehberi
+# Task Splitting Guide
 
-İyi bölünmüş görev = tek ajanla, tek oturuşta, dışarıya soru sormadan bitirilebilen iş.
+A well-split task = work one agent can finish in one sitting without asking anyone outside.
 
-## Kontrol listesi
-- [ ] Her parçanın **tek sorumlusu** var (iki ajana aynı dosyayı verme — çakışır).
-- [ ] Her parçada **bağlam** var: hangi proje, hangi dizin, hangi kısıtlar.
-- [ ] Her parçada **teslim kriteri** var: "X dosyası derleniyor", "rapor 10 maddeyi geçmiyor" gibi ölçülebilir.
-- [ ] Parçalar arasında sıra bağımlılığı varsa önce bağımsızları paralel dağıt, bağımlıları sonuç geldikçe ver.
-- [ ] 3'ten fazla ardışık el değiştirme gerekiyorsa işi yeniden böl — zincir uzadıkça kalite düşer.
+## Checklist
+- [ ] Every piece has **a single owner** (never give the same file to two agents - they collide).
+- [ ] Every piece has **context**: which project, which directory, which constraints.
+- [ ] Every piece has a **done criterion**, measurable: "file X compiles", "the report has at most 10 items".
+- [ ] If pieces depend on each other, hand out the independent ones in parallel first and the dependent ones as results arrive.
+- [ ] If the work needs more than 3 consecutive hand-offs, split it again - quality drops as the chain grows.
 
-## Görev metni şablonu
+## Task brief template
 ```
-Bağlam: <proje/dizin, mevcut durum>
-Görev: <yapılacak iş, tek cümle>
-Kapsam dışı: <dokunulmayacaklar>
-Teslim kriteri: <ölçülebilir bitti tanımı>
-Çıktı biçimi: <rapor/diff/dosya listesi>
+Context: <project/directory, current state>
+Task: <the work, one sentence>
+Out of scope: <what must not be touched>
+Done criterion: <measurable definition of done>
+Output format: <report/diff/file list>
 ```

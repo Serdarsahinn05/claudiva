@@ -1,24 +1,24 @@
 ---
 name: ozellik-yeni
-description: Yeni ozellik istegini ekiple planlayip uygulatir.
+description: Plans a new feature request and has the team implement it.
 ---
 
-# Yeni Ozellik
+# New Feature
 
-Yeni bir ozellik istegini planla ve ekiple uygula.
+Plan a new feature request and implement it with the team.
 
-Once su bilgilerin elinde oldugundan emin ol; eksikse sor:
+First make sure you have the following; ask if anything is missing:
 
-| Bilgi | Aciklama |
+| Information | Meaning |
 |---|---|
-| Proje/dizin | Nerede calisilacak |
-| Ozellik | Ne yapacak |
-| Kullanici ne gorecek | Beklenen davranis |
-| Kapsam disi | Dokunulmayacaklar |
-| Kabul kriteri | Bittigini nasil anlariz |
+| Project/directory | Where the work happens |
+| Feature | What it will do |
+| What the user sees | Expected behavior |
+| Out of scope | What must not be touched |
+| Acceptance criterion | How we know it is done |
 
-Sonra isi parcalara bolup uygun ajanlara dagit, sonuclari sentezleyip tek rapor sun.
-Kabul kriterini **birebir** kontrol etmeden isi bitti sayma.
+Then split the work, hand it to the right agents, synthesize the results and present one report.
+Do not count the work as done until you have checked the acceptance criterion **exactly**.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

@@ -1,19 +1,19 @@
 ---
 name: plan-yap
-description: Istegi alt gorevlere bolup ekibe delegate_task ile dagitir ve sonuclari toplar.
+description: Splits a request into subtasks, hands them to the team with delegate_task and gathers the results.
 ---
 
-# Plan Yap ve Dagit
+# Plan and Delegate
 
-Verilen istegi analiz et, alt gorevlere bol ve ekibe dagit.
+Analyze the request, split it into subtasks and hand them to the team.
 
-1. **Bol.** Her alt gorev tek ajanla, tek oturusta bitirilebilir olsun.
-2. **Ata.** Her gorevi `delegate_task` ile ekipteki **en uygun** ajana ver.
-   Bagimsiz gorevleri **paralel** dagit; bagimli olanlari sonuc geldikce ver.
-3. **Takip et.** `check_task` ile durumlari izle.
-4. **Topla.** Sonuclari birlestirip **tek bir ozet rapor** sun.
+1. **Split.** Each subtask should be finishable by one agent in one sitting.
+2. **Assign.** Give each task to the **best-suited** agent with `delegate_task`.
+   Hand out independent tasks **in parallel**; give dependent ones as results arrive.
+3. **Track.** Follow their status with `check_task`.
+4. **Gather.** Merge the results and present **a single summary report**.
 
-Gorev metninde mutlaka bulunsun: baglam (proje/dizin), yapilacak is, kapsam disi, olculebilir teslim kriteri.
+Every task brief must include: context (project/directory), the work, what is out of scope, and a measurable done criterion.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

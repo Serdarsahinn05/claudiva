@@ -1,20 +1,20 @@
 ---
 name: test-yaz
-description: Bir modul icin davranis odakli test seti yazar ve calistirip raporlar.
+description: Writes a behavior-focused test suite for a module, runs it and reports.
 ---
 
-# Test Yaz
+# Write Tests
 
-Belirtilen modul icin test yaz.
+Write tests for the given module.
 
-1. **Once kesfet.** Projenin test altyapisini ve mevcut desenlerini bul; **onlara uy**, yeni bir stil getirme.
-2. **Kapsa:** mutlu yol + sinir kosullari (bos, null, 0, negatif, cok buyuk) + hata yollari.
-3. **Calistir.** Testleri gercekten kostur.
-4. **Raporla:** kac test kostu / gecti / kaldi. Kalan varsa cikitisini oldugu gibi ver.
+1. **Discover first.** Find the project's test setup and existing patterns; **follow them**, do not bring in a new style.
+2. **Cover:** happy path + edge cases (empty, null, 0, negative, very large) + error paths.
+3. **Run.** Actually run the tests.
+4. **Report:** how many tests ran / passed / failed. If any failed, give the output as is.
 
-Test gecmediyse bunu **acikca soyle**; gectigini varsayma.
+If tests did not pass, **say so plainly**; do not assume they passed.
 
-Oncelik ve adlandirma olcutleri icin `test-stratejisi` skill'ine bak.
+For priority and naming criteria, see the `test-stratejisi` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

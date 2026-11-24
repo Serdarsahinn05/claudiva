@@ -1,5 +1,5 @@
 {
   "name": "boss",
-  "description": "Boss ajanının skill'leri: işi parçalara bölme, iş başlatma, yeni özellik akışı, durum özeti ve hafızaya yazma.",
+  "description": "Boss agent skills: splitting work, starting work, new feature flow, status summary and writing to memory.",
   "version": "1.0.0"
 }

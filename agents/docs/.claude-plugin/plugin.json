@@ -1,5 +1,5 @@
 {
   "name": "docs",
-  "description": "Docs Writer ajanının skill'leri: doküman güncelleme, doküman stili ve commit/PR metni.",
+  "description": "Docs Writer agent skills: document updates, documentation style and commit/PR text.",
   "version": "1.0.0"
 }

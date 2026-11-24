@@ -6,7 +6,7 @@
  * eklenen bir skill (ör. find-skills) ya da düzeltilen bir rol adı mevcut
  * kullanıcıya hiç ulaşmıyordu.
  *
- * İki kural:
+ * Üç kural:
  *  1. **Ad/açıklama** yalnız değer ESKİ paket değerine BİREBİR eşitse yenilenir.
  *     Eşit değilse kullanıcı düzenlemiştir, dokunulmaz.
  *  2. **Skill'ler** `<ajan>/.seeded-skills` manifestiyle izlenir. Pakette olup
@@ -15,9 +15,16 @@
  *     Manifest yoksa başlangıç değeri, 0.1.x paketinde olan skill listesidir
  *     (LEGACY tablosu). Bu olmasa kullanıcının sildiği eski bir skill "yeni"
  *     sanılıp geri gelirdi.
+ *  3. **İçerik** (`personality.md`, `.claude-plugin/plugin.json`, her
+ *     `skills/<s>/SKILL.md` ya da pasif hâli `SKILL.md.disabled`) yalnız diskteki
+ *     dosyanın özeti ESKİ bir paket sürümüne eşitse (`LEGACY_CONTENT`) paketteki
+ *     sürümle değiştirilir; pasif skill adını korur. Bilinmeyen özet = kullanıcı
+ *     düzenlemiştir, dokunulmaz. Yalnız VAR OLAN dosya yazılır; silinen geri gelmez.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { LEGACY_CONTENT } from './agentLegacyContent.js';
 
 interface Legacy {
   /** 0.1.x paketindeki ad ve açıklama: yalnız bunlara eşitse yenilenir. */
@@ -115,6 +122,11 @@ export function upgradeSeededAgent(
   } catch (err) {
     console.warn(`[claudiva] ${id} skill'leri güncellenemedi: ${(err as Error).message}`);
   }
+  try {
+    upgradeContent(bundledDir, targetDir, id);
+  } catch (err) {
+    console.warn(`[claudiva] ${id} dosya içerikleri güncellenemedi: ${(err as Error).message}`);
+  }
 }
 
 function upgradeConfig(bundledDir: string, targetDir: string, legacy: Legacy | undefined): void {
@@ -158,5 +170,44 @@ function upgradeSkills(
   }
   if (changed) {
     fs.writeFileSync(manifestFile, JSON.stringify([...seeded].sort(), null, 2) + '\n', 'utf8');
+  }
+}
+
+/** CRLF → LF normalize edilmiş içeriğin sha256 özetinin ilk 16 hex karakteri. */
+function contentHash(text: string): string {
+  return crypto.createHash('sha256').update(text.replace(/\r\n/g, '\n')).digest('hex').slice(0, 16);
+}
+
+/**
+ * Kural 3: dokunulmamış eski içerikleri paketteki sürümle değiştirir.
+ * Dosya başına ayrı try: biri okunamazsa diğerleri yine güncellenir.
+ */
+function upgradeContent(bundledDir: string, targetDir: string, id: string): void {
+  // LEGACY_CONTENT anahtarlarıyla aynı biçim: `/` ayraçlı, ajan dizinine göre göreli.
+  const rels = ['personality.md', '.claude-plugin/plugin.json'];
+  const bundledSkills = path.join(bundledDir, 'skills');
+  if (fs.existsSync(bundledSkills)) {
+    for (const entry of fs.readdirSync(bundledSkills, { withFileTypes: true })) {
+      if (entry.isDirectory()) rels.push(`skills/${entry.name}/SKILL.md`);
+    }
+  }
+
+  for (const rel of rels) {
+    const known = LEGACY_CONTENT[`${id}/${rel}`];
+    const source = path.join(bundledDir, rel);
+    if (!known || !fs.existsSync(source)) continue;
+    // Pasif skill `SKILL.md.disabled` olarak durur; adı korunarak güncellenir.
+    const target = path.join(targetDir, rel);
+    for (const file of [target, target + '.disabled']) {
+      try {
+        if (!fs.existsSync(file)) continue;
+        const current = contentHash(fs.readFileSync(file, 'utf8'));
+        if (!known.includes(current)) continue;
+        const bundled = fs.readFileSync(source, 'utf8');
+        if (current !== contentHash(bundled)) fs.writeFileSync(file, bundled, 'utf8');
+      } catch (err) {
+        console.warn(`[claudiva] ${file} güncellenemedi: ${(err as Error).message}`);
+      }
+    }
   }
 }

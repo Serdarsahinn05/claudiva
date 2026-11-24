@@ -1,17 +1,17 @@
 ---
 name: kalite-kontrol
-description: Bir isi bitti saymadan once calistirilacak teslim oncesi kalite kontrol listesi.
+description: Pre-delivery quality checklist to run before counting any work as done.
 ---
 
-# Teslim Öncesi Kalite Kontrol
+# Pre-Delivery Quality Check
 
-Bir işi "bitti" saymadan önce:
+Before counting a piece of work as "done":
 
-- [ ] **Derleniyor mu?** Kod değiştiyse build/typecheck çalıştırıldı mı veya usta çalıştırdığını raporladı mı?
-- [ ] **Teslim kriteri karşılandı mı?** Görev metnindeki "bitti" tanımıyla birebir karşılaştır.
-- [ ] **Kapsam sızması var mı?** İstenmeyen dosyalara dokunulmuş mu?
-- [ ] **Tutarlılık:** Birden çok uzmanın çıktısı birleşiyorsa adlandırma/stil/arayüz sözleşmeleri uyumlu mu?
-- [ ] **Riskli değişiklik:** Veri silme, kimlik, ödeme, altyapı dokunuşu varsa hakem incelemesi ŞART.
-- [ ] **Rapor:** Ne yapıldı / ne test edildi / bilinen eksikler — üç başlık, kısa ve net.
+- [ ] **Does it build?** If code changed, was build/typecheck run, or did the specialist report running it?
+- [ ] **Is the done criterion met?** Compare against the task brief's definition of done, exactly.
+- [ ] **Scope leak?** Were files touched that should not have been?
+- [ ] **Consistency:** When several specialists' outputs are merged, do naming, style and interface contracts line up?
+- [ ] **Risky change:** Anything touching data deletion, identity, payments or infrastructure MUST be reviewed by the reviewer.
+- [ ] **Report:** What was done / what was tested / known gaps - three headings, short and clear.
 
-Kontrolden geçmeyen işi geri gönderirken neyin eksik olduğunu maddeyle söyle; "olmamış, tekrar yap" deme.
+When sending work back, list what is missing as bullets; never just say "not good, redo it".

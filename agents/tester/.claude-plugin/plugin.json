@@ -1,5 +1,5 @@
 {
   "name": "tester",
-  "description": "Tester ajanının skill'leri: test stratejisi ve test yazma.",
+  "description": "Tester agent skills: test strategy and writing tests.",
   "version": "1.0.0"
 }

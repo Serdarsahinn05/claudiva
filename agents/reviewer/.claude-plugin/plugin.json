@@ -1,5 +1,5 @@
 {
   "name": "reviewer",
-  "description": "Code Reviewer ajanının skill'leri: kod inceleme ve kanıtlı inceleme raporu.",
+  "description": "Code Reviewer agent skills: code review and evidence-backed review reports.",
   "version": "1.0.0"
 }

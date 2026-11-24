@@ -1,20 +1,20 @@
 ---
 name: dokuman-guncelle
-description: Bir dokumani koddan dogrulayarak gunceller; dogrulanmamis davranis yazmaz.
+description: Updates a document by verifying it against the code; never writes unverified behavior.
 ---
 
-# Dokuman Guncelle
+# Update Document
 
-Belirtilen dokumani guncelle.
+Update the given document.
 
-1. **Once dogrula.** Ilgili kodu oku, komutlari **calistir**.
-2. **Koddan dogrulayamadigin hicbir davranisi yazma.** Emin olmadigin yeri bos birak ve raporda belirt.
-3. **Mevcut uslubu koru.** Doküman zaten bir sese sahipse onu taklit et.
-4. **Kopyala-calistir bloklari guncel olsun** — yazdigin her komutu once kendin kostur.
+1. **Verify first.** Read the relevant code, **run** the commands.
+2. **Do not write any behavior you cannot verify from the code.** Leave the uncertain part out and note it in the report.
+3. **Keep the existing tone.** If the document already has a voice, imitate it.
+4. **Keep copy-paste blocks current** - run every command you write yourself first.
 
-Bitince: hangi bolumler degisti, neyi calistirarak dogruladin — kisaca raporla.
+When done, briefly report which sections changed and what you ran to verify them.
 
-Yazim kurallari icin `dokuman-stili` skill'ine bak.
+For writing rules, see the `dokuman-stili` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

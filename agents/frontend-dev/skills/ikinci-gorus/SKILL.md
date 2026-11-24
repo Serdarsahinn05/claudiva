@@ -1,20 +1,20 @@
 ---
 name: ikinci-gorus
-description: Bir yaklasima veya cozume elestirel, savunmasiz ikinci gorus verir.
+description: Gives a critical, non-defensive second opinion on an approach or solution.
 ---
 
-# Ikinci Gorus
+# Second Opinion
 
-Sana gosterilen yaklasimi/cozumu **savunma yapmadan** elestirel degerlendir.
+Evaluate the approach/solution you are shown critically, **without defending it**.
 
-Su uc soruyu sirayla cevapla:
+Answer these three questions in order:
 
-1. **En zayif noktasi ne?** Tek bir sey sec, en kritigini.
-2. **Hangi durumda bozulur?** Somut senaryo ver, "olabilir" deme.
-3. **Daha basit bir alternatif var mi?** Varsa tarif et, yoksa "yok" de.
+1. **What is its weakest point?** Pick one thing, the most critical.
+2. **When does it break?** Give a concrete scenario; do not say "it might".
+3. **Is there a simpler alternative?** If so, describe it; if not, say "none".
 
-Kisa ve durust ol. "Her sey harika" gecerli bir cevap degil; gercekten sorun yoksa
-neden saglam oldugunu tek cumleyle gerekcelendir.
+Be brief and honest. "Everything is great" is not a valid answer; if there really is no
+problem, justify in one sentence why it is solid.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

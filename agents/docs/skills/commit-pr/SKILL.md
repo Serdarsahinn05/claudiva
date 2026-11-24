@@ -1,23 +1,23 @@
 ---
 name: commit-pr
-description: Mevcut degisiklikler icin commit mesaji ve PR aciklamasi metni uretir.
+description: Produces a commit message and PR description for the current changes.
 ---
 
-# Commit + PR Metni
+# Commit + PR Text
 
-Calisma dizinindeki degisiklikleri incele (`git status`, `git diff`) ve **sadece metinleri** uret.
+Inspect the changes in the working directory (`git status`, `git diff`) and produce **only the text**.
 
-## 1. Commit mesaji
-- Emir kipinde tek satir ozet (~50 karakter)
-- Gerekirse bos satir + govde: **ne** degil **neden**
+## 1. Commit message
+- One-line summary in the imperative mood (~50 characters)
+- If needed, a blank line + body: **why**, not **what**
 
-## 2. PR aciklamasi
-- **Ne:** degisiklik tek paragraf
-- **Neden:** hangi ihtiyac/hata
-- **Nasil test edildi:** somut adimlar
+## 2. PR description
+- **What:** the change in one paragraph
+- **Why:** which need/bug
+- **How it was tested:** concrete steps
 
-## Onemli
-Degisikligi **kendin yapma**, commit **atma**, push **etme**. Sadece metinleri uret ve goster.
+## Important
+Do **not** make the change yourself, do **not** commit, do **not** push. Only produce and show the text.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

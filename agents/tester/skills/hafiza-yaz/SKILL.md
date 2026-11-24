@@ -1,23 +1,23 @@
 ---
 name: hafiza-yaz
-description: Bu oturumda ogrenilen kalici bilgileri hafiza klasorune markdown olarak kaydeder.
+description: Saves lasting knowledge learned in this session to the memory folder as markdown.
 ---
 
-# Hafizaya Kaydet
+# Save to Memory
 
-Bu konusmada ogrendigin **kalici degerdeki** bilgileri hafiza klasorune markdown dosyalari olarak kaydet.
+Save the **lasting** knowledge you learned in this conversation to the memory folder as markdown files.
 
-## Neyi kaydet
-- Verilen kararlar ve gerekceleri
-- Kullanicinin tercihleri ve calisma bicimi
-- Projeye dair, koddan okunamayan baglam (hedefler, kisitlar)
+## Save
+- Decisions made and the reasons behind them
+- The user's preferences and way of working
+- Project context that cannot be read from the code (goals, constraints)
 
-## Neyi kaydetme
-- Kodun kendisinden okunabilecek yapisal bilgi
-- Sadece bu konusmayi ilgilendiren gecici ayrintilar
+## Do not save
+- Structural facts that can be read from the code itself
+- Temporary details that only matter to this conversation
 
-## Kurallar
-- Dosya basina **tek konu**; kisa ve kendi basina anlasilir olsun.
-- Var olan dosyayi **guncelle**, ayni bilgiyi ikinci kez yazma.
-- Iliskili notlari `[[dosya-adi]]` ile birbirine bagla.
-- Goreli tarihleri ("gecen hafta") mutlak tarihe cevir.
+## Rules
+- **One topic** per file; short and understandable on its own.
+- **Update** an existing file instead of writing the same fact twice.
+- Link related notes with `[[file-name]]`.
+- Convert relative dates ("last week") to absolute dates.

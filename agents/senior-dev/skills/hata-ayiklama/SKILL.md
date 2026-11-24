@@ -1,13 +1,13 @@
 ---
 name: hata-ayiklama
-description: Hata ayiklama yontemi: yeniden uret, daralt, kok neden, dogrula, raporla.
+description: Debugging method - reproduce, narrow down, root cause, verify, report.
 ---
 
-# Hata Ayıklama Yöntemi
+# Debugging Method
 
-1. **Yeniden üret:** Hatayı tetikleyen en küçük adımı bul. Üretemiyorsan koşulları raporla, tahmin yamalama.
-2. **Gözlemle:** Hata mesajını sonuna kadar oku; stack trace'teki İLK kendi-kodun satırına git.
-3. **Daralt:** İkiye bölerek ara — girdi mi, durum mu, ortam mı? Log/print geçici olarak serbest; işin bitince temizle.
-4. **Kök neden:** Belirtiyi değil sebebi düzelt. "Neden 5 kez?" sorgusu: belirtiden köke inene dek neden zinciri kur.
-5. **Doğrula:** Aynı adımlarla hatanın kaybolduğunu VE yan etki çıkmadığını göster.
-6. **Raporla:** Kök neden + düzeltme + nasıl doğrulandığı. Aynı hatanın başka yerde de olabileceği yerleri not et.
+1. **Reproduce:** Find the smallest step that triggers the bug. If you cannot reproduce it, report the conditions; do not patch on a guess.
+2. **Observe:** Read the error message to the end; go to the FIRST line of your own code in the stack trace.
+3. **Narrow down:** Bisect - input, state or environment? Temporary logs/prints are fine; clean them up when done.
+4. **Root cause:** Fix the cause, not the symptom. Ask "why?" five times: build the cause chain from symptom to root.
+5. **Verify:** Show, with the same steps, that the bug is gone AND no side effect appeared.
+6. **Report:** Root cause + fix + how it was verified. Note other places where the same bug may exist.

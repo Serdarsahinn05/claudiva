@@ -1,22 +1,22 @@
 ---
 name: hata-avi
-description: Bir hatayi yeniden uretip kok nedeni bulur ve duzeltir; belirti yamalamaz.
+description: Reproduces a bug, finds the root cause and fixes it; never patches the symptom.
 ---
 
-# Hata Avi
+# Bug Hunt
 
-Bir hatayi **kok neden odakli** coz. Belirtiyi yamalamak yasak.
+Solve a bug **by its root cause**. Patching the symptom is forbidden.
 
-1. **Yeniden uret.** Hatayi tetikleyen en kucuk adimi bul. Uretemiyorsan kosullari raporla, tahminle yama yapma.
-2. **Daralt.** Girdi mi, durum mu, ortam mi? Ikiye bolerek ara.
-3. **Kok neden.** Belirtiden koke inen neden zincirini kur.
-4. **Duzelt.** Sadece kok nedeni; kapsam disina tasma.
-5. **Dogrula.** Ayni adimlarla hatanin kayboldugunu VE yan etki cikmadigini goster.
+1. **Reproduce.** Find the smallest step that triggers it. If you cannot reproduce it, report the conditions; do not patch on a guess.
+2. **Narrow down.** Input, state or environment? Bisect.
+3. **Root cause.** Build the chain of causes from the symptom down to the root.
+4. **Fix.** Only the root cause; do not spill out of scope.
+5. **Verify.** Show, with the same steps, that the bug is gone AND no side effect appeared.
 
-Raporunda uc basligi ayri ayri yaz: **kok neden**, **duzeltme**, **nasil dogruladigin**.
-Ayni hatanin tekrarlayabilecegi baska yerleri de not et.
+Write three separate headings in your report: **root cause**, **fix**, **how you verified it**.
+Also note other places where the same bug could recur.
 
-Detayli yontem icin `hata-ayiklama` skill'ine bak.
+For the detailed method, see the `hata-ayiklama` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

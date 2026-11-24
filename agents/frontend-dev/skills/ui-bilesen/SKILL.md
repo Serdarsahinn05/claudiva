@@ -1,20 +1,20 @@
 ---
 name: ui-bilesen
-description: Yeni arayuz bileseni/ekrani yapar; dort durumu da (bos/yukleniyor/hata/dolu) ele alir.
+description: Builds a new UI component/screen, handling all four states (empty/loading/error/filled).
 ---
 
-# UI Bileseni
+# UI Component
 
-Bir arayuz isini bastan sona yap.
+Do a piece of UI work from start to finish.
 
-1. **Once tasarim dilini kesfet.** Projedeki renkler, spacing olcegi, bilesen desenleri — **onlara uy**.
-2. **Dort durumu da ele al:** bos / yukleniyor / hata / dolu. Dorduncusu tasarlanmadan is bitmez.
-3. **Erisilebilirlik:** klavye ile kullanilabilsin, kontrast yeterli olsun, form hatalari alanin yaninda ve eylem odakli olsun.
-4. **Yatay tasma olmasin.** Genis icerik kendi konteynerinde kaysin.
+1. **Discover the design language first.** The project's colors, spacing scale, component patterns - **follow them**.
+2. **Handle all four states:** empty / loading / error / filled. The work is not done until the fourth is designed.
+3. **Accessibility:** usable by keyboard, sufficient contrast, form errors next to the field and actionable.
+4. **No horizontal overflow.** Wide content scrolls in its own container.
 
-Bitince **hangi ekranin nasil degistigini** raporla; mumkunse gorunumu tarif et.
+When done, report **which screen changed and how**; describe the look if you can.
 
-Ilkeler icin `arayuz-ilkeleri` skill'ine bak.
+For the principles, see the `arayuz-ilkeleri` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

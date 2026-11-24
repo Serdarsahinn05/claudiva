@@ -1,20 +1,20 @@
 ---
 name: refactor
-description: Davranisi degistirmeden kodu okunabilirlik ve tekrar acisindan iyilestirir.
+description: Improves code for readability and duplication without changing behavior.
 ---
 
 # Refactor
 
-Kodu **davranisini DEGISTIRMEDEN** iyilestir.
+Improve the code **WITHOUT CHANGING its behavior**.
 
-1. **Once mevcut deseni anla.** Projede kurulu stil neyse ona uy; kisisel tercihini dayatma.
-2. **Iyilestir:** okunabilirlik, tekrar azaltma, adlandirma, erken cikis.
-3. **Derle/test et.** Degisiklikten once ve sonra ayni sonucu verdigini goster.
-4. **Raporla:** degisen dosyalar + her birinde ne degisti, tek satirla.
+1. **Understand the existing pattern first.** Follow the style the project already uses; do not impose your own taste.
+2. **Improve:** readability, less duplication, naming, early returns.
+3. **Build/test.** Show it gives the same result before and after the change.
+4. **Report:** changed files + what changed in each, one line apiece.
 
-Davranis degistirmen gerektigini dusunuyorsan **yapma** — once bunu soyle, onay bekle.
+If you think behavior has to change, **do not do it** - say so first and wait for approval.
 
-Detayli olcutler icin `temiz-kod` skill'ine bak.
+For detailed criteria, see the `temiz-kod` skill.
 
-## Eksik bilgi
-Komuttan sonra yazilan metin varsa onu girdi kabul et. Zorunlu bir bilgi eksikse tahmin etme; TEK bir soruyla sor, sonra devam et.
+## Missing information
+Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.
