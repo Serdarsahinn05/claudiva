@@ -168,6 +168,18 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   sayılır. Güncelleme İŞLEVSEL olmak zorunda (`markSeen`): aynı karede iki
   efekt yazıyor, eski durumu okuyan ikincisi birincinin yazdığını eziyordu.
 
+## Terminal dökümü: sade / ayrıntılı
+
+- **Varsayılan SADE** (`toolDetail.ts`, `claudiva.toolDetail`; durum satırındaki
+  "ayrıntılar" kutusu). Kod bilmeyen kullanıcı için `mcp__team__delegate_task({...})`
+  satırları gürültüydü (kullanıcı geri bildirimi). Sade görünümde art arda araç
+  adımları tek katlanmış satıra iner, okunur etiketle (`toolFriendly.ts`,
+  `L.friendly`; tanınmayan araç uydurma açıklama almaz, `mcp__x__` öneki atılmış
+  adıyla kalır); görev kuyruğunun `# Görev (id:` mesajı başlığına iner. Açılınca
+  ham hâl AYNI skin bileşenleriyle çizilir, bilgi kaybolmaz.
+- Ardışık aynı sistem satırları iki görünümde de tek satır + `×N`.
+- Sohbet modu zaten araçları katlıyor (`cm-tools`); orası ayrı.
+
 ## Pano modu (üçüncü arayüz modu)
 
 - `uiMode` = `board`. Kabuk `components/board/BoardShell.tsx`, widget'lar

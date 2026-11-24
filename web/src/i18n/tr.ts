@@ -452,6 +452,8 @@ export const tr = {
     ready: 'Bu ajan hazır',
     placeholder: (name: string) => `${name} ajanına görev ver…`,
     thinking: 'düşünme',
+    details: 'ayrıntılar',
+    detailsTitle: 'Araç adımlarını ve görev metnini ham hâliyle göster (kapalıyken okunur özet)',
   },
 
   catalog: {
@@ -552,6 +554,10 @@ export const tr = {
   },
 
   budget: {
+    router: 'Model yönlendirici (deneysel)',
+    routerHint: 'varsayılan kapalı',
+    routerNote:
+      'Açıkken her görev, büyüklüğüne göre ucuz ya da güçlü bir modele yönlendirilir. Küçük işlerde ölçülen tasarruf var ama garanti değil ve ucuz modele giden işte kalite düşebilir. Sonucu Harcama → Model yönlendirici bölümünden izleyebilirsin.',
     exceeded: 'sınır aşıldı, yeni iş kabul edilmiyor',
     warn: 'uyarı eşiğinin üstünde',
     ok: 'sınır içinde',
@@ -819,6 +825,26 @@ export const tr = {
   },
 
   usage: {
+    routerOff: 'Yönlendirici kapalı. Ayarlar → Bütçe bölümünden açabilirsin; açınca kararlar ve ölçülen tasarruf burada görünür.',
+    routerTitle: 'Model yönlendirici',
+    routerNote:
+      'Her görev ajana gitmeden önce büyüklüğüne göre bir modele yönlendirilir: önce kurallar (0 token), emin değilse küçük bir Haiku sınıflandırıcı. Tasarruf gerçek turlardan, ölçülmüş 3:1 Sonnet/Haiku fiyat oranıyla hesaplanır; Opus için oran ölçülmediğinden hesaba katılmaz.',
+    routerEmpty: 'Henüz yönlendirilmiş görev yok. Ekibe bir iş ver; ilk görevden itibaren kararlar burada görünür.',
+    routerRouted: 'Yönlendirilen görev',
+    routerWho: 'Kural / sınıflandırıcı',
+    routerWhoSub: (d: number) => `${d} görev temel modelde kaldı`,
+    routerClassifier: 'Sınıflandırıcı maliyeti',
+    routerCalls: (n: number) => `${n} çağrı`,
+    routerSaving: 'Net tasarruf (ölçülmüş)',
+    routerSavingSub: (cost: string, unpriced: number) =>
+      `${cost} gerçek maliyet üzerinden${unpriced ? ` · ${unpriced} görev hesap dışı (Opus)` : ''}`,
+    routeBy: { rule: 'kural', classifier: 'sınıflandırıcı', default: 'varsayılan' } as Record<string, string>,
+    routeApplied: {
+      opened: 'oturum bu modelle açıldı',
+      switched: 'soğuk oturumda değişti',
+      escalated: 'sıcak oturumda yükseltildi',
+      kept: 'model korundu',
+    } as Record<string, string>,
     range: { today: 'Bugün', week: '7 gün', all: 'Tümü' } as Record<string, string>,
     window: {
       five_hour: '5 saatlik pencere',
@@ -981,6 +1007,30 @@ export const tr = {
     clear: 'Terminal dökümünü temizler (ajanın bağlamı korunur)',
     modelArg: '[ad]',
     resumeArg: '[yeniden]',
+  },
+
+  friendly: {
+    steps: (n: number) => `${n} adım`,
+    task: (title: string) => `Görev: ${title}`,
+    from: (who: string) => `· atayan: ${who}`,
+    delegate: (agent: string, title: string) => `Görev verdi → ${agent}${title ? `: ${title}` : ''}`,
+    delegateMany: (n: number) => `${n} görevi dağıttı`,
+    complete: 'Görevi kapattı',
+    completeFailed: 'Görevi başarısız olarak kapattı',
+    checkTask: 'Görevin durumuna baktı',
+    listAgents: 'Ekibe baktı',
+    setModel: (m: string) => `Modeli değiştirdi: ${m}`,
+    browser: 'Tarayıcıyı kullandı',
+    read: (f: string) => `Okudu: ${f}`,
+    write: (f: string) => `Yazdı: ${f}`,
+    edit: (f: string) => `Düzenledi: ${f}`,
+    bash: 'Komut çalıştırdı',
+    search: 'Dosyalarda aradı',
+    fetch: (h: string) => `Sayfayı okudu: ${h}`,
+    webSearch: (q: string) => `Web'de aradı: ${q}`,
+    toolSearch: 'Araç yükledi',
+    todo: 'Yapılacaklar listesini güncelledi',
+    skill: (s: string) => `Skill kullandı: ${s}`,
   },
 
   toolVerbs: {

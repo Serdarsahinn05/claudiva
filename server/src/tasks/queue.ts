@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import type { AgentManager } from '../agents/manager.js';
 import type { Task } from '../types.js';
 import { DATA_DIR } from '../paths.js';
+import { routeTask } from '../router/index.js';
 
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 const MAX_RESULT_LEN = 20_000;
@@ -57,6 +58,13 @@ export class TaskQueue extends EventEmitter {
   private grace = new Map<string, NodeJS.Timeout>();
   /** Ajan başına son tur sonucu — yedek kapanışta sonuç metni olarak kullanılır. */
   private lastTurn = new Map<string, { text: string; isError: boolean }>();
+  /**
+   * Ajan başına yönlendirme zinciri. Yönlendirme asenkron (sınıflandırıcı
+   * ~2.3 sn sürebilir); aynı ajana art arda giden iki görevin kararları farklı
+   * sürede biterse mesajlar ters sırayla giderdi. Zincir gönderim sırasını
+   * dispatch sırasıyla aynı tutar.
+   */
+  private routeChain = new Map<string, Promise<void>>();
   private saveTimer: NodeJS.Timeout | null = null;
   private wired = new Set<string>();
 
@@ -245,17 +253,45 @@ export class TaskQueue extends EventEmitter {
         ? `## Önceki adımın çıktısı — "${dep.title}" (${dep.assignedTo})\n\n${dep.result}\n\n---\n\n`
         : '';
 
-    session.send(
+    const text =
       `# Görev (id: ${task.id}) — atayan: ${task.assignedBy}\n` +
-        `## ${task.title}\n\n${carried}${task.prompt}\n\n` +
-        `Görevi tamamla. Bitirdiğinde SON İŞ olarak mcp__task__complete_task aracını ` +
-        `task_id="${task.id}" ve sonucu özetleyen bir summary ile çağır; görev ancak ` +
-        `bu çağrıyla kapanır. Yapamadıysan aynı aracı failed=true ile çağır.`,
-      task.id,
-    );
+      `## ${task.title}\n\n${carried}${task.prompt}\n\n` +
+      `Görevi tamamla. Bitirdiğinde SON İŞ olarak mcp__task__complete_task aracını ` +
+      `task_id="${task.id}" ve sonucu özetleyen bir summary ile çağır; görev ancak ` +
+      `bu çağrıyla kapanır. Yapamadıysan aynı aracı failed=true ile çağır.`;
 
     this.emit('task_update', task);
     this.persist();
+
+    // Yönlendirme yalnız kullanıcı açtıysa (Ayarlar → Bütçe, varsayılan kapalı)
+    // ve ajanın otomatik model seçimi kapalı değilse. Aksi hâlde eskisi gibi:
+    // temel modelle, her mesajdaki hatırlatmayla.
+    if (session.config.autoModel === false || !this.manager.settings.get().modelRouter) {
+      session.send(text, task.id);
+      return;
+    }
+
+    // JEV yönlendiricisi: model, görev ajana gitmeden önce seçilir (router/).
+    const agentId = task.assignedTo;
+    const prev = this.routeChain.get(agentId) ?? Promise.resolve();
+    const next = prev.then(async () => {
+      if (task.status !== 'running') return; // bu arada iptal/başarısız olmuş olabilir
+      let routed = false;
+      try {
+        const route = await routeTask(task.title, task.prompt, session.routeState());
+        task.route = route;
+        await session.applyRoute(route.model, `yönlendirici: ${route.why}`);
+        routed = true;
+        this.emit('task_update', task);
+        this.persist();
+      } catch (err) {
+        // Yönlendirme bir görevi asla düşürmemeli: karar yoksa temel modelle gider.
+        console.warn(`[claudiva] yönlendirme başarısız (${task.id}): ${(err as Error).message}`);
+      }
+      if (task.status !== 'running') return;
+      session.send(text, task.id, { routed });
+    });
+    this.routeChain.set(agentId, next.catch(() => {}));
   }
 
   /** Bu göreve bağlı bekleyen adımlar. */

@@ -1,7 +1,7 @@
 /**
  * Proje ayarları (`DATA_DIR/settings.json`).
  *
- * Şimdilik yalnızca bütçe sınırı tutuyor. Proje bazlı olması kasıtlı:
+ * Bütçe sınırı ve model yönlendiricisi anahtarı. Proje bazlı olması kasıtlı:
  * kullanım muhasebesi de (usage.json) proje bazlı, dolayısıyla sınır ile
  * harcama aynı kapsamda kalıyor.
  */
@@ -16,9 +16,16 @@ export interface Settings {
   dailyLimitUSD?: number;
   /** Bu yüzdeye ulaşınca panel uyarır (varsayılan %80). */
   warnAtPercent?: number;
+  /**
+   * JEV model yönlendiricisi (server/src/router). VARSAYILAN KAPALI: ölçülen
+   * tasarruf karşı-olgusal (aynı işin temel modelde aynı tokenı harcayacağını
+   * varsayar) ve ucuz modele giden işte kalite riski var; garanti olmadığı
+   * için kullanıcı bilerek açar.
+   */
+  modelRouter?: boolean;
 }
 
-const DEFAULTS: Settings = { warnAtPercent: 80 };
+const DEFAULTS: Settings = { warnAtPercent: 80, modelRouter: false };
 
 export class SettingsStore {
   private data: Settings = { ...DEFAULTS };
@@ -44,6 +51,7 @@ export class SettingsStore {
     };
     if ('dailyLimitUSD' in patch) this.data.dailyLimitUSD = num(patch.dailyLimitUSD);
     if ('warnAtPercent' in patch) this.data.warnAtPercent = num(patch.warnAtPercent) ?? 80;
+    if ('modelRouter' in patch) this.data.modelRouter = patch.modelRouter === true;
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
       fs.writeFileSync(SETTINGS_FILE, JSON.stringify(this.data, null, 2), 'utf-8');

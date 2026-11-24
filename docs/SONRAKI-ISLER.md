@@ -139,6 +139,80 @@ haiku, `systemPrompt` düz dizge (preset DEĞİL), araç yok,
   Eğer CLI kendi sistem yükünü ekleyip binlerce token tutuyorsa, sınıflandırıcı
   yerine yalnız kural katmanı kullanılmalı.
 
+### ÖLÇÜLDÜ (2026-11-24) — `node server/scripts/measure-router.mjs A|B|C`
+
+**A) Sınıflandırıcı** (haiku, düz sistem istemi, araç yok, `settingSources: []`,
+6 örnek mesaj, ortalama):
+
+| Ayar | Girdi | Çıktı | Maliyet | Süre |
+|---|---|---|---|---|
+| Düşünme AÇIK (varsayılan) | 859 | 441 | $0.0037 | 6.7 sn |
+| Düşünme KAPALI + mesaj `<istek>` ile sarılı | 570 | 7 | **$0.0006** | **2.3 sn** |
+
+- **Düşünme kapatılmak ZORUNDA** (`thinking: { type: 'disabled' }`): tek kelimelik
+  cevap için 300-600 gizli çıktı tokeni ve 4 sn fazladan gecikme.
+- **Mesaj veri olarak sarılmak ZORUNDA:** çıplak gönderilen "README'yi özetle"
+  görev sanıldı, model sınıf yerine cevap yazmaya çalıştı.
+- CLI'ın kendi sistem yükü küçük (~570 girdi). Yani "binlerce token" korkusu boşa.
+- **Asıl bedel gecikme:** 2.3 sn'nin çoğu her çağrıda yeni CLI süreci açmak.
+  Mesajın önüne bu kadar bekleme eklemek hissedilir.
+- Doğruluk kusursuz değil: "login hatasını düzelt" KÜÇÜK dendi (ORTA olmalıydı).
+
+**B) Ajan oturumu açılışı** (tech-lead kişiliği + skill'ler + kullanıcı/proje
+ayarları, tek "5+5" turu; gerçek oturumdan biraz düşük, team/self/task MCP yok):
+
+- Sonnet soğuk: önbelleğe **39.434 token yazma, $0.237**. Haiku soğuk: 26.890, $0.054.
+- Aynı önek 5 dk içinde tekrar: önbellekten okunur, **$0.003** (haiku).
+- **Çevirinin kazancı küçük:** Türkçe dosyalarla 27.160, İngilizceyle 26.900 token
+  (**−260, ~%1**). Skill'lerin yalnız adı + açıklaması açılışa giriyor, gövdesi
+  çağrılınca; yükün büyüğü CLI'ın sistem istemi ve araçları.
+
+**C) Oturum İÇİNDE model değişimi** (haiku → haiku → sonnet → haiku):
+
+| Tur | Model | Önbellek oku / yaz | Maliyet |
+|---|---|---|---|
+| 1 | haiku | 26.890 / 0 | $0.003 |
+| 2 | haiku | 0 / 28.511 | $0.057 |
+| 3 | **sonnet** | **0 / 39.491** | **$0.237** |
+| 4 | haiku | 28.511 / 1.303 | $0.006 |
+
+- **Önbellek modele özgü:** başka modele geçmek, o modelin önbelleği soğuksa
+  bütün öneki yeniden yazar. Bir turluk "Sonnet'e çık" ≈ $0.24 ≈ 400 sınıflandırıcı.
+- Geri dönmek ucuz (eski modelin önbelleği 5 dk içinde hâlâ sıcak).
+- **Açıklanamadı:** 2. turda model aynı kaldığı hâlde okuma 0, yazma 28.511.
+  Tekrar ölçülmeli (CLI'ın önbellek kırılma noktası ilk turdan sonra mı kayıyor?).
+
+**Gerçek kullanım (usage-history.json, 11 tur):** 8 sonnet + 3 haiku, $1.67;
+oturum içi model değişimi 0 (örnek küçük). 11 turda **238.820 token önbellek
+yazma** → maliyetin çoğu yeni oturum açılışlarından geliyor.
+
+### UYGULANDI (2026-11-24)
+
+Aşağıdaki tasarım `server/src/router/` olarak uygulandı (ayrıntı `server/CLAUDE.md`
+→ "JEV model yönlendiricisi"). Açık kalanlar:
+- Mesajlaşma yüzeyleri (sohbet, terminal) yönlendirilmiyor; yalnız görevler.
+- Sınıflandırıcı gecikmesi (~2.3-4 sn) için sürekli açık tek oturum denenmedi.
+- §B'deki evet/hayır kararları (soru mu görev mi, tur bitti mi, lidere mi
+  uzmana mı) henüz yok.
+- Ajanın kendi `set_model` yükseltmesinin sıklığı hâlâ ölçülmedi.
+
+### Ölçümden çıkan tasarım (yukarıdaki A/B planını DÜZELTİR)
+
+1. **Yönlendirme MESAJ başına değil GÖREV/OTURUM başına.** Model bir oturum
+   açılırken seçilir ve oturum boyunca sabit kalır. Oturum ortasında model
+   değiştirmek soğuk önbellek demek ($0.24/geçiş, sonnet). Bugünkü
+   `set_model` yükseltmesi bu yüzden kendi başına pahalı olabilir; ne sıklıkta
+   tetiklendiği ölçülmeli (geçmişte veri yok).
+2. **Kural katmanı önce** (0 token, 0 ms). Sınıflandırıcı yalnız kural emin
+   değilse ve yalnız YENİ bir görev/oturum başlarken: $0.0006 maliyet önemsiz,
+   2.3 sn gecikme önemli. Gecikmeyi düşürmek için sürekli açık tek bir
+   sınıflandırıcı oturumu (akış girişli `query`) denenebilir; ölçülmedi.
+3. **En büyük kazanç kapısı oturum açılışı:** delegasyonda alt görev zaten yeni
+   bir oturumda başlıyor; ucuz işi Haiku'da açmak açılışı $0.237 → $0.054 yapar
+   (~4.4 kat). Yönlendiricinin asıl yeri `delegate_task(s)` → alt ajanın
+   oturum modeli.
+4. Sınıflandırıcı çağrısında `thinking: disabled` ve `<istek>` sarmalayıcısı şart.
+
 ### Ölçüm ve gösterim
 
 - Her yönlendirici kararı `usage-history.json`a yazılır. Alanlar: `routedModel`,

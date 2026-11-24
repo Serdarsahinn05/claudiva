@@ -145,6 +145,19 @@ export interface BackendStartOptions {
     input: Record<string, unknown>,
     opts: { title?: string; description?: string; signal: AbortSignal },
   ) => Promise<{ behavior: 'allow' | 'deny'; updatedInput?: Record<string, unknown>; message?: string }>;
+  /**
+   * Oturumun AÇILIŞ modeli. Verilmezse `config.model` (temel model).
+   * Yönlendirici kapalı bir oturumu ucuz modelle açabilsin diye var.
+   */
+  model?: string;
+}
+
+export interface BackendSendOptions {
+  /**
+   * Otomatik model seçimi hatırlatması eklensin mi (varsayılan: evet).
+   * Yönlendirilmiş görevde hayır: modeli yönlendirici zaten seçti.
+   */
+  reminder?: boolean;
 }
 
 /**
@@ -156,7 +169,7 @@ export interface BackendStartOptions {
 export interface AgentBackend extends EventEmitter {
   readonly capabilities: BackendCapabilities;
   start(opts: BackendStartOptions): void;
-  send(text: string): void;
+  send(text: string, opts?: BackendSendOptions): void;
   interrupt(): Promise<void>;
   stop(): Promise<void>;
   /** Oturum akışta değilse ya da desteklenmiyorsa reddedebilir — çağıran

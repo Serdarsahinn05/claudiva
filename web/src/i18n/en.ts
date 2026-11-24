@@ -441,6 +441,8 @@ export const en: Dict = {
     ready: 'This agent is ready',
     placeholder: (name) => `Give ${name} a task…`,
     thinking: 'thinking',
+    details: 'details',
+    detailsTitle: 'Show tool steps and task text raw (off: a readable summary)',
   },
 
   catalog: {
@@ -541,6 +543,10 @@ export const en: Dict = {
   },
 
   budget: {
+    router: 'Model router (experimental)',
+    routerHint: 'off by default',
+    routerNote:
+      'When on, each task is routed to a cheaper or stronger model by its size. Small tasks showed measured savings, but they are not guaranteed and work sent to the cheaper model may lose quality. Track the result under Spending → Model router.',
     exceeded: 'limit exceeded, new work is rejected',
     warn: 'above the warning threshold',
     ok: 'within the limit',
@@ -809,6 +815,26 @@ export const en: Dict = {
   },
 
   usage: {
+    routerOff: 'The router is off. Turn it on under Settings → Budget; decisions and measured savings show up here.',
+    routerTitle: 'Model router',
+    routerNote:
+      'Each task is routed to a model by its size before it reaches the agent: rules first (0 tokens), a small Haiku classifier when unsure. Savings come from real turns at the measured 3:1 Sonnet/Haiku price ratio; Opus is left out because its ratio was not measured.',
+    routerEmpty: 'No routed tasks yet. Give the team some work; decisions show up here from the first task.',
+    routerRouted: 'Routed tasks',
+    routerWho: 'Rule / classifier',
+    routerWhoSub: (d: number) => `${d} ${d === 1 ? 'task' : 'tasks'} stayed on the base model`,
+    routerClassifier: 'Classifier cost',
+    routerCalls: (n: number) => `${n} ${n === 1 ? 'call' : 'calls'}`,
+    routerSaving: 'Net saving (measured)',
+    routerSavingSub: (cost: string, unpriced: number) =>
+      `over ${cost} of real cost${unpriced ? ` · ${unpriced} left out (Opus)` : ''}`,
+    routeBy: { rule: 'rule', classifier: 'classifier', default: 'default' } as Record<string, string>,
+    routeApplied: {
+      opened: 'session opened on this model',
+      switched: 'switched in a cold session',
+      escalated: 'escalated in a warm session',
+      kept: 'model kept',
+    } as Record<string, string>,
     range: { today: 'Today', week: '7 days', all: 'All' },
     window: {
       five_hour: '5-hour window',
@@ -969,6 +995,30 @@ export const en: Dict = {
     clear: 'Clears the terminal transcript (the agent’s context is kept)',
     modelArg: '[name]',
     resumeArg: '[yeniden]',
+  },
+
+  friendly: {
+    steps: (n: number) => `${n} ${n === 1 ? 'step' : 'steps'}`,
+    task: (title: string) => `Task: ${title}`,
+    from: (who: string) => `· from ${who}`,
+    delegate: (agent: string, title: string) => `Handed a task → ${agent}${title ? `: ${title}` : ''}`,
+    delegateMany: (n: number) => `Handed out ${n} ${n === 1 ? 'task' : 'tasks'}`,
+    complete: 'Closed the task',
+    completeFailed: 'Closed the task as failed',
+    checkTask: 'Checked a task',
+    listAgents: 'Looked at the team',
+    setModel: (m: string) => `Switched model: ${m}`,
+    browser: 'Used the browser',
+    read: (f: string) => `Read: ${f}`,
+    write: (f: string) => `Wrote: ${f}`,
+    edit: (f: string) => `Edited: ${f}`,
+    bash: 'Ran a command',
+    search: 'Searched files',
+    fetch: (h: string) => `Read a page: ${h}`,
+    webSearch: (q: string) => `Searched the web: ${q}`,
+    toolSearch: 'Loaded a tool',
+    todo: 'Updated the to-do list',
+    skill: (s: string) => `Used a skill: ${s}`,
   },
 
   toolVerbs: {

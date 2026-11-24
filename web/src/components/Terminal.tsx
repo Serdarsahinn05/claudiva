@@ -14,6 +14,7 @@ import { sendToAgent } from '../agentSend';
 import type { CliSkin } from '../cliSkins';
 import { useCliSkin } from '../cliSkins';
 import { SkinnedTranscript } from './SkinnedTranscript';
+import { setToolDetail, useToolDetail } from '../toolDetail';
 import { SkinnedPermission } from './SkinnedPermission';
 import { SkinnedComposer } from './SkinnedComposer';
 import { L, locale } from '../i18n';
@@ -124,6 +125,7 @@ export function Terminal({
 }: Props) {
   const [input, setInput] = useState('');
   const [showThinking, setShowThinking] = useState(false);
+  const detailed = useToolDetail();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -238,7 +240,7 @@ export function Terminal({
           </div>
         </div>
 
-        <SkinnedTranscript events={visible} skin={skin} agent={agent} />
+        <SkinnedTranscript events={visible} skin={skin} agent={agent} agents={agents} detailed={detailed} />
       </div>
 
       {agent.pendingPermissions.length > 0 && (
@@ -326,6 +328,10 @@ export function Terminal({
           <kbd>Enter</kbd> gönder
         </span>
         <div className="spacer" />
+        <label className="cli-toggle" title={L.terminal.detailsTitle}>
+          <input type="checkbox" checked={detailed} onChange={(e) => setToolDetail(e.target.checked)} />
+          {L.terminal.details}
+        </label>
         <label className="cli-toggle">
           <input type="checkbox" checked={showThinking} onChange={(e) => setShowThinking(e.target.checked)} />
           {L.terminal.thinking}

@@ -151,6 +151,35 @@ export interface Task {
   /** Bu görev hangi görevin içinde doğdu (delegasyon). Raporun kanıt ağacı
    *  bunu izler — bkz. TaskInput.parentTaskId. */
   parentTaskId?: string;
+  /** Yönlendirici kararı (yönlendirilmediyse yok). */
+  route?: TaskRoute;
+}
+
+/**
+ * JEV yönlendiricisinin bu görev için verdiği model kararı (server/src/router).
+ * Görev ajana gönderilmeden ÖNCE yazılır; panel bunu kartta ve harcama
+ * panosunda (ölçülmüş tasarruf) gösterir.
+ */
+export interface TaskRoute {
+  /** Görevin çalıştığı model (takma ad: haiku | sonnet | opus …). */
+  model: string;
+  tier?: 'small' | 'medium' | 'large';
+  /** Kararı kim verdi: kural (0 token), sınıflandırıcı (haiku) ya da varsayılan. */
+  by: 'rule' | 'classifier' | 'default';
+  why: string;
+  /**
+   * Nasıl uygulandı. Önbellek modele özgü olduğu için (ölçüldü) SICAK bir
+   * oturumda model yalnız yükseltilir, düşürülmez:
+   *  opened    — oturum bu modelle açıldı
+   *  switched  — soğuk oturumda model değişti (önbellek zaten yeniden yazılacaktı)
+   *  escalated — sıcak oturumda daha güçlü modele çıkıldı
+   *  kept      — sıcak oturum, model korundu (düşürmek önbelleği çöpe atardı)
+   */
+  applied: 'opened' | 'switched' | 'escalated' | 'kept';
+  /** Sınıflandırıcı çağrısının maliyeti (yalnız by === 'classifier'). */
+  classifierCostUSD?: number;
+  /** Karar süresi (sınıflandırıcı gecikmesi dahil). */
+  ms: number;
 }
 
 export interface PromptTemplate {

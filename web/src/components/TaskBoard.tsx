@@ -136,6 +136,14 @@ export function TaskBoard({ tasks, agents }: Props) {
           <span className={`chip chip-${t.status}`}>{STATUS_TR[t.status]}</span>
           {t.chainId && <span className="task-step">{(t.stepIndex ?? 0) + 1}.</span>}
           <strong className="task-title">{t.title}</strong>
+          {t.route && (
+            <span
+              className={`route-chip m-${(t.route.model.match(/haiku|sonnet|opus/i)?.[0] ?? 'x').toLowerCase()}`}
+              title={`${L.usage.routeBy[t.route.by]} · ${L.usage.routeApplied[t.route.applied]} · ${t.route.why}`}
+            >
+              {t.route.model}
+            </span>
+          )}
           <span className="task-meta">
             → {agentName(t.assignedTo)} · {t.assignedBy === 'user' ? L.chat.you.toLocaleLowerCase() : agentName(t.assignedBy)}
           </span>

@@ -79,6 +79,9 @@ export class AgentSession extends EventEmitter {
   /** Oturumun şu an kullandığı model. Otomatik model seçimi config.model'i
    *  (temel modeli) değiştirmeden bunu oynatır. */
   currentModel: string;
+  /** Son turun bitiş anı. Yönlendirici önbelleğin sıcak olup olmadığını buradan
+   *  kestirir (router/index.ts WARM_MS). */
+  lastTurnAt?: number;
   /** Bu oturumda "/" ile çağrılabilen komutlar; panelin otomatik tamamlaması bunu kullanır. */
   commands: SlashCommand[] = [];
   /**
@@ -103,7 +106,7 @@ export class AgentSession extends EventEmitter {
    *  2. **Resume geri düşüşü.** Oturum ölürse kuyruktaki mesajlar kaybolur;
    *     sıfırdan açılan oturuma görev kimliğiyle birlikte yeniden gönderilir.
    */
-  private inFlightTurns: { text: string; taskId?: string }[] = [];
+  private inFlightTurns: { text: string; taskId?: string; routed?: boolean }[] = [];
 
   constructor(
     config: AgentConfig,
@@ -166,6 +169,9 @@ export class AgentSession extends EventEmitter {
       extraMcpServers: this.extraMcpServers,
       extraAllowedTools: this.extraAllowedTools,
       canUseTool: this.buildCanUseTool(),
+      // Yönlendirici kapalı bir oturumu ucuz modelle açmaya karar verdiyse
+      // (applyRoute) currentModel zaten o modeldir; aksi hâlde temel model.
+      model: this.currentModel,
     });
 
     this.setStatus('idle');
@@ -190,7 +196,7 @@ export class AgentSession extends EventEmitter {
    * `taskId` verilirse bu tur o göreve aittir ve sonucu `turn_complete` ile
    * birlikte geri döner. Sohbet mesajlarında verilmez.
    */
-  send(text: string, taskId?: string, opts: { replay?: boolean } = {}): void {
+  send(text: string, taskId?: string, opts: { replay?: boolean; routed?: boolean } = {}): void {
     /**
      * Bütçe kapısı. Burada olmak ZORUNDA: aşağıdaki satır ölü oturumu
      * kendiliğinden yeniden başlatıyor, dolayısıyla "ajanı durdur" biçiminde
@@ -206,10 +212,41 @@ export class AgentSession extends EventEmitter {
     // tekrar yazmak aynı mesajı iki kez gösteriyordu (ölçüldü: başka cwd'de
     // açılan oturumda her ajanın ilk mesajı çift çıkıyordu).
     if (!opts.replay) this.pushEvent({ kind: 'user', text });
-    this.inFlightTurns.push({ text, taskId });
+    this.inFlightTurns.push({ text, taskId, routed: opts.routed });
     this.turnDepth += 1;
     this.setStatus('working');
-    this.backend!.send(text);
+    // Yönlendirilmiş görevde modeli yönlendirici seçti: "modeli değerlendir,
+    // gerekirse değiştir" hatırlatması gönderilmez — oturum ortasında model
+    // değişimi soğuk önbellek demek (ölçüldü, router/index.ts).
+    this.backend!.send(text, { reminder: !opts.routed });
+  }
+
+  /** Yönlendiricinin okuduğu oturum durumu. */
+  routeState(): { base: string; current: string; alive: boolean; busy: boolean; lastTurnAt?: number } {
+    return {
+      base: this.config.model,
+      current: this.currentModel,
+      alive: this.backend !== null,
+      // Sürmekte olan bir tur varken model değiştirmek o turu yarıda başka
+      // modele geçirir; yönlendirici bu durumda modeli korur.
+      busy: this.turnDepth > 0,
+      lastTurnAt: this.lastTurnAt,
+    };
+  }
+
+  /**
+   * Yönlendirici kararını uygular. Oturum kapalıysa yalnız currentModel
+   * ayarlanır; sonraki start() o modelle açar (ek tur yok). Açıksa oturum içi
+   * geçiş yapılır; başarısız olursa görev mevcut modelle sürer (karar kaydı
+   * yine yazılır, panel gerçek modeli turdaki kayıttan görür).
+   */
+  async applyRoute(model: string, reason: string): Promise<void> {
+    if (!this.backend) {
+      this.currentModel = model;
+      return;
+    }
+    if (model === this.currentModel) return;
+    await this.switchModel(model, reason).catch(() => {});
   }
 
   async interrupt(): Promise<void> {
@@ -332,6 +369,9 @@ export class AgentSession extends EventEmitter {
     this.backend = null;
     this.turnDepth = 0;
     this.inFlightTurns = [];
+    // Kapanan oturumun modeli (yükseltilmiş ya da yönlendirilmiş) bir sonraki
+    // açılışa sızmasın: start() artık currentModel ile açıyor.
+    this.currentModel = this.config.model;
     this.currentActivity = undefined;
     this.contextTokens = 0;
     this.setStatus('offline');
@@ -354,7 +394,7 @@ export class AgentSession extends EventEmitter {
       this.start();
       // Görev kimliğiyle birlikte: aksi hâlde yeniden gönderilen görev
       // sohbet turu sanılır ve kuyrukta kapanmadan kalır.
-      for (const turn of replay) this.send(turn.text, turn.taskId, { replay: true });
+      for (const turn of replay) this.send(turn.text, turn.taskId, { replay: true, routed: turn.routed });
     }
   }
 
@@ -405,6 +445,7 @@ export class AgentSession extends EventEmitter {
           requests: 1,
         };
         this.lastTurn = turn;
+        this.lastTurnAt = Date.now();
         addUsage(this.usage, turn);
         // Bağlam doluluğu ≈ son isteğin girdi tarafı (taze + cache'ten okunan)
         this.contextTokens =
@@ -421,12 +462,15 @@ export class AgentSession extends EventEmitter {
         const finished = this.inFlightTurns.shift();
         this.currentActivity = undefined;
         if (this.turnDepth === 0) this.setStatus('idle');
-        // Otomatik model seçimi: yükseltme görev-bazlıdır — tur bitince temel
-        // modele dön (dinlenme hâli her zaman ucuz model; sonraki görev
-        // gerekirse yeniden yükseltir).
+        // Otomatik model seçimi: ajanın KENDİ yükseltmesi (set_model) görev-
+        // bazlıdır — tur bitince temel modele dön. Yönlendirilmiş görev turunda
+        // DÖNÜLMEZ: model yönlendiricinin kararıdır ve sonraki görevi yine o
+        // verir. Dönülseydi ardışık küçük görevler "sıcak oturum, düşürme yok"
+        // kuralına takılıp hep temel modelde kalırdı (yönlendirme boşa çıkardı).
         if (
           this.turnDepth === 0 &&
           this.config.autoModel !== false &&
+          !finished?.routed &&
           this.currentModel !== this.config.model
         ) {
           void this.switchModel(this.config.model, 'tur bitti — temel modele dönüş').catch(() => {});

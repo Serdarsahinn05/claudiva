@@ -6,10 +6,12 @@ import type {
   AgentSnapshot,
   BudgetState,
   ContextUsageInfo,
+  Task,
   UsageHistoryResponse,
   UsageSummary,
 } from '../types';
 import { L, dateLocale } from '../i18n';
+import { routerStats } from '../routerStats';
 
 /**
  * Harcama panosu.
@@ -73,9 +75,11 @@ interface Props {
   agents: AgentSnapshot[];
   usage: UsageSummary | null;
   budget: BudgetState | null;
+  /** Seçili takımın görevleri — yönlendirici kararları bunlarda (Task.route). */
+  tasks: Task[];
 }
 
-export function UsageBoard({ agents, usage, budget }: Props) {
+export function UsageBoard({ agents, usage, budget, tasks }: Props) {
   const [range, setRange] = useState<Range>('all');
   const [metric, setMetric] = useState<Metric>('cost');
   const [history, setHistory] = useState<UsageHistoryResponse | null>(null);
@@ -124,6 +128,8 @@ export function UsageBoard({ agents, usage, budget }: Props) {
   }, [costKey]);
 
   // ------------------------------------------------------------- türetmeler
+
+  const router = useMemo(() => routerStats(tasks, history?.turns ?? [], agents), [tasks, history, agents]);
 
   const scoped = useMemo(() => {
     const set = new Set(ids ? ids.split(',') : []);
@@ -398,6 +404,58 @@ export function UsageBoard({ agents, usage, budget }: Props) {
           centerValue={fmtCost(total.costUSD)}
           centerLabel={L.usage.allTime}
         />
+      </section>
+
+      {/* ------------------------------------------------------- yönlendirici */}
+      <section className="ub-sec">
+        <h3>{L.usage.routerTitle}</h3>
+        <span className="ub-note">{L.usage.routerNote}</span>
+        {router.routed ? (
+          <>
+            <div className="ub-tiles">
+              <StatTile
+                label={L.usage.routerRouted}
+                value={String(router.routed)}
+                sub={Object.entries(router.byModel)
+                  .map(([m, n]) => `${m} ${n}`)
+                  .join(' · ')}
+              />
+              <StatTile
+                label={L.usage.routerWho}
+                value={`${router.byWho.rule} / ${router.byWho.classifier}`}
+                sub={L.usage.routerWhoSub(router.byWho.default)}
+              />
+              <StatTile
+                label={L.usage.routerClassifier}
+                value={fmtCost(router.classifierCostUSD)}
+                sub={L.usage.routerCalls(router.classifierCalls)}
+              />
+              <StatTile
+                label={L.usage.routerSaving}
+                value={fmtCost(router.netSavingUSD)}
+                sub={L.usage.routerSavingSub(fmtCost(router.measuredCostUSD), router.unpriced)}
+                tone={router.netSavingUSD < 0 ? 'warn' : 'neutral'}
+              />
+            </div>
+            <ul className="ub-routes">
+              {router.recent.map((t) => (
+                <li key={t.id}>
+                  <span className={`route-chip m-${(t.route!.model.match(/haiku|sonnet|opus/i)?.[0] ?? 'x').toLowerCase()}`}>
+                    {t.route!.model}
+                  </span>
+                  <span className="ub-route-title">{t.title}</span>
+                  <span className="ub-note">
+                    {L.usage.routeBy[t.route!.by]} · {L.usage.routeApplied[t.route!.applied]} · {t.route!.why}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <div className="ub-note">
+            {budget?.settings?.modelRouter ? L.usage.routerEmpty : L.usage.routerOff}
+          </div>
+        )}
       </section>
 
       {/* ------------------------------------------------------------ model */}

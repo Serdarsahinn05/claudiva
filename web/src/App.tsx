@@ -224,7 +224,7 @@ export default function App() {
             </div>
           );
         case 'usage':
-          return <UsageBoard agents={teamAgents} usage={store.usage} budget={store.budget} />;
+          return <UsageBoard agents={teamAgents} usage={store.usage} budget={store.budget} tasks={teamTasks} />;
         case 'tasks':
           return <TaskBoard tasks={teamTasks} agents={teamAgents} />;
         case 'code':

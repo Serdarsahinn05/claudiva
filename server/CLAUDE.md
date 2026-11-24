@@ -62,6 +62,43 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   sessizce bozardı). `personality.md` (boss + patron) bağımsız işler için bunu
   emreder; tek tek `delegate_task` yalnızca bağımlı/sıralı iş içindir.
 
+## JEV model yönlendiricisi (`server/src/router/`)
+
+- **VARSAYILAN KAPALI, kullanıcı açar** (`settings.json` `modelRouter`, Ayarlar →
+  Bütçe). Gerekçe (kullanıcı kararı): ölçülen tasarruf karşı-olgusal ve ucuz
+  modele giden işte kalite riski var; büyük işlerde kazanç henüz denenemedi.
+  Kapalıyken eski davranış birebir sürer (temel model + mesaj hatırlatması).
+- **Karar GÖREV başına, mesaj başına DEĞİL** ve `TaskQueue.launch()`'ta verilir
+  (delegasyon + panelden görev atama). Liderle doğrudan sohbet yönlendirilmez.
+  Sıra: `rules.ts` (0 token) → emin değilse `classifier.ts` (haiku) → temel model.
+  Ölçümler ve gerekçe: `docs/SONRAKI-ISLER.md` §2, betik `server/scripts/measure-router.mjs`.
+- **Önbellek modele özgü (ölçüldü):** sıcak oturumda Sonnet'e geçiş 39.491 token
+  yazma, $0.237. Bu yüzden oturum kapalı/soğuksa (son turdan > `WARM_MS` 5 dk)
+  model serbest seçilir; SICAKSA yalnız YÜKSELTİLİR, düşürülmez; tur SÜRERKEN
+  (`busy`) hiç değiştirilmez, sınıflandırıcı da çağrılmaz.
+- Kapalı oturum: `applyRoute` yalnız `currentModel`i ayarlar, `start()` o modelle
+  açar (`BackendStartOptions.model`). `cleanup()` `currentModel`i temele döndürür,
+  yoksa yönlendirilmiş model sonraki açılışa sızar.
+- **Yönlendirilmiş görev turunda iki şey KAPALI:** mesaja eklenen "modeli
+  değerlendir" hatırlatması (`BackendSendOptions.reminder`) ve tur sonu temele
+  dönüş. Dönüş açık kalsaydı ardışık küçük görevler "sıcak, düşürme yok"
+  kuralına takılıp hep temel modelde kalırdı. Ajanın KENDİ `set_model`
+  yükseltmesinde dönüş sürer.
+- Sınıflandırıcıda `thinking: disabled` ve `<istek>` sarmalayıcısı ŞART (ölçüldü:
+  düşünme açıkken 6 kat pahalı + 4 sn; çıplak mesaj görev sanıldı).
+- Eşleme: küçük→haiku, orta→sonnet, büyük→temel modelin altına düşmez ama Opus'a
+  kendiliğinden çıkmaz (Opus yalnız temeli Opus olan ajanda).
+- Kural kalıpları sözcük BAŞI sınırıyla (`\p{L}`): JS `\b` ASCII'dir, `özetle`yi
+  hiç yakalamıyordu. Ad olarak da geçen kökler listede YOK ("kur"→kurulum,
+  "change"→CHANGELOG okuma isteğini değişiklik sandırıyordu, ölçüldü).
+- Ajan başına kapatma: `config.autoModel === false` → yönlendirme yok, eski yol.
+- Karar `Task.route`a yazılır (iki types.ts). Panel: görev kartında model rozeti,
+  Harcama'da "Model yönlendirici" (`web/src/routerStats.ts`). Tasarruf ölçülmüş
+  3:1 Sonnet/Haiku oranıyla GERÇEK turlardan; Opus oranı ölçülmedi → hesap dışı.
+  Sınır: aynı tokenların temel modelde de harcanacağını varsayar (karşı-olgusal).
+- Canlı doğrulama (4611, scratch): kural yolu 3 ms, sınıflandırıcı 3-4 sn
+  $0.0006; dört görevin oturumu haiku ile açıldı, turlar haiku'da.
+
 ## Görev zincirleri
 
 - Zincir adımı `pending` doğar (`chainId`/`stepIndex`/`dependsOn`/`passResult`).

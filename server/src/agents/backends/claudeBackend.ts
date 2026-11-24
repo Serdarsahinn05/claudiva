@@ -17,6 +17,7 @@ import type {
   AgentBackend,
   BackendCapabilities,
   BackendEvent,
+  BackendSendOptions,
   BackendStartOptions,
   InspectPart,
   SessionInspect,
@@ -73,14 +74,19 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
   /** loop() bitince "resume başarısız, yeniden dene" mi bildirilecek? */
   private resumeFailed = false;
 
+  /** Oturumun şu anki modeli: açılış modeli (yönlendirici) ya da son setModel. */
+  private activeModel: string | null = null;
+
   private resolveModel(): string {
-    return MODEL_ALIASES[this.config.model] ?? this.config.model;
+    const m = this.activeModel ?? this.config.model;
+    return MODEL_ALIASES[m] ?? m;
   }
 
   start(opts: BackendStartOptions): void {
     if (this.q) return;
     this.opts = opts;
     this.config = opts.config;
+    this.activeModel = opts.model ?? null;
     this.personality = opts.personality;
     this.queue = new AsyncQueue<SDKUserMessage>();
     this.abort = new AbortController();
@@ -97,7 +103,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     void this.loop();
   }
 
-  send(text: string): void {
+  send(text: string, opts: BackendSendOptions = {}): void {
     // Otomatik model seçimi: sistem prompt'unun dibindeki talimat (özellikle
     // haiku'da) gözden kaçıyor; her mesajın başına kısa bir hatırlatma koy.
     // Transcript'e orijinal metin AgentSession tarafından yazılır, bu
@@ -109,7 +115,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     // metne çevirir ve komut sessizce hiç çalışmaz (yalnızca model onu okur).
     // Panelin yerleşik komutları bu yüzden karşılıksız kalıyordu.
     const wrapped =
-      this.config.autoModel !== false && !isSlashCommand(text)
+      this.config.autoModel !== false && opts.reminder !== false && !isSlashCommand(text)
         ? `[Hatırlatma: yanıtlamadan önce görevin zorluğunu değerlendir; mevcut model (${this.resolveModel()}) uygun değilse önce mcp__self__set_model ile değiştir: basit→haiku, orta→sonnet, zor→opus.]\n\n${text}`
         : text;
     this.queue?.push({
@@ -148,6 +154,8 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
    */
   async setModel(model: string): Promise<void> {
     await this.q?.setModel(MODEL_ALIASES[model] ?? model);
+    // Başarılıysa hatırlatmadaki "mevcut model" de doğru modeli söylesin.
+    if (this.q) this.activeModel = model;
   }
 
   /** `this.q` yoksa boş dizi; SDK gerçekten reddederse çağırana yansır
@@ -282,15 +290,20 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
 
     const autoModelInstructions =
       config.autoModel !== false
-        ? `\n\n# Otomatik model seçimi\n` +
-          `Temel modelin: ${config.model}. Her yeni görev/mesaja başlarken önce işin zorluğunu ` +
-          `değerlendir; mevcut model uygun değilse İLK İŞ olarak mcp__self__set_model aracını çağır, ` +
-          `sonra göreve devam et:\n` +
-          `- haiku → basit işler: kısa cevap, özet, listeleme, tek dosya okuma, basit arama\n` +
-          `- sonnet → orta işler: kod yazma/düzenleme, çok adımlı görevler, araştırma + sentez\n` +
-          `- opus → zor işler: mimari kararlar, karmaşık hata ayıklama, geniş refactor, kritik kod\n` +
-          `Model zaten uygunsa aracı çağırma. Yükseltme görev-bazlıdır: tur bitince otomatik ` +
-          `olarak temel modele dönülür, her yeni görevde yeniden değerlendirirsin.`
+        ? // Görev mesajlarında modeli panelin yönlendiricisi seçer (router/);
+          // model değişimi oturum ortasında soğuk önbellek demek (ölçüldü:
+          // Sonnet'e bir geçiş ≈ $0.24), bu yüzden ajan yalnız GERÇEKTEN
+          // gerektiğinde yükseltsin. Sohbet mesajlarında eski davranış sürer.
+          `\n\n# Model choice\n` +
+          `Your base model: ${config.model}. For task messages ("# Görev (id: …)") the panel has ` +
+          `already picked a model sized to the task; do not switch just to re-evaluate. Call ` +
+          `mcp__self__set_model only if the work turns out clearly harder than the current model ` +
+          `can handle (escalate), or for a plain chat message whose size clearly mismatches the model:\n` +
+          `- haiku → simple: short answer, summary, listing, reading one file, simple search\n` +
+          `- sonnet → medium: writing/editing code, multi-step tasks, research + synthesis\n` +
+          `- opus → hard: architecture decisions, complex debugging, wide refactors, critical code\n` +
+          `Switching models mid-session is expensive (the prompt cache is per model). After the ` +
+          `turn the panel returns to the base model automatically.`
         : '';
 
     const dir = agentDir(config.id);

@@ -3727,3 +3727,56 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .style-prev-phosphor .style-prev-title em { font-family: 'Bodoni Moda', Georgia, serif; font-style: italic; font-weight: 400; }
 .style-prev-phosphor .style-prev-chip { border-radius: 999px; }
 .style-prev-phosphor { background: radial-gradient(160px 90px at 100% 0%, rgb(var(--accent-rgb) / 0.22), transparent 70%), var(--void); }
+
+/* ---------- model yönlendirici (TaskBoard rozeti, Harcama bölümü) ----------
+   Model ailesi rengi: haiku ucuz (nane/ok), sonnet orta (aux), opus pahalı (uyarı).
+   Durum renklerinden ödünç alınmıyor gibi görünse de anlam aynı yönde: "ne kadar
+   güçlü/pahalı" → sakin → dikkat. */
+.route-chip {
+  flex-shrink: 0; padding: 0 7px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 10.5px; line-height: 17px;
+  color: var(--muted); background: rgb(var(--muted-rgb) / 0.12);
+}
+.route-chip.m-haiku { color: var(--nominal); background: rgb(var(--ok-rgb) / 0.12); }
+.route-chip.m-sonnet { color: var(--aux); background: rgb(var(--aux-rgb) / 0.12); }
+.route-chip.m-opus { color: var(--caution); background: rgb(var(--warn-rgb) / 0.12); }
+.ub-routes { list-style: none; margin: var(--s3) 0 0; padding: 0; display: flex; flex-direction: column; }
+.ub-routes li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px var(--s3); padding: 7px 0; }
+.ub-routes li + li { border-top: var(--border-w) solid rgb(var(--edge-rgb) / 0.7); }
+.ub-routes .ub-note { grid-column: 2; }
+.ub-route-title { font-size: 13px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Ayarlar: açıklamalı onay kutusu (model yönlendirici). */
+.set-toggle {
+  display: flex; flex-direction: row; align-items: flex-start; gap: var(--s3); margin-top: var(--s4);
+  padding: var(--s3); border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  cursor: pointer;
+}
+.set-toggle input { flex: 0 0 auto; width: auto; height: auto; margin: 3px 0 0; accent-color: var(--hud); }
+.set-toggle-text { display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- terminal: sade döküm (SkinnedTranscript, toolDetail.ts) ----------
+   Katlanmış araç grubu ve görev başlığı. Skinden bağımsız sade bir satır:
+   her üç CLI skininde de aynı okunur özet. */
+.tx-tools, .tx-brief { margin: 2px 0; }
+.tx-tools > summary, .tx-brief > summary {
+  display: flex; align-items: baseline; gap: 8px; list-style: none; cursor: pointer;
+  padding: 2px 0; color: var(--muted); font-size: 12.5px;
+}
+.tx-tools > summary::-webkit-details-marker, .tx-brief > summary::-webkit-details-marker { display: none; }
+.tx-tools > summary::after, .tx-brief > summary::after { content: '›'; color: var(--dim); transition: transform var(--t-fast) var(--ease-out); }
+.tx-tools[open] > summary::after, .tx-brief[open] > summary::after { transform: rotate(90deg); }
+.tx-tools > summary:hover, .tx-brief > summary:hover { color: var(--fg); }
+.tx-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--nominal); flex-shrink: 0; align-self: center; }
+.tx-tools.err .tx-dot { background: var(--alarm); }
+.tx-steps { color: var(--fg); font-weight: 500; flex-shrink: 0; }
+.tx-labels { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-tools-body { margin: 4px 0 6px 15px; padding-left: 10px; border-left: var(--border-w) solid var(--edge); }
+.tx-brief-title { color: var(--fg); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-dim { color: var(--dim); flex-shrink: 0; }
+.tx-brief > pre {
+  margin: 4px 0 6px; padding: 8px 10px; white-space: pre-wrap; word-break: break-word;
+  font-size: 12px; color: var(--muted); background: var(--void);
+  border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+}
+.tx-count { color: var(--dim); font-family: var(--font-mono); }

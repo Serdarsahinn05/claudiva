@@ -54,6 +54,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
     budget?.limitUSD && budget.limitUSD > 0 ? String(budget.limitUSD) : '',
   );
   const [warnAt, setWarnAt] = useState(String(budget?.settings?.warnAtPercent ?? 80));
+  const [router, setRouter] = useState(budget?.settings?.modelRouter === true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [sys, setSys] = useState<SystemInfo | null>(null);
@@ -73,6 +74,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
       await api.updateSettings({
         dailyLimitUSD: limit.trim() ? Number(limit) : 0,
         warnAtPercent: Number(warnAt) || 80,
+        modelRouter: router,
       });
       onSaved();
       onClose();
@@ -195,6 +197,19 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
               <div className="set-note dim">
                 {L.budget.note}
               </div>
+
+              {/* Model yönlendiricisi: tasarruf garanti olmadığı için bilerek
+                  açılır (varsayılan kapalı, bkz. server/src/settings.ts). */}
+              <label className="set-toggle">
+                <input type="checkbox" checked={router} onChange={(e) => setRouter(e.target.checked)} />
+                <span className="set-toggle-text">
+                  <span className="tb-field-label">
+                    {L.budget.router}
+                    <span className="tb-hint">{L.budget.routerHint}</span>
+                  </span>
+                  <span className="set-note dim">{L.budget.routerNote}</span>
+                </span>
+              </label>
             </>
           )}
 
