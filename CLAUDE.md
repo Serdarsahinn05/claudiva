@@ -54,11 +54,11 @@ Rules:
 
 ## ŞU ANKİ İŞ (oku: docs/SONRAKI-ISLER.md, HANDOFF.md, docs/ANALIZ.md)
 
-Panel revizyonunun Faz 1-3'ü bitti ve 0.1.1 ile yayımlandı. 2026-11-23 turunda
-şunlar yapıldı (commit EDİLMEDİ): **Sohbet modu**, **`.claudiva` veri klasörü
-geçişi**, **Türkçe rol adları ve tohum güncellemesi**, **skill kütüphanesi
-bağlama**. Sıradaki adımlar, kullanıcı kararları ve repo rename kontrol listesi
-`HANDOFF.md`'nin başında. Kararları yeniden sorma.
+0.1.1 yayımlı. 2026-11-23/24 turlarında (hepsi commit + push, `88d9ea9`):
+Sohbet modu, `.claudiva` geçişi, İngilizce ajan dosyaları, stil katmanı
+(Gözlemevi/Stüdyo/Fosfor), **Pano modu**, isteğe bağlı **JEV model
+yönlendiricisi** (varsayılan kapalı), sade terminal dökümü. **Sıradaki iş ve
+kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma.
 
 **Faz 4 = ikinci sağlayıcı ve kullanıcı onu BİLEREK ertelemişti**, açmadan önce
 sor. **3D ofis de sona bırakıldı**; three.js eklemeden önce sor.

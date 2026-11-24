@@ -1,11 +1,40 @@
 # Devir — Claudiva
 
-# ▶ SONRAKİ OTURUM: önce `docs/SONRAKI-ISLER.md` oku
+# ▶ SONRAKİ OTURUM (2026-11-24 sonu)
 
-Stil temaları (Stüdyo/Atölye/Sade) ve JEV model yönlendiricisi orada planlı;
-hangisiyle başlanacağını oturum başında kullanıcıya sor.
+Her şey commit edildi ve **push edildi** (`88d9ea9`, origin/main ile eşit).
+Kullanıcı tokeni bittiği için durdu; kaldığı yer:
 
-## 2026-11-24 turu (commit EDİLMEDİ)
+**Sıradaki iş (kullanıcıya önerildi, onay bekliyor):**
+1. **Kalan çeviriler** — `web/src/localCommands.ts` komut ÇIKTILARI (~100 satır),
+   `server/src/api/routes.ts` hata metinleri (~21 dizge). npm yayınından önce şart.
+2. **npm yayını 0.2.0** (`npm publish` EN SONA, kullanıcı kararı) → ardından repo
+   klasörünü `claudiva` yapma (kontrol listesi aşağıda).
+
+**Bu turda biten (hepsi commit + push):**
+- Ajan dosyaları İngilizce + eski kurulumları güncelleme (aşağıda ayrıntı).
+- **Stil katmanı:** Gözlemevi · **Stüdyo** (referans `docs/Screenshot_…jpg`,
+  beyaz kart, mor) · **Fosfor** (referans "Drop Cloude" videosu, limon, Genel
+  Durum ürün sayfası düzeniyle `PhosphorHero.tsx`). Stil + palet TEK yerden:
+  Görünüm menüsü. Kurallar `web/CLAUDE.md` → "Stil katmanı".
+- **Pano modu** (3. arayüz modu): 14 widget, galeri, işaretçiyle sürükleme,
+  köşeden boyutlandırma, 12 sütun × sabit satır. `web/CLAUDE.md` → "Pano modu".
+- **JEV model yönlendiricisi** `server/src/router/`, **VARSAYILAN KAPALI**
+  (Ayarlar → Bütçe; kullanıcı kararı: tasarruf garanti değil). Ölçümler
+  `docs/SONRAKI-ISLER.md` §2, kurallar `server/CLAUDE.md`.
+- **Terminal dökümü varsayılan SADE** (araç adımları katlı, okunur etiket;
+  "ayrıntılar" kutusu ham görünüm). `web/CLAUDE.md` → "Terminal dökümü".
+- Kullanıcının kurulumunda Boss + Teknik Lider kişilikleri güncellendi;
+  eskileri `~/.claudiva/agents/<id>/personality.md.yedek-2026-11-24`.
+
+**Bekleyen/ertelenen (açmadan önce sor):** Atölye ve Sade stilleri · JEV'in
+evet/hayır kararları ve sınıflandırıcı gecikmesi · Tauri · 3D ofis · Faz 4.
+
+**Bilinen ufak notlar:** `git push` izin sınıflandırıcısına takılabiliyor —
+kullanıcı açıkça isteyince geçti. Git Bash `curl` Türkçe karakteri UTF-8
+göndermiyor; API testlerinde Node `fetch` kullan.
+
+## 2026-11-24 turu — ayrıntılar
 
 - [x] **Ajan dosyaları İngilizce:** 8 personality, bütün SKILL.md'ler,
   plugin.json açıklamaları. Skill DİZİN adları ve `name:` Türkçe kaldı (kimlik:
