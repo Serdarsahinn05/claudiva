@@ -81,6 +81,8 @@ export const api = {
     req<{ path: string; entries: TreeEntry[] }>('GET', `/api/files/tree?path=${encodeURIComponent(p)}`),
   fileRead: (p: string) => req<FileContent>('GET', `/api/files/read?path=${encodeURIComponent(p)}`),
   reports: () => req<Report[]>('GET', '/api/reports'),
+  /** Sonuçlanmış her görevin (alt görevler dahil) alt ağaç kanıt sayısı. */
+  taskEvidence: () => req<Record<string, number>>('GET', '/api/tasks/evidence'),
   browserState: () => req<BrowserState>('GET', '/api/browser/state'),
   browserNavigate: (url: string) => req<BrowserState>('POST', '/api/browser/navigate', { url }),
   browserAct: (a: BrowserAction) => req<BrowserState>('POST', '/api/browser/act', a),

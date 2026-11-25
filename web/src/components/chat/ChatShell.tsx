@@ -71,6 +71,22 @@ export function ChatShell(props: Props) {
   }, [agents.length]);
 
   const byId = useMemo(() => new Map(agents.map((a) => [a.config.id, a])), [agents]);
+
+  // Teslim kartlarındaki kanıt rozeti. Yalnız sonuçlanan görev kümesi
+  // değişince yeniden okunur (her WS güncellemesinde değil).
+  const finishedKey = tasks
+    .filter((t) => t.status === 'done' || t.status === 'failed')
+    .map((t) => t.id)
+    .join(',');
+  const [evidence, setEvidence] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!finishedKey) return;
+    let live = true;
+    api.taskEvidence().then((e) => live && setEvidence(e)).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [finishedKey]);
   const nameOf = (id: string) => (id === 'user' ? L.chat.you : byId.get(id)?.config.name ?? id);
 
   // DM'deki ajan silinirse gruba dön.
@@ -344,8 +360,14 @@ export function ChatShell(props: Props) {
           </button>
         </header>
 
+        {/* role="log": yeni balonlar ekran okuyucuya kibarca duyurulur. Akan
+            metin var olan düğümün içeriğini değiştirir, ekleme sayılmaz; yani
+            akış token token okunmaz, yalnız yeni mesajlar duyurulur. */}
         <div
           className="chat-thread"
+          role="log"
+          aria-relevant="additions"
+          aria-label={title}
           ref={threadRef}
           onScroll={(e) => {
             const el = e.currentTarget;
@@ -362,7 +384,7 @@ export function ChatShell(props: Props) {
               </p>
             </div>
           ) : (
-            <Thread feed={feed} byId={byId} leadId={lead?.config.id} onReply={reply} onJump={jump} />
+            <Thread feed={feed} byId={byId} evidence={evidence} leadId={lead?.config.id} onReply={reply} onJump={jump} />
           )}
           {/* Çalışan ama henüz tek satır üretmemiş ajan: mesaj gönderildiği an
               ile ilk olay arasında akış sessiz kalıyordu, "gitti mi?" diye
@@ -445,9 +467,11 @@ function Thread({
   leadId,
   onReply,
   onJump,
+  evidence,
 }: {
   feed: ChatItem[];
   byId: Map<string, AgentSnapshot>;
+  evidence: Record<string, number>;
   leadId?: string;
   onReply: (item: ChatItem) => void;
   onJump: (id: string) => void;
@@ -481,6 +505,7 @@ function Thread({
         continued={continued}
         onReply={onReply}
         onJump={onJump}
+        evidence={evidence}
       />
     );
     prev = item;

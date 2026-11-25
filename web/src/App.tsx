@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from './useStore';
 import { useLayout } from './useLayout';
 import { api } from './api';
@@ -8,22 +8,9 @@ import { Terminal } from './components/Terminal';
 import { Survey } from './components/Survey';
 import { Rail, ICONS } from './components/Rail';
 import { TaskBoard } from './components/TaskBoard';
-import { PromptLibrary } from './components/PromptLibrary';
-import { Office } from './components/Office';
-import { Changes } from './components/Changes';
-import { Memory } from './components/Memory';
-import { UsageBoard } from './components/UsageBoard';
-import { Code } from './components/Code';
-import { Reports } from './components/Reports';
-import { Skills } from './components/Skills';
-import { Browser } from './components/Browser';
-import { ThemePicker } from './components/ThemePicker';
-import { Settings } from './components/Settings';
 import { TeamTabs } from './components/TeamTabs';
 import { Orchestrator } from './components/Orchestrator';
-import { ChatShell } from './components/chat/ChatShell';
 import { UI_MODES, setUiMode, useUiMode } from './uiMode';
-import { BoardShell } from './components/board/BoardShell';
 import { CenterGrid, SideDock, type CenterTile } from './components/Workspace';
 import { CommandPalette, agentCommands, themeCommands, type Command } from './components/CommandPalette';
 import { useHotkey } from './useHotkey';
@@ -33,6 +20,26 @@ import { ALL_TEAMS, agentsInTeam, tasksInTeam, teamsOf } from './teams';
 import { PANELS, tileKey, type PanelId } from './workspace';
 import type { AgentSnapshot } from './types';
 import { L as T, LOCALES, locale, setLocale } from './i18n';
+
+/**
+ * Paket bölme (2026-11-25): varsayılan ekranda (Paneller modu, Genel Durum)
+ * görünmeyen her şey ayrı yığın. Önce tek paket 579 KB'tı ve 500 KB uyarısı
+ * veriyordu. Yalnız App.tsx'ten içe aktarılanlar bölünebilir; başka bir eager
+ * modül bunlardan birini statik import ederse yığın sessizce ana pakete döner.
+ */
+const Office = lazy(() => import('./components/Office').then((m) => ({ default: m.Office })));
+const UsageBoard = lazy(() => import('./components/UsageBoard').then((m) => ({ default: m.UsageBoard })));
+const Code = lazy(() => import('./components/Code').then((m) => ({ default: m.Code })));
+const Reports = lazy(() => import('./components/Reports').then((m) => ({ default: m.Reports })));
+const Skills = lazy(() => import('./components/Skills').then((m) => ({ default: m.Skills })));
+const Browser = lazy(() => import('./components/Browser').then((m) => ({ default: m.Browser })));
+const Changes = lazy(() => import('./components/Changes').then((m) => ({ default: m.Changes })));
+const Memory = lazy(() => import('./components/Memory').then((m) => ({ default: m.Memory })));
+const PromptLibrary = lazy(() => import('./components/PromptLibrary').then((m) => ({ default: m.PromptLibrary })));
+const ThemePicker = lazy(() => import('./components/ThemePicker').then((m) => ({ default: m.ThemePicker })));
+const Settings = lazy(() => import('./components/Settings').then((m) => ({ default: m.Settings })));
+const ChatShell = lazy(() => import('./components/chat/ChatShell').then((m) => ({ default: m.ChatShell })));
+const BoardShell = lazy(() => import('./components/board/BoardShell').then((m) => ({ default: m.BoardShell })));
 
 export default function App() {
   const store = useStore();
@@ -182,7 +189,7 @@ export default function App() {
    * sağda da aynı bileşendir. Kapsam süzgeci (takım) burada tek noktada
    * uygulanıyor — her panelin ayrı ayrı takımı bilmesi gerekmiyor.
    */
-  const renderPanel = useCallback(
+  const panelBody = useCallback(
     (id: PanelId) => {
       switch (id) {
         case 'survey':
@@ -253,6 +260,11 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [teamAgents, teamTasks, store.usage, store.budget, store.prompts, store.projectDir, focusedTile,
      bulkBusy, team, teams.length, store.agents, store.browserState],
+  );
+  // Tembel yüklenen paneller yığını gelene kadar boş kalır (yerel sunucu, ms).
+  const renderPanel = useCallback(
+    (id: PanelId) => <Suspense fallback={null}>{panelBody(id)}</Suspense>,
+    [panelBody],
   );
 
   // ------------------------------------------------------------ orta gözler
@@ -454,6 +466,7 @@ export default function App() {
         </button>
       </header>
 
+      <Suspense fallback={null}>
       {uiMode === 'board' ? (
         <BoardShell
           agents={teamAgents}
@@ -550,9 +563,11 @@ export default function App() {
       <Orchestrator teamAgents={teamAgents} teamLabel={teamLabel} onOpenTerminal={openTerminal} />
       </>
       )}
+      </Suspense>
 
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
 
+      <Suspense fallback={null}>
       {themeOpen && <ThemePicker onClose={() => setThemeOpen(false)} />}
 
       {settingsOpen && (
@@ -564,6 +579,7 @@ export default function App() {
           onSaved={() => void store.refreshBudget()}
         />
       )}
+      </Suspense>
 
       {formAgent !== null && (
         <AgentForm

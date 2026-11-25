@@ -210,6 +210,7 @@ export function ChatComposer({
         <textarea
           ref={ref}
           className="chat-input"
+          aria-label={placeholder}
           rows={1}
           value={text}
           disabled={mode === 'group' && !lead}
@@ -262,10 +263,10 @@ export function ChatComposer({
             </span>
             {!target && (
             <div className="chat-seg" role="group" aria-label={L.composer.mode}>
-              <button className={`chat-chip${kind === 'task' ? ' on' : ''}`} onClick={() => setKind('task')}>
+              <button className={`chat-chip${kind === 'task' ? ' on' : ''}`} aria-pressed={kind === 'task'} onClick={() => setKind('task')}>
                 {L.composer.task}
               </button>
-              <button className={`chat-chip${kind === 'ask' ? ' on' : ''}`} onClick={() => setKind('ask')}>
+              <button className={`chat-chip${kind === 'ask' ? ' on' : ''}`} aria-pressed={kind === 'ask'} onClick={() => setKind('ask')}>
                 {L.composer.question}
               </button>
             </div>
@@ -274,6 +275,7 @@ export function ChatComposer({
               <div className="chat-seg" role="group" aria-label={L.composer.plan}>
                 <button
                   className={`chat-chip${plan === 'auto' ? ' on' : ''}`}
+                  aria-pressed={plan === 'auto'}
                   onClick={() => setPlan('auto')}
                   title={L.composer.planAutoTitle}
                 >
@@ -281,6 +283,7 @@ export function ChatComposer({
                 </button>
                 <button
                   className={`chat-chip${plan === 'approve' ? ' on' : ''}`}
+                  aria-pressed={plan === 'approve'}
                   onClick={() => setPlan('approve')}
                   title={L.composer.planApproveTitle}
                 >

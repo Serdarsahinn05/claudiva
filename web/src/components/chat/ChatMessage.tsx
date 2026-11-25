@@ -34,6 +34,8 @@ interface Props {
   onReply?: (item: ChatItem) => void;
   /** Alıntıya tıklanınca yanıtlanan mesaja git. */
   onJump?: (id: string) => void;
+  /** Görev kimliği → alt ağaçta dokunulmuş dosya sayısı (teslim kartı rozeti). */
+  evidence?: Record<string, number>;
 }
 
 /** Balonun köşesindeki "Yanıtla" düğmesi; klavyeyle de erişilir. */
@@ -74,7 +76,7 @@ export function Quote({
   );
 }
 
-export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: Props) {
+export function ChatMessage({ item, byId, leadId, continued, onReply, onJump, evidence }: Props) {
   const name = (id: string) => (id === 'user' ? L.chat.you : byId.get(id)?.config.name ?? id);
 
   switch (item.type) {
@@ -181,6 +183,7 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump }: 
           ok={ok}
           text={t.result ?? ''}
           ts={item.ts}
+          files={evidence?.[t.id]}
         />
       );
     }
@@ -264,8 +267,10 @@ function ResultCard(props: {
   ok: boolean;
   text: string;
   ts: number;
+  /** Ölçülmüş kanıt: alt ağaçta yazılan dosya sayısı. undefined = henüz okunmadı. */
+  files?: number;
 }) {
-  const { itemId, replyBtn, agent, fallbackName, to, title, ok, text, ts } = props;
+  const { itemId, replyBtn, agent, fallbackName, to, title, ok, text, ts, files } = props;
   const [open, setOpen] = useState(text.length <= LONG);
   return (
     <div className="cm-row" data-item={itemId}>
@@ -278,6 +283,11 @@ function ResultCard(props: {
           </span>
           <span className="cm-role">→ {to}</span>
           <span className={`cm-status s-${ok ? 'done' : 'failed'}`}>{ok ? L.chat.delivered : L.chat.failed}</span>
+          {files !== undefined && (
+            <span className={`rp-eviq${files ? '' : ' none'}`} title={L.reports.evidence}>
+              {files ? L.reports.files(files) : L.reports.noFiles}
+            </span>
+          )}
           <time>{clock(ts)}</time>
         </div>
         <div className="cm-event-title">{title}</div>

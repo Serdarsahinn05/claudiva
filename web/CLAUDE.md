@@ -66,6 +66,15 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   ya da kodsuz hatada (SDK, git, dosya sistemi) sunucu metnine düşer. Yeni
   hata eklerken `ApiError` kullan ve kodu iki sözlüğe ekle.
 
+## Paket bölme
+
+- **Varsayılan ekranda görünmeyen her şey `lazy()`** (App.tsx): Sohbet ve Pano
+  kabukları, Ofis/Harcama/Kod/Raporlar/Skill/Tarayıcı/Değişiklikler/Hafıza/
+  Promptlar panelleri, Ayarlar ve Görünüm. Ölçüldü: ana paket 579 → 340 KB,
+  500 KB uyarısı gitti. **Bu modüllerden birini App.tsx dışındaki eager bir
+  modülden statik import ETME**: yığın sessizce ana pakete döner, uyarı da geri
+  gelir. Paneller `renderPanel` içinde `Suspense fallback={null}` ile sarılı.
+
 ## Sözdizimi renklendirme (Kod paneli)
 
 - **"Highlighter paketi şişirir" ölçüldü ve DOĞRU ÇIKMADI.** Eski karar
@@ -172,6 +181,14 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   ALTINA eklenir, bu yüzden `stripBrief` önce, `parseReply` sonra çalışır.
   `/komut` yanıt bloğuyla SARILMAZ (CLI yalnız ilk karakter `/` ise komut sayar).
   Ajan mesajına yanıt o ajana gider; kendi mesajına yanıt hedefi değiştirmez.
+- **Teslim kartında kanıt rozeti** (`N dosya` / `dosya yok`): `GET
+  /api/tasks/evidence` (sonuçlanmış HER görev, alt ağaç dahil; `/reports` yalnız
+  kökleri döndürdüğü için oradan okunamazdı). Raporlar ile aynı `evidenceIndex`
+  yardımcısı, sayılar birebir tutar (ölçüldü). Yalnız sonuçlanan görev kümesi
+  değişince yeniden okunur.
+- Erişilebilirlik (2026-11-25 denetimi): ileti bölgesi `role="log"`
+  (`aria-relevant="additions"`: akan metin duyurulmaz, yeni balon duyurulur),
+  Görev/Soru ve Plan çipleri `aria-pressed`, yazı alanı `aria-label`.
 - Okunmamış sayacı `claudiva.chat.seen`. İlk ziyarette mevcut geçmiş "görülmüş"
   sayılır. Güncelleme İŞLEVSEL olmak zorunda (`markSeen`): aynı karede iki
   efekt yazıyor, eski durumu okuyan ikincisi birincinin yazdığını eziyordu.

@@ -9,6 +9,10 @@
 - [x] Yayın öncesi kontrol: `npm run build` ✓, `contrast.mjs` 0 ✓,
   `npm pack --dry-run` 1.1 MB / 200 dosya ✓, boş dizine kurulum testi
   (`/`, `/api/budget`, `/api/agents` 200) ✓, `agents/` kişisel içerik yok ✓.
+- [x] Küçük işler: sohbet teslim kartında kanıt rozeti (`/api/tasks/evidence`),
+  paket bölme (579 → 340 KB, uyarı yok), sohbet modu `impeccable audit` + P1
+  erişilebilirlik düzeltmeleri, Kırmızı Fener paleti kaldırıldı.
+- [ ] "Plan: onaylı" kipinin canlı ekip işiyle sınanması (token harcar, kullanıcıya soruldu).
 - [ ] **Kullanıcı yapacak:** `npm login` → `npm whoami` → `npm publish`
   (etkileşimli, ajan kabuğunda asılı kalır; bu oturumda `npm whoami` E401 verdi).
 - [ ] Sonra repo klasörünü `claudiva` yap (aşağıdaki liste).

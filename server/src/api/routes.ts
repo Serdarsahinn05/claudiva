@@ -295,12 +295,8 @@ export function createRoutes(
   });
 
   // ---------------------------------------------------------- raporlar
-  /**
-   * Sonuçlanmış görevler + KANITI. Ajanın rapor metni kendi anlatısı;
-   * `files` ise ölçülmüş olan — o görev sırasında gerçekten yazılan dosyalar
-   * (`ChangeLog.filesForTask`). İkisi yan yana durmadan rapor doğrulanamaz.
-   */
-  r.get('/reports', handle(() => {
+  /** Görev ağacı + alt ağaçtan kanıt toplama (raporlar ve sohbet rozeti ortak). */
+  const evidenceIndex = () => {
     const all = tasks.list();
 
     /**
@@ -329,19 +325,44 @@ export function createRoutes(
       return own;
     };
 
+    /** Alt ağaçta dokunulmuş dosyalar, yola göre tekil, en yenisi temsil eder. */
+    const filesOf = (id: string) => {
+      const uniq = new Map<string, ReturnType<typeof changes.filesForTask>[number]>();
+      for (const f of collect(id).sort((a, b) => b.ts - a.ts)) if (!uniq.has(f.path)) uniq.set(f.path, f);
+      return [...uniq.values()];
+    };
+    return { all, childrenOf, filesOf };
+  };
+
+  /**
+   * Sonuçlanmış HER görevin (alt görevler dahil) kanıt sayısı. Sohbetteki
+   * teslim kartları alt görevler için çizilir; `/reports` yalnız kökleri
+   * döndürdüğü için rozet oradan okunamazdı.
+   */
+  r.get('/tasks/evidence', handle(() => {
+    const { all, filesOf } = evidenceIndex();
+    const out: Record<string, number> = {};
+    for (const t of all) if (t.status === 'done' || t.status === 'failed') out[t.id] = filesOf(t.id).length;
+    return out;
+  }));
+
+  /**
+   * Sonuçlanmış görevler + KANITI. Ajanın rapor metni kendi anlatısı;
+   * `files` ise ölçülmüş olan — o görev sırasında gerçekten yazılan dosyalar
+   * (`ChangeLog.filesForTask`). İkisi yan yana durmadan rapor doğrulanamaz.
+   */
+  r.get('/reports', handle(() => {
+    const { all, childrenOf, filesOf } = evidenceIndex();
+
     // Yalnız KÖK görevler listelenir; alt görevler kendi raporlarıyla değil,
     // ait oldukları işin altında görünür (aksi hâlde aynı iş iki kez okunur).
     return all
       .filter((t) => (t.status === 'done' || t.status === 'failed') && !t.parentTaskId)
       .sort((a, b) => (b.finishedAt ?? b.createdAt) - (a.finishedAt ?? a.createdAt))
       .map((t) => {
-        const files = collect(t.id);
-        // Aynı dosyaya birden çok dokunuş olabilir; en yenisi temsil eder.
-        const uniq = new Map<string, (typeof files)[number]>();
-        for (const f of files.sort((a, b) => b.ts - a.ts)) if (!uniq.has(f.path)) uniq.set(f.path, f);
         return {
           task: t,
-          files: [...uniq.values()],
+          files: filesOf(t.id),
           subtasks: (childrenOf.get(t.id) ?? []).map((c) => ({
             id: c.id,
             title: c.title,
