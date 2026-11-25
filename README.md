@@ -293,13 +293,12 @@ hiçbir komutu reddetmez.
 
 ## 🎨 Temalar
 
-Altı tema iki aileden gelir. **Plakalar** bir gözlem koşulunu taklit eder:
-*Gece*, *Kırmızı Fener* (gece görüşünü bozmaz — mavi yoktur, durumlar renkle
-değil parlaklık ve biçimle ayrışır), *Gündüz* (basılı kağıt). **Premium** ise
+Gözlemevi stilinin beş teması iki aileden gelir. **Plakalar** bir gözlem
+koşulunu taklit eder: *Gece* ve *Gündüz* (basılı kağıt). **Premium** ise
 işlenmiş bir yüzeydir: *Obsidyen* (varsayılan), *Karbon*, *Aurora*.
 
 Kontrast göz kararıyla onaylanmaz, ölçülür: `node web/scripts/contrast.mjs`
-altı plakayı da eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
+bütün paletleri eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
 
 ---
 

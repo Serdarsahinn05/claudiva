@@ -49,6 +49,8 @@
       }
       try {
         var t = localStorage.getItem('claudiva.theme') || 'obsidian';
+        // Kaldırılmış palet (Kırmızı Fener, 2026-11-25): themes.ts getTheme ile AYNI düşüş.
+        if (t === 'redlight') t = 'obsidian';
         // Stil↔palet uyumu (appStyle.ts syncPalette ile AYNI kural): Stüdyo
         // yalnız kendi paletleriyle, Gözlemevi onlarsız açılır.
         var ds = document.documentElement.dataset.style;

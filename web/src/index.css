@@ -2362,8 +2362,8 @@ label.check.small { font-size: 12px; color: var(--muted); }
 /* Sözdizimi kovaları. Sınıf adı Prism'in kendi adı DEĞİL: `highlight.ts` 100+
    token tipini dokuz kovaya indiriyor, eşleşmeyen tip sınıfsız kalıp düz --fg
    olarak çiziliyor (yanlış renk vermektense renksiz bırakmak).
-   Yorum italik: renk tek ayırt edici kanal olmasın — Kırmızı Fener plakasında
-   hue yok denecek kadar az, orada ayrımı taşıyan şey parlaklık ve bu italik. */
+   Yorum italik: renk tek ayırt edici kanal olmasın (renk körlüğü, düşük
+   kontrastlı paletler). */
 .syn-com { color: var(--syn-com); font-style: italic; }
 .syn-key { color: var(--syn-key); }
 .syn-str { color: var(--syn-str); }

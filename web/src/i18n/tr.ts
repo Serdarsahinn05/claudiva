@@ -394,7 +394,6 @@ export const tr = {
 
   themes: {
     night: { name: 'Gece', desc: 'Gece mürekkebi zemin, yıldız tozu metin, vermilyon ek açıklama' },
-    redlight: { name: 'Kırmızı Fener', desc: 'Gözlemci feneri: kırmızı monokrom, karanlığa uyumu bozmaz' },
     day: { name: 'Gündüz', desc: 'Basılı plaka: kağıt zemin, siyah mürekkep, aydınlık oda' },
     obsidian: { name: 'Obsidyen', desc: 'Mürekkep siyahı obsidyen, tek soğuk kaynak: cyan' },
     carbon: { name: 'Karbon', desc: 'Anodize grafit gövde, buz cyanı — uzun oturum için nötr' },

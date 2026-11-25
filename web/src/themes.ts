@@ -9,7 +9,6 @@ import { L } from './i18n';
  *
  * PLAKALAR — bir gözlem koşulu. Kağıt, mürekkep, tane:
  *   · Gece          — karanlık odada saatlerce açık duran plaka
- *   · Kırmızı Fener — gece görüşünü bozmayan kırmızı monokrom
  *   · Gündüz        — aydınlık odada okunan basılı plaka
  *
  * PREMIUM — işlenmiş bir yüzey. Cam ve anodize metal, mürekkep değil ışık:
@@ -17,9 +16,9 @@ import { L } from './i18n';
  *   · Karbon   — anodize grafit, buz cyanı
  *   · Aurora   — menekşeli siyah, cyan vurgu
  *
- * Varsayılan Obsidyen'dir. Plakalar kaldırılmadı ve kaldırılmamalı: gece
- * görüşü (Kırmızı Fener) ve aydınlık oda (Gündüz) hâlâ karşılanması gereken
- * gerçek koşullar, premium aile ikisini de karşılamıyor.
+ * Varsayılan Obsidyen'dir. Kırmızı Fener (`redlight`) 2026-11-25'te kullanıcı
+ * isteğiyle kaldırıldı; kayıtlı seçimi olan Obsidyen'e düşer (`isKnown` +
+ * index.html satır içi betiği).
  *
  * Yeni plaka: themes.css'e bir blok + buraya bir satır + scripts/contrast.mjs
  * içindeki `plates` dizisine bir satır. Kontrast ÖLÇÜLÜR:
@@ -41,12 +40,6 @@ export const THEMES: ThemeDef[] = [
     id: 'night',
     name: L.themes.night.name,
     desc: L.themes.night.desc,
-    group: 'Plakalar',
-  },
-  {
-    id: 'redlight',
-    name: L.themes.redlight.name,
-    desc: L.themes.redlight.desc,
     group: 'Plakalar',
   },
   {

@@ -311,7 +311,7 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   Ayrışırlarsa panel bir temayla boyanır, seçici başkasını işaretli gösterir.
   Şu an ikisi de `obsidian`.
 - **İki tema ailesi.** *Plakalar* bir gözlem koşulunu taklit eder (kağıt,
-  mürekkep, tane): Gece · Kırmızı Fener · Gündüz. *Premium* işlenmiş bir yüzeyi
+  mürekkep, tane): Gece · Gündüz. *Premium* işlenmiş bir yüzeyi
   (cam/anodize metal, mürekkep değil ışık): Obsidyen (varsayılan) · Karbon ·
   Aurora — siyah gövde, cyan vurgu, grain 0.42→0.10 ve `overlay` karışım.
   Premium'da da durum renkleri (ok/warn/err) cyan'a boyanmaz; yoksa üç ayrı
@@ -322,10 +322,11 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   değerleriyle ölçtürdü ve yine "tüm eşikler tutuyor" dedi. Betik en çok renk
   token'ı taşıyan bloğu seçer ve renk bloğu bulunamayan plakada çıkış kodu 2
   ile durur — sessiz düşüş bu betiğin en tehlikeli hata biçimi.
-- **Üç plaka, üçü de gerçek bir gözlem koşulu:** Gece · Kırmızı Fener
-  (gece görüşünü bozmaz, bu yüzden **mavi yok**; durumlar tonla değil parlaklık ve
-  biçimle ayrışır) · Gündüz (basılı plaka, `--glow-a: 0`). Keyfî renk şeması eklemek
-  bu üçlünün mantığını bozar.
+- **Plakalar gerçek bir gözlem koşulu:** Gece · Gündüz (basılı plaka,
+  `--glow-a: 0`). **Kırmızı Fener (`redlight`) 2026-11-25'te kullanıcı isteğiyle
+  KALDIRILDI;** kayıtlı seçimi olan Obsidyen'e düşer (`themes.ts` `isKnown` +
+  `index.html` betiği, ikisi aynı kural). Bu dosyadaki eski "Kırmızı Fener"
+  notları tarihçedir (Prism'in sınıf seçme gerekçesi hâlâ geçerli).
 - **Fontlar paketten gelir** (çevrimdışı da aynı görünsün): Bodoni Moda italik
   (gravür başlıkları), Archivo (arayüz), JetBrains Mono (koordinat/okuma).
 - Yerleşim gerçeği: solda plaka indeksi, ortada plaka, Genel Durum'da sağda efemeris

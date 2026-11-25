@@ -202,7 +202,8 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
 - **`vscode-icons` npm'de YOK** (404; o bir VS Code eklentisi). Depodaki 1584
   SVG 4.08 MB ve içinde 215 KB'lık aykırılar var. `material-icon-theme` hem
   npm'de, hem MIT, hem eşlemeyi de taşıyor — bu yüzden seçildi.
-- **Kırmızı Fener plakasında ikonlar FİLTREDEN geçer** (`--icon-filter`).
+- **(Tarihçe: Kırmızı Fener 2026-11-25'te kaldırıldı; `--icon-filter` kancası
+  `index.css`te duruyor, şu an hiçbir palet tanımlamıyor.)** Kırmızı Fener plakasında ikonlar FİLTREDEN geçerdi (`--icon-filter`).
   Marka renkleri sabit hex; React cyan'ı, Go mavisi o plakanın tek kuralını
   (gece görüşü, mavi yok) ağacın HER SATIRINDA delerdi. Filtre hepsini
   kırmızı-amber ailesine indiriyor, kimliği şekil taşıyor. Diğer plakalarda

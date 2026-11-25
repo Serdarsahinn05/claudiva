@@ -240,11 +240,10 @@ Density is high (this is a tool for someone running eight agents at once) but th
 first viewport spends its space on a single sentence, because the product's first
 job is to report state, not to report data.
 
-Three editions exist, and each answers a real observing condition rather than a
-colour preference: **Gece** (night ink, the default for a panel left open for hours),
-**Kırmızı Fener** (observer's red lamp — no blue at all, so status separates by
-brightness and form), **Gündüz** (printed plate on paper for a lit room; print does
-not glow, so the halo token goes to 0). Interface language is Turkish throughout.
+Two editions exist, and each answers a real observing condition rather than a
+colour preference: **Gece** (night ink, a panel left open for hours) and
+**Gündüz** (printed plate on paper for a lit room; print does not glow, so the halo
+token goes to 0). A third, **Kırmızı Fener** (red lamp), was removed on 2026-11-25. Interface language is Turkish throughout.
 
 **Key Characteristics:**
 - Data-true diagram: magnitude = tokens, colour + form = status, line = delegation
@@ -631,7 +630,7 @@ on `data-theme`.
 | Corners | 2/3px (premium 4/6px) | 6/10px |
 | Texture | grain, graticule, starfield | none, flat ground |
 | Labels | vermilion/cyan small caps | muted small caps, 0.06em |
-| Palettes | Night, Red Lantern, Day, Obsidian, Carbon, Aurora | Paper (light), Graphite (dark), single indigo accent |
+| Palettes | Night, Day, Obsidian, Carbon, Aurora | Paper (light), Graphite (dark), single indigo accent |
 
 Studio rules: no ornament that is not data; status colors stay distinct from
 the accent; contrast is measured with `scripts/contrast.mjs` like every plate.

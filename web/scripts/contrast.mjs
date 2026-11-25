@@ -126,7 +126,6 @@ function plate(name, css, selector) {
 }
 const plates = [
   ['night', base],
-  plate('redlight', themesCss, "[data-theme='redlight']"),
   plate('day', themesCss, "[data-theme='day']"),
   // Premium aile — aynı eşikler geçerli, ayrıcalık yok.
   plate('obsidian', themesCss, "[data-theme='obsidian']"),

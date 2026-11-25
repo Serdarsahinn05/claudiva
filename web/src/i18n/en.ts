@@ -383,7 +383,6 @@ export const en: Dict = {
 
   themes: {
     night: { name: 'Night', desc: 'Night-ink ground, stardust text, vermilion annotations' },
-    redlight: { name: 'Red Lantern', desc: 'Observer lamp: red monochrome that keeps your dark adaptation' },
     day: { name: 'Day', desc: 'Printed plate: paper ground, black ink, a bright room' },
     obsidian: { name: 'Obsidian', desc: 'Ink-black obsidian with a single cool light: cyan' },
     carbon: { name: 'Carbon', desc: 'Anodized graphite with ice cyan — neutral for long sessions' },
