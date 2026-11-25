@@ -22,6 +22,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 [data-theme='day'] {
   --bg-rgb:        226 223 214;   /* masa/kağıt kenarı */
+
+  /* Açık palette terminal koyu KALIR (CLI görünümleri ~200 sabit renkle
+     gerçek CLI'ı taklit ediyor) ama kenardan kenara siyah blok değil,
+     panelin üstünde duran koyu bir kart olur. Koyu paletlerde tanımsız. */
+  --terminal-inset: 10px;
+  --terminal-radius: 12px;
+  --shadow-screen: 0 10px 28px rgb(24 22 34 / 0.16), 0 2px 6px rgb(24 22 34 / 0.10);
   --surface-rgb:   245 243 237;   /* plaka kağıdı */
   --surface-2-rgb: 236 233 225;
   --surface-3-rgb: 224 220 210;
@@ -290,6 +297,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 [data-theme='paper'] {
   --bg-rgb:        251 251 252;   /* neredeyse beyaz: kartlar kenarla ayrışır, zeminle değil */
+
+  /* Açık palette terminal koyu KALIR (CLI görünümleri ~200 sabit renkle
+     gerçek CLI'ı taklit ediyor) ama kenardan kenara siyah blok değil,
+     panelin üstünde duran koyu bir kart olur. Koyu paletlerde tanımsız. */
+  --terminal-inset: 10px;
+  --terminal-radius: 12px;
+  --shadow-screen: 0 10px 28px rgb(24 22 34 / 0.16), 0 2px 6px rgb(24 22 34 / 0.10);
   --surface-rgb:   255 255 255;
   --surface-2-rgb: 250 250 251;
   --surface-3-rgb: 240 241 243;

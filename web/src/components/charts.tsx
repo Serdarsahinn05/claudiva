@@ -272,7 +272,7 @@ export function Donut({
             />
             <span className="ub-legend-name">{s.label}</span>
             <span className="ub-legend-val">{s.display}</span>
-            <span className="ub-legend-pct">%{Math.round((s.value / total) * 100)}</span>
+            <span className="ub-legend-pct">{L.extra.pct(Math.round((s.value / total) * 100))}</span>
           </li>
         ))}
       </ul>

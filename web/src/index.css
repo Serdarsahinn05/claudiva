@@ -1513,7 +1513,9 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .terminal {
   display: flex; flex-direction: column; flex: 1; min-height: 0;
   background: var(--void);
-  border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  /* --terminal-* yalnız açık paletlerde tanımlı (themes.css): koyu kart. */
+  margin: var(--terminal-inset, 0);
+  border: var(--border-w) solid var(--edge); border-radius: var(--terminal-radius, var(--radius));
   overflow: hidden;
   box-shadow: var(--shadow-screen);
 }
@@ -3421,6 +3423,97 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .survey.px .eph-mod {
   padding: var(--s4); background: rgb(var(--surface-rgb) / 0.7);
   border: var(--border-w) solid var(--edge); border-radius: var(--radius-lg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STÜDYO — Genel Durum gövdesi (StudioOverview.tsx)
+   Gök haritası yerine iki beyaz kart: ekip listesi + son devirler. Yalnız
+   `.survey.st` altında. Durum hapı sohbetteki `cm-status` kalıbıyla aynı:
+   renk durumdan (currentColor), dolgu `--status-tint`ten.
+   ═══════════════════════════════════════════════════════════════════ */
+.st-body {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--s4); align-items: start; min-width: 0;
+}
+@container (max-width: 860px) { .st-body { grid-template-columns: 1fr; } }
+
+.st-card {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--hull-1); border: var(--border-w) solid var(--edge);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+}
+.st-card-head {
+  display: flex; align-items: baseline; gap: var(--s3);
+  padding: var(--s3) var(--s4); border-bottom: var(--border-w) solid var(--edge);
+}
+.st-card-head h3 { margin: 0; font-family: var(--font-ui); font-size: 13.5px; font-weight: 600; color: var(--fg); }
+.st-card-meta { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.st-empty { margin: 0; padding: var(--s5) var(--s4); font-size: 13px; line-height: 1.5; color: var(--muted); }
+
+.st-team, .st-flow { list-style: none; margin: 0; padding: var(--s1); }
+
+/* Ajan satırı: düğme ama liste satırı gibi davranır — kenarlık yok, kalkma yok. */
+.survey.st .st-agent {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto 64px; align-items: center;
+  gap: var(--s3); width: 100%; padding: 9px var(--s3); text-align: left;
+  border: var(--border-w) solid transparent; border-radius: var(--radius);
+  font-size: 13px;
+}
+.survey.st .st-agent:hover:not(:disabled) {
+  background: rgb(var(--fg-rgb) / 0.04); border-color: transparent; transform: none;
+}
+.survey.st .st-agent:active:not(:disabled) { transform: none; }
+.survey.st .st-agent.on { background: rgb(var(--accent-rgb) / 0.08); border-color: rgb(var(--accent-rgb) / 0.25); }
+.st-agent.off .st-av, .st-agent.off .st-name { opacity: 0.6; }
+
+.st-av {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; color: var(--fg);
+  background: rgb(var(--fg-rgb) / 0.06); border: var(--border-w) solid var(--edge);
+}
+.st-av[data-role='boss'], .st-av[data-role='manager'], .st-av[data-role='team-leader'] {
+  color: var(--hud); background: rgb(var(--accent-rgb) / 0.1); border-color: rgb(var(--accent-rgb) / 0.3);
+}
+.st-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.st-name {
+  display: flex; align-items: baseline; gap: var(--s2); min-width: 0;
+  font-weight: 600; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.st-role { font-weight: 400; font-size: 12px; color: var(--muted); }
+.st-note { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-tok { justify-self: end; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.st-pill {
+  justify-self: start; padding: 1px 9px; border-radius: var(--chip-radius, 999px);
+  font-size: 11.5px; white-space: nowrap; color: var(--muted);
+  border: var(--border-w) solid var(--status-border, currentColor);
+  background: color-mix(in srgb, currentColor var(--status-tint, 10%), transparent);
+}
+.st-pill.s-working, .st-pill.s-running { color: var(--aux); }
+.st-pill.s-waiting { color: var(--caution); }
+.st-pill.s-idle, .st-pill.s-done { color: var(--nominal); }
+.st-pill.s-failed { color: var(--alarm); }
+.st-pill.s-offline, .st-pill.s-pending { color: var(--muted); }
+
+.st-hand {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  gap: var(--s3); padding: 9px var(--s3);
+}
+.st-hand + .st-hand { border-top: var(--border-w) solid rgb(var(--edge-rgb) / 0.7); }
+.st-hand-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.st-hand-title { font-size: 13px; font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-hand-route { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-hand-time { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* Kart başlığındaki gravür cetveli (çizgi + nokta) Gözlemevi süsü; Stüdyo'da veri olmayan süs yok. */
+.survey.st .eph-mod-head::after { display: none; }
+
+/* Okumalar haritanın yanında değil altında: kart ızgarası (Fosfor ile aynı düzen). */
+.survey.st .survey-body { grid-template-columns: 1fr; }
+.survey.st .eph { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s4); }
+.survey.st .eph-mod {
+  padding: var(--s4); background: var(--hull-1);
+  border: var(--border-w) solid var(--edge); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
 }
 
 /* ═══════════════════════════════════════════════════════════════════

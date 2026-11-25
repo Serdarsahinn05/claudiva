@@ -401,8 +401,17 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   Paket fontu (Inter) istenirse yalnız o stil seçilince yüklenmeli.
 - **Stil önizleme kartı kendi `data-style`ını taşıyamaz** (token kökte yaşar);
   `.style-prev-*` yazıyı ve köşeyi satır içi örnekler.
-- Bilinen eksik: Genel Durum'daki gökyüzü haritası (`Sky.tsx`) Stüdyo'da da
-  gök çizimi; doku/yıldız alanı kapalı ama harita aynı.
+- **Stüdyo'da Genel Durum gövdesi `StudioOverview.tsx`** (2026-11-25): gök
+  haritası yerine Ekip kartı (satır = ajan; sıra: izin bekleyen, çalışan, açık,
+  kapalı; ikinci satır hapı TEKRAR ETMEZ: şu anki iş / son iş / rol açıklaması)
+  + Son devirler kartı. Okumalar kart ızgarası, başlıktaki gravür cetveli
+  (`.eph-mod-head::after`) gizli. CSS `.survey.st` altında. Dal `Survey.tsx`te
+  (`appStyle`): Fosfor → PhosphorHero, Stüdyo → StudioOverview, Gözlemevi → Sky.
+- **Açık palette terminal koyu KART** (`--terminal-inset/-radius`,
+  `--shadow-screen`; yalnız `paper` ve `day` tanımlar, `themes.css`). Terminal
+  koyu kalır: CLI görünümleri ~200 sabit renkle (39 dosya, `brainless/`) gerçek
+  CLI'ı taklit ediyor; açık terminal yerine kart seçildi (kullanıcı kararı).
+- Yüzde biçimi `L.extra.pct` (TR `%70`, EN `70%`); `%{n}` YAZMA.
 - **Üçüncü stil `phosphor` (Fosfor)**, referans `docs/` altındaki "Drop Cloude"
   videosu (gece yarısı ürün sayfası): grafit-siyah + limon, kalın Archivo başlık
   + **yalnız son kelime** italik Bodoni (`--em-font/--em-style/--em-color`),

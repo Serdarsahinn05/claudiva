@@ -435,7 +435,7 @@ export function QuotaWidget(_: WidgetData) {
           <div key={k} className="bw-quota-row">
             <span className="bw-quota-head">
               <span>{L.survey.window[k] ?? k}</span>
-              <b>%{Math.round(pct)}</b>
+              <b>{L.extra.pct(Math.round(pct))}</b>
             </span>
             <span className={`bw-gauge${pct >= 90 ? ' crit' : pct >= 70 ? ' warn' : ''}`}>
               <span style={{ width: `${pct}%` }} />

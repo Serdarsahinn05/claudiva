@@ -12,7 +12,8 @@ import { fmtCost, fmtNum, totalTokens } from '../format';
 import { Sky } from './Sky';
 import { PhosphorHero } from './PhosphorHero';
 import { useAppStyle } from '../appStyle';
-import { L } from '../i18n';
+import { L, dateLocale } from '../i18n';
+import { StudioOverview } from './StudioOverview';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -41,12 +42,7 @@ function fmtBytes(n: number): string {
 }
 
 function fmtUptime(sec: number): string {
-  const d = Math.floor(sec / 86400);
-  const h = Math.floor((sec % 86400) / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  if (d) return `${d}g ${h}s`;
-  if (h) return `${h}s ${m}dk`;
-  return `${m}dk`;
+  return L.survey.uptimeFmt(Math.floor(sec / 86400), Math.floor((sec % 86400) / 3600), Math.floor((sec % 3600) / 60));
 }
 
 function fmtReset(iso?: string): string {
@@ -54,7 +50,7 @@ function fmtReset(iso?: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? ''
-    : d.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    : d.toLocaleString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 /** Kenar okuması: vermilyon etiket + hairline cetvel. */
@@ -105,7 +101,7 @@ function Gauge({ pct, label, sub }: { pct: number; label: string; sub?: string }
     <div className="bgauge">
       <div className="bgauge-head">
         <span>{label}</span>
-        <span className="bgauge-pct">%{Math.round(pct)}</span>
+        <span className="bgauge-pct">{L.extra.pct(Math.round(pct))}</span>
       </div>
       <div className={`gauge ${tone}`}>
         <span style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
@@ -154,8 +150,11 @@ export function Survey({
   onOpenSettings,
 }: Props) {
   const [sys, setSys] = useState<SystemInfo | null>(null);
-  // Fosfor stili Genel Durum'u ürün sayfası düzeniyle çizer (bkz. PhosphorHero).
-  const phosphor = useAppStyle() === 'phosphor';
+  // Fosfor Genel Durum'u ürün sayfası düzeniyle (PhosphorHero), Stüdyo ekip
+  // listesi + devir kartıyla (StudioOverview) çizer; gök haritası Gözlemevi'nin.
+  const appStyle = useAppStyle();
+  const phosphor = appStyle === 'phosphor';
+  const studio = appStyle === 'studio';
   const [plan, setPlan] = useState<Record<string, RateWindow | null> | null>(null);
   const [planAvailable, setPlanAvailable] = useState(false);
 
@@ -194,7 +193,7 @@ export function Survey({
   const p = phrase(agents, tasks, budget);
 
   return (
-    <div className={`survey${phosphor ? ' px' : ''}`}>
+    <div className={`survey${phosphor ? ' px' : studio ? ' st' : ''}`}>
       {phosphor ? (
         <PhosphorHero
           agents={agents}
@@ -220,7 +219,11 @@ export function Survey({
       )}
 
       <div className="survey-body">
-        {!phosphor && <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />}
+        {studio ? (
+          <StudioOverview agents={agents} tasks={tasks} selectedId={selectedId} onOpenAgent={onOpenAgent} />
+        ) : (
+          !phosphor && <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />
+        )}
 
         <div className="eph">
           <Mod label={L.survey.dailyBudget} onClick={onOpenSettings}>
@@ -263,11 +266,11 @@ export function Survey({
             )}
           </Mod>
 
-          <Mod label="Token">
+          <Mod label={L.survey.tokenHead}>
             {usage ? (
               <>
-                <Stat k="Toplam" v={fmtNum(totalTokens(usage.total))} />
-                <Stat k="Maliyet" v={fmtCost(usage.total.costUSD)} />
+                <Stat k={L.survey.total} v={fmtNum(totalTokens(usage.total))} />
+                <Stat k={L.survey.cost} v={fmtCost(usage.total.costUSD)} />
                 <Stat k={L.survey.input} v={fmtNum(usage.total.inputTokens)} />
                 <Stat k={L.survey.output} v={fmtNum(usage.total.outputTokens)} />
                 <Stat k={L.survey.cache} v={fmtNum(usage.total.cacheReadTokens)} />
