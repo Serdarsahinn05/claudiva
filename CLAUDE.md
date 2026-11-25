@@ -58,7 +58,7 @@ Rules:
 Sohbet modu, `.claudiva` geçişi, İngilizce ajan dosyaları, stil katmanı
 (Gözlemevi/Stüdyo/Fosfor), **Pano modu**, isteğe bağlı **JEV model
 yönlendiricisi** (varsayılan kapalı), sade terminal dökümü. **Sıradaki iş ve
-kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma.
+kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma. (2026-11-25: paletler kalkıyor, yalnız stiller kalıyor; seçim Ayarlar'a; Ayarlar modalı sabit boy.)
 
 **Faz 4 = ikinci sağlayıcı ve kullanıcı onu BİLEREK ertelemişti**, açmadan önce
 sor. **3D ofis de sona bırakıldı**; three.js eklemeden önce sor.
