@@ -27,7 +27,7 @@ it cost.
 
 </div>
 
-![Claudiva in Panels mode: overview, live office, the lead's terminal and the task board](docs/screenshots/panels.jpg)
+![Claudiva in Panels mode, Glass style: overview, the lead's terminal and the task board](docs/screenshots/panels.jpg)
 
 ---
 
@@ -126,7 +126,19 @@ In **Chat**, every delivery card shows how many files the agent actually wrote,
 measured rather than claimed. You can reply to a message (WhatsApp-style quote),
 message an agent directly, and switch between **Task** and **Question**.
 
+The **i** button opens a side panel for the agent you're talking to (the lead in
+a team chat): its model and auto-approve switch, how full its context is, today's
+spend, its skills (turn them on or off), its MCP servers and the files it
+touched. Context and MCP status come from the agent's open session; when the
+session is closed the panel says so instead of guessing. On a wide screen the
+panel starts open.
+
 ![Board mode: brief the team, live flow, status, budget and agents](docs/screenshots/board.jpg)
+
+Board widgets include an **agent activity heatmap** (tokens per agent per day,
+last 7 days), a **budget dial** and the **delegation network**: who handed work
+to whom, with running work drawn as a moving line. Click an agent in the network
+to open its terminal.
 
 ---
 
@@ -264,7 +276,9 @@ are kept across updates.
 
 Each agent directory is also a local Claude Code plugin; the
 `skills/<name>/SKILL.md` files inside it are called as `/<name>` in the
-terminal. Your own skills and plugins under `~/.claude/skills` work too; type `/`
+terminal, for example `/status-summary`, `/bug-hunt` or `/second-opinion`. The
+panel shows each built-in skill with a readable title and a description in the
+interface language. Your own skills and plugins under `~/.claude/skills` work too; type `/`
 in the terminal to list them all.
 
 The panel's terminal uses the real CLI's command set. Commands that open a
@@ -274,28 +288,44 @@ agent as it is. The panel never rejects a command.
 
 ## 🎨 Appearance and language
 
-There are three styles, picked under **Settings → Interface**. Each style is a complete look with its own colours; there is no separate palette to pick.
+There are four styles, picked under **Settings → Interface**. Each style has a
+**light** and a **dark** mode; pick the mode right under the style cards or from
+the command palette (`Ctrl+K` → "Toggle light/dark mode"). The mode is
+remembered per style, so you can keep Observatory dark and Glass light.
 
-| Style | Feel | Colours |
-|---|---|---|
-| **Observatory** (default) | A star atlas: engraved headings, paper grain, a starfield | Obsidian: ink black, cyan accent |
-| **Studio** | A clean product surface: sans-serif, soft corners, no texture | Paper: light, violet accent |
-| **Phosphor** | A midnight product page: bold headings, italic serif accents, lime light | Graphite black, lime accent |
+| Style | Feel | Light | Dark |
+|---|---|---|---|
+| **Glass** (default) | Frosted cards and separate panels: round corners, soft light | Grey-white, aqua green | Forest green night, mint light |
+| **Observatory** | A star atlas: engraved headings, a graticule, a starfield | Grey-white, turquoise | Ink black, cyan |
+| **Studio** | A clean product surface: sans-serif, soft corners, no texture | Paper white, violet | Graphite, violet |
+| **Phosphor** | A midnight product page: bold headings, italic serif accents | Lavender, lime fill | Graphite black, lime |
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Studio style: the Overview shows a team list and recent handoffs"></td>
-<td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Phosphor style in Panels mode"></td>
+<td width="50%"><img src="docs/screenshots/glass-dark.jpg" alt="Glass style, dark mode, in Panels mode"></td>
+<td width="50%"><img src="docs/screenshots/observatory-light.jpg" alt="Observatory style, light mode: the Overview draws the team as a star map"></td>
 </tr>
 <tr>
-<td align="center"><sub>Studio</sub></td>
-<td align="center"><sub>Phosphor</sub></td>
+<td align="center"><sub>Glass · dark</sub></td>
+<td align="center"><sub>Observatory · light</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Studio style, light mode: the Overview shows a team list and recent handoffs"></td>
+<td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Phosphor style, dark mode, in Panels mode"></td>
+</tr>
+<tr>
+<td align="center"><sub>Studio · light</sub></td>
+<td align="center"><sub>Phosphor · dark</sub></td>
 </tr>
 </table>
 
-Each style also has its own Overview: Observatory draws the team as a star map, Studio as a
-plain team list with recent handoffs, Phosphor as a product-page hero. On Studio's light
-surface the terminal stays dark and sits on the panel as an inset card.
+Each style also has its own Overview. Glass shows a status card, ask-the-lead,
+a budget dial, an activity heatmap, recent handoffs and the delegation network;
+Observatory draws the team as a star map; Studio shows a plain team list;
+Phosphor opens like a product page. Studio and Phosphor show the delegation
+network too. On light modes the terminal stays dark and sits on the panel as an
+inset card. Lime and light turquoise can't be read as text on a light ground, so
+there they are used as fills and light, and text accents use a darker tone.
 
 Contrast isn't approved by eye, it is measured: `node web/scripts/contrast.mjs`
 checks every style's colours against the thresholds and exits non-zero if one fails.

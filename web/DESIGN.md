@@ -240,6 +240,8 @@ Density is high (this is a tool for someone running eight agents at once) but th
 first viewport spends its space on a single sentence, because the product's first
 job is to report state, not to report data.
 
+(Since 2026-11-25 this is one of four styles and Glass is the default; see
+"Styles" at the end. What follows describes the Observatory style.)
 Two editions exist, and each answers a real observing condition rather than a
 colour preference: **Gece** (night ink, a panel left open for hours) and
 **Gündüz** (printed plate on paper for a lit room; print does not glow, so the halo
@@ -618,19 +620,47 @@ stays put when the curtain leaves.
 
 ## Styles (design language, separate from palette)
 
-The sky-plate identity above is the **Observatory** style, the default. A
-second style, **Studio**, re-skins the same tokens for users who want a plain
-product surface. Style lives on `data-style` (`src/styles.css`); palette stays
-on `data-theme`.
+The sky-plate identity above is the **Observatory** style. Since 2026-11-25 there
+are four styles, and **Glass** is the default. Style lives on `data-style`
+(`src/styles.css`, tokens only; shell rules for Glass at the end of
+`src/index.css`), palette on `data-theme` (`src/themes.css`).
 
-| | Observatory | Studio |
-|---|---|---|
-| Display type | Bodoni Moda italic | system sans (Segoe UI Variable / SF), 600 |
-| UI type | Archivo | system sans |
-| Corners | 2/3px (premium 4/6px) | 6/10px |
-| Texture | grain, graticule, starfield | none, flat ground |
-| Labels | vermilion/cyan small caps | muted small caps, 0.06em |
-| Palette | Obsidian only (since 2026-11-25 every style has exactly one palette) | Paper only |
+**Style × mode, not free palettes.** Every style has exactly two palettes, a
+light one and a dark one. The user picks style and mode; the palette follows
+(`appStyle.ts` `STYLE_PALETTES`, mirrored in the boot script in `index.html`).
+The mode is remembered per style. A colour-only variant is never added as a
+"theme": a new look is a new style with its own two palettes.
 
-Studio rules: no ornament that is not data; status colors stay distinct from
-the accent; contrast is measured with `scripts/contrast.mjs` like every plate.
+| | Glass (default) | Observatory | Studio | Phosphor |
+|---|---|---|---|---|
+| Reference | Vireon + Optivue / Astrabit + Ventra | the sky plate | a product chat screen | the "Drop Cloude" page / InsightOS |
+| Display type | Sora 600 | Bodoni Moda italic | system sans 600 | Archivo 600 + one italic Bodoni word |
+| UI type | Sora | Archivo | system sans | Archivo |
+| Corners | 10 / 18px | 4 / 6px | 8 / 12px | 6 / 12px, pill buttons |
+| Surfaces | separate frosted cards with a gap | hairline plates, edge to edge | white cards, light edge | flat, light bleeding from a corner |
+| Light palette | `mist`: grey-white, aqua green | `tide`: grey-white, turquoise | `paper`: white, violet | `lumen`: lavender, lime fill |
+| Dark palette | `grove`: forest night, mint | `obsidian`: ink black, cyan | `graphite`: graphite, violet | `phosphor`: graphite black, lime |
+| Overview | cards: status, ask the lead, budget dial, heatmap, handoffs, delegation network | the sky map | team list + handoffs + delegation network | product-page hero + delegation network |
+
+**Bright accents on light ground.** Lime, light turquoise and aqua green do
+not read as text on a light surface (about 1.3:1). On light palettes `--accent`
+is a darker tone that passes the 3:1 bar; the reference's bright colour comes
+in as `--accent-fill` / `--accent-fill-fg` (primary button) and
+`--accent-glow-rgb` (texture light, chips, heatmap cells). Style rules read
+them with a fallback to `--hud` / `--accent-rgb`, so dark palettes need not
+define them.
+
+**Glass rules.**
+- Frosted glass (`backdrop-filter`) only on the shell's large surfaces: header,
+  rail, side docks, tiled panels, the team bar, chat columns. Never on rows,
+  chips or cards inside a panel; they already sit on frosted glass, and a second
+  blur layer is both invisible and expensive.
+- Glass only reads with colour behind it: the ground carries two soft light
+  spots (accent at the top right, a second aura at the bottom left).
+- The overview's headline cards stay dark in both modes (the references' black
+  card on a light ground); their light comes from the palette.
+- The terminal is an inset dark card in both modes.
+
+Rules for every style: no ornament that is not data; status colours stay
+distinct from the accent; contrast is measured with `scripts/contrast.mjs` on
+all eight palettes, never judged by eye.

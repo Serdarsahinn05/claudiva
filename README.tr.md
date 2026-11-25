@@ -27,7 +27,7 @@ harcadığını gösterir.
 
 </div>
 
-![Paneller modunda Claudiva: genel durum, canlı ofis, liderin terminali ve görev panosu](docs/screenshots/panels.jpg)
+![Paneller modunda Claudiva, Cam stili: genel durum, liderin terminali ve görev panosu](docs/screenshots/panels.jpg)
 
 > Ekran görüntüleri İngilizce arayüzden alındı; panel Türkçe de kullanılabilir
 > (Ayarlar → Arayüz).
@@ -130,7 +130,17 @@ gösterir; bu sayı ajanın iddiası değil, ölçümdür. Bir mesajı yanıtlay
 (WhatsApp tarzı alıntı), bir ajana doğrudan yazabilir, **Görev** ile **Soru**
 arasında geçiş yapabilirsiniz.
 
+**i** düğmesi, konuştuğunuz ajanın (ekip sohbetinde liderin) yan panelini açar:
+modeli ve oto-onay anahtarı, bağlamının ne kadar dolu olduğu, bugünkü harcaması,
+skill'leri (açıp kapatabilirsiniz), MCP sunucuları ve dokunduğu dosyalar. Bağlam
+ve MCP durumu ajanın açık oturumundan okunur; oturum kapalıysa panel tahmin
+yürütmez, bunu söyler. Geniş ekranda panel açık başlar.
+
 ![Pano modu: ekibe yaz, canlı akış, durum, bütçe ve ajanlar](docs/screenshots/board.jpg)
+
+Pano widget'ları arasında **ajan etkinliği ısı haritası** (son 7 gün, ajan ve
+gün başına token), **bütçe kadranı** ve **delegasyon ağı** da var: kim kime iş
+verdi, süren iş akan çizgiyle çizilir. Ağda bir ajana tıklamak terminalini açar.
 
 ---
 
@@ -265,7 +275,10 @@ yaptığınız düzenlemeler güncellemelerde korunur.
 ## 🧩 Skill'ler ve komutlar
 
 Her ajan dizini aynı zamanda yerel bir Claude Code plugin'idir; içindeki
-`skills/<ad>/SKILL.md` dosyaları terminalde `/<ad>` olarak çağrılır. Kendi
+`skills/<ad>/SKILL.md` dosyaları terminalde `/<ad>` olarak çağrılır; örneğin
+`/status-summary`, `/bug-hunt`, `/second-opinion`. Panel yerleşik skill'leri
+okunur bir başlık ve arayüz dilinde bir açıklamayla gösterir (Durum özeti, Hata
+avı, İkinci görüş). Kendi
 `~/.claude/skills` altındaki skill'leriniz ve plugin'leriniz de geçerlidir;
 terminalde `/` yazınca hepsi listelenir.
 
@@ -276,28 +289,44 @@ hiçbir komutu reddetmez.
 
 ## 🎨 Görünüm ve dil
 
-Üç stil vardır, **Ayarlar → Arayüz**'den seçilir. Her stil kendi renkleriyle birlikte tam bir görünümdür; ayrıca seçilecek bir palet yoktur.
+Dört stil vardır, **Ayarlar → Arayüz**'den seçilir. Her stilin bir **açık** bir
+**koyu** modu var; mod stil kartlarının hemen altından ya da komut paletinden
+(`Ctrl+K` → "Açık/koyu modu değiştir") seçilir. Mod stil başına hatırlanır:
+Gözlemevi'ni koyu, Cam'ı açık kullanabilirsiniz.
 
-| Stil | His | Renkler |
-|---|---|---|
-| **Gözlemevi** (varsayılan) | Gök atlası: gravür başlıklar, kâğıt tanesi, yıldız alanı | Obsidyen: mürekkep siyahı, cyan vurgu |
-| **Stüdyo** | Sade bir ürün yüzeyi: sans-serif, yumuşak köşe, doku yok | Kâğıt: açık, mor vurgu |
-| **Fosfor** | Gece yarısı ürün sayfası: kalın başlık, italik serif vurgu, limon ışık | Grafit-siyah, limon vurgu |
+| Stil | His | Açık | Koyu |
+|---|---|---|---|
+| **Cam** (varsayılan) | Buzlu kartlar ve ayrık paneller: yuvarlak köşe, yumuşak ışık | Gri-beyaz, su yeşili | Orman yeşili gece, nane ışık |
+| **Gözlemevi** | Gök atlası: gravür başlıklar, koordinat ızgarası, yıldız alanı | Gri-beyaz, turkuaz | Mürekkep siyahı, cyan |
+| **Stüdyo** | Sade bir ürün yüzeyi: sans-serif, yumuşak köşe, doku yok | Kâğıt beyazı, mor | Grafit, mor |
+| **Fosfor** | Gece yarısı ürün sayfası: kalın başlık, italik serif vurgu | Lavanta, limon dolgu | Grafit-siyah, limon |
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Stüdyo stili: Genel Durum ekip listesi ve son devirlerle"></td>
-<td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Paneller modunda Fosfor stili"></td>
+<td width="50%"><img src="docs/screenshots/glass-dark.jpg" alt="Paneller modunda Cam stili, koyu mod"></td>
+<td width="50%"><img src="docs/screenshots/observatory-light.jpg" alt="Gözlemevi stili, açık mod: Genel Durum ekibi gök haritası olarak çizer"></td>
 </tr>
 <tr>
-<td align="center"><sub>Stüdyo</sub></td>
-<td align="center"><sub>Fosfor</sub></td>
+<td align="center"><sub>Cam · koyu</sub></td>
+<td align="center"><sub>Gözlemevi · açık</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Stüdyo stili, açık mod: Genel Durum ekip listesi ve son devirlerle"></td>
+<td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Paneller modunda Fosfor stili, koyu mod"></td>
+</tr>
+<tr>
+<td align="center"><sub>Stüdyo · açık</sub></td>
+<td align="center"><sub>Fosfor · koyu</sub></td>
 </tr>
 </table>
 
-Her stilin Genel Durum ekranı da kendine ait: Gözlemevi ekibi gök haritası olarak, Stüdyo
-sade bir ekip listesi ve son devirlerle, Fosfor bir ürün sayfası açılışıyla çizer. Stüdyo'nun
-açık yüzeyinde terminal koyu kalır ve panelin üstünde kenar boşluklu bir kart olarak durur.
+Her stilin Genel Durum ekranı da kendine ait. Cam bir durum kartı, lidere soru,
+bütçe kadranı, etkinlik ısı haritası, son devirler ve delegasyon ağı gösterir;
+Gözlemevi ekibi gök haritası olarak çizer; Stüdyo sade bir ekip listesi, Fosfor
+bir ürün sayfası açılışı gösterir. Stüdyo ve Fosfor'da delegasyon ağı da var.
+Açık modlarda terminal koyu kalır ve panelin üstünde kenar boşluklu bir kart
+olarak durur. Limon ve açık turkuaz açık zeminde yazı olarak okunmadığı için
+orada dolgu ve ışık olarak kullanılır; yazıdaki vurgu daha koyu bir tondur.
 
 Kontrast göz kararıyla onaylanmaz, ölçülür: `node web/scripts/contrast.mjs`
 her stilin renklerini eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
