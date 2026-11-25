@@ -9,6 +9,7 @@ import type {
   SkillScope,
 } from '../types';
 import { L } from '../i18n';
+import { skillText } from '../skillI18n';
 
 /**
  * Skill paneli — iki kip, iki ayrı soru.
@@ -92,7 +93,10 @@ export function Skills({ agents }: Props) {
         (s) =>
           !needle ||
           s.name.toLocaleLowerCase('tr').includes(needle) ||
-          s.description.toLocaleLowerCase('tr').includes(needle),
+          s.description.toLocaleLowerCase('tr').includes(needle) ||
+          // Panelde görünen çeviri de aranır ("durum" yazan Durum özeti'ni bulsun).
+          skillText(s).title.toLocaleLowerCase('tr').includes(needle) ||
+          skillText(s).desc.toLocaleLowerCase('tr').includes(needle),
       );
   }, [skills, tab, q]);
 
@@ -134,7 +138,7 @@ export function Skills({ agents }: Props) {
     try {
       await api.removeSkill(s.id);
       await load();
-      setNotice(`"${s.name}" silindi.`);
+      setNotice(L.skills.deleted(s.name));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -227,17 +231,18 @@ export function Skills({ agents }: Props) {
                 <article key={s.id} className={`sk-item${s.enabled ? '' : ' off'}`}>
                   <div className="sk-main">
                     <div className="sk-top">
-                      <span className="sk-name">{s.name}</span>
+                      <span className="sk-name">{skillText(s).title}</span>
+                      {skillText(s).packaged && <code className="sk-cmd">/{s.name}</code>}
                       <span className={`badge sk-scope-${s.scope}`}>
                         {SCOPE_LABEL[s.scope]}
                         {s.agentId && ` · ${nameOf(s.agentId)}`}
                       </span>
                       {!s.enabled && <span className="chip chip-pending">{L.skills.off}</span>}
                     </div>
-                    {s.description && <p className="sk-desc">{s.description}</p>}
+                    {s.description && <p className="sk-desc">{skillText(s).desc}</p>}
                     <div className="sk-meta">
                       <span>{fmtSize(s.size)}</span>
-                      {s.extras.length > 0 && <span>{s.extras.length} ek dosya</span>}
+                      {s.extras.length > 0 && <span>{L.skills.extraFiles(s.extras.length)}</span>}
                       <span className="sk-dir" title={s.dir}>
                         {s.dir}
                       </span>

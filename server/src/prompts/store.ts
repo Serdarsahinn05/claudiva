@@ -20,7 +20,7 @@ export class PromptStore {
       }
     }
     // Varsayılan prompt yok: eskiden buradaki üç şablon artık skill
-    // (/durum-ozeti, /hafiza-yaz, /plan-yap) olarak geliyor.
+    // (/status-summary, /save-memory, /plan-work) olarak geliyor.
     this.prompts = [];
   }
 

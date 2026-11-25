@@ -1010,6 +1010,8 @@ export const tr = {
     narrow: 'Aramayı daralt ya da başka bir kapsama bak.',
     useDiscover: '“Keşfet” kipinden arayıp kurabilirsin.',
     off: 'kapalı',
+    deleted: (name: string) => `"${name}" silindi.`,
+    extraFiles: (n: number) => `${n} ek dosya`,
     disable: 'Kapat',
     enable: 'Aç',
     delete: 'Sil',

@@ -109,6 +109,9 @@ const tr = {
   upgradeSkillsFailed: (id: string, msg: string) => `[claudiva] ${id} skill'leri güncellenemedi: ${msg}`,
   upgradeContentFailed: (id: string, msg: string) => `[claudiva] ${id} dosya içerikleri güncellenemedi: ${msg}`,
   upgradeFileFailed: (file: string, msg: string) => `[claudiva] ${file} güncellenemedi: ${msg}`,
+  skillRenamed: (id: string, from: string, to: string) => `[claudiva] ${id}: skill ${from} → ${to} olarak yeniden adlandırıldı`,
+  skillRenameKept: (id: string, from: string, to: string) =>
+    `[claudiva] ${id}: ${from} skill'i değiştirilmiş, olduğu gibi bırakıldı (paketteki yeni adı: ${to})`,
   migrated: (from: string, to: string) => `[claudiva] ${from} → ${to} taşındı.`,
   migrateFailed: (from: string, msg: string) => `[claudiva] ${from} taşınamadı (${msg}); eski klasör kullanılıyor.`,
   bannerProject: 'Proje:',
@@ -180,6 +183,8 @@ const en: Dict = {
   upgradeSkillsFailed: (id, msg) => `[claudiva] could not update ${id}'s skills: ${msg}`,
   upgradeContentFailed: (id, msg) => `[claudiva] could not update ${id}'s files: ${msg}`,
   upgradeFileFailed: (file, msg) => `[claudiva] could not update ${file}: ${msg}`,
+  skillRenamed: (id, from, to) => `[claudiva] ${id}: skill ${from} renamed to ${to}`,
+  skillRenameKept: (id, from, to) => `[claudiva] ${id}: skill ${from} was edited, left as is (its new package name is ${to})`,
   migrated: (from, to) => `[claudiva] moved ${from} → ${to}.`,
   migrateFailed: (from, msg) => `[claudiva] could not move ${from} (${msg}); using the old folder.`,
   bannerProject: 'Project:',

@@ -14,7 +14,7 @@ Improve the code **WITHOUT CHANGING its behavior**.
 
 If you think behavior has to change, **do not do it** - say so first and wait for approval.
 
-For detailed criteria, see the `temiz-kod` skill.
+For detailed criteria, see the `clean-code` skill.
 
 ## Missing information
 Treat any text written after the command as input. If required information is missing, do not guess; ask ONE question, then continue.

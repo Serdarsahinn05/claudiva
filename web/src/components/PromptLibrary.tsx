@@ -91,7 +91,7 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
           <h2>{L.prompts.emptyTitle}</h2>
           <p>
             {L.prompts.emptyA}<strong>{L.prompts.emptySkill}</strong>{L.prompts.emptyB}<kbd>/</kbd>{L.prompts.emptyC}
-            <code>/durum-ozeti</code>, <code>/hata-avi</code>{L.prompts.emptyD}
+            <code>/status-summary</code>, <code>/bug-hunt</code>{L.prompts.emptyD}
           </p>
           <p className="muted small">{L.prompts.emptyHint}</p>
         </div>

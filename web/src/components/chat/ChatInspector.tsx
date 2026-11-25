@@ -24,6 +24,7 @@ import type { AgentSnapshot, BudgetState, ChangedFile, ContextUsageInfo, McpStat
 import { api } from '../../api';
 import { fmtCost, fmtNum, totalTokens, ROLE_LABEL, STATUS_LABEL } from '../../format';
 import { Avatar } from './ChatMessage';
+import { skillText } from '../../skillI18n';
 import { L } from '../../i18n';
 
 const HEADROOM = new Set(['Free space', 'Autocompact buffer']);
@@ -286,8 +287,8 @@ export function ChatInspector({ agent, budget, compact = false, refreshAgents }:
                 .filter((s) => s.scope !== 'global' || showGlobal)
                 .map((s) => (
                 <div key={s.id} className="ci-row">
-                  <span className="ci-ell" title={s.description}>
-                    {s.name}
+                  <span className="ci-ell" title={`/${s.name} · ${skillText(s).desc}`}>
+                    {skillText(s).title}
                     <span className={`ci-scope${s.scope === 'agent' ? ' own' : ''}`}>{L.chat.ciScope[s.scope] ?? s.scope}</span>
                   </span>
                   <Toggle on={s.enabled} label={s.name} onChange={(v) => void toggleSkill(s, v)} />

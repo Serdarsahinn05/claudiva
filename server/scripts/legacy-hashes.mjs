@@ -29,6 +29,13 @@ const SAHADA_GORULEN = {
 };
 
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+// Yeniden adlandırılan skill'ler (server/src/skillRenames.ts, metin olarak okunur):
+// eski yoldaki geçmiş sürümler YENİ yolun anahtarına yazılır, yoksa eski adlı
+// kurulumların dizini "kullanıcı değiştirmiş" sanılıp hiç taşınmazdı.
+const RENAMES = Object.fromEntries(
+  [...fs.readFileSync('server/src/skillRenames.ts', 'utf8').matchAll(/^\s*"([a-z0-9-]+)": "([a-z0-9-]+)",$/gm)].map((m) => [m[1], m[2]]),
+);
+const renamed = (rel) => rel.replace(/^([^/]+)\/skills\/([^/]+)\//, (all, agent, skill) => (RENAMES[skill] ? `${agent}/skills/${RENAMES[skill]}/` : all));
 // agentUpgrade.ts contentHash ile AYNI kural: CRLF -> LF, sondaki boşluk kırpılır.
 const hash = (text) =>
   crypto.createHash('sha256').update(text.replace(/\r\n/g, '\n').trimEnd()).digest('hex').slice(0, 16);
@@ -47,7 +54,7 @@ for (const c of commits) {
   const files = sh(`git ls-tree -r --name-only ${c} agents`).split('\n');
   for (const f of files) {
     if (!WANTED.test(f) || f.includes('/find-skills/')) continue;
-    const rel = f.replace(/^agents\//, '');
+    const rel = renamed(f.replace(/^agents\//, ''));
     if (!current.has(rel)) continue; // pakette artık olmayan dosya: güncellenecek hedef yok
     const h = hash(sh(`git show ${c}:"${f}"`));
     if (h === current.get(rel)) continue;

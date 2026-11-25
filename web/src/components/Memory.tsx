@@ -133,7 +133,7 @@ export function Memory() {
         <div className="mem-empty">
           <h3>{L.memory.emptyTitle}</h3>
           <p>
-            {L.memory.emptyA}<code>hafiza-yaz</code>{L.memory.emptyB}<strong>{L.memory.refresh}</strong>{L.memory.emptyC}
+            {L.memory.emptyA}<code>save-memory</code>{L.memory.emptyB}<strong>{L.memory.refresh}</strong>{L.memory.emptyC}
           </p>
         </div>
       )}

@@ -20,12 +20,19 @@
  *     dosyanın özeti ESKİ bir paket sürümüne eşitse (`LEGACY_CONTENT`) paketteki
  *     sürümle değiştirilir; pasif skill adını korur. Bilinmeyen özet = kullanıcı
  *     düzenlemiştir, dokunulmaz. Yalnız VAR OLAN dosya yazılır; silinen geri gelmez.
+ *
+ * Ve skill YENİDEN ADLANDIRMA (2026-11-25, `skillRenames.ts`): eski (Türkçe)
+ * adlı dizin, `SKILL.md`si paketin bir eski sürümüne eşitse yeni adına TAŞINIR
+ * (içerik sonra kural 3 ile yenilenir). Eşit değilse kullanıcı düzenlemiştir:
+ * eski adıyla kalır, yeni ad KOPYALANMAZ (aynı işi gören iki skill olmasın).
+ * Manifestteki eski ad her durumda yeni adla değiştirilir.
  */
 import { S } from './i18n.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { LEGACY_CONTENT } from './agentLegacyContent.js';
+import { SKILL_RENAMES } from './skillRenames.js';
 
 interface Legacy {
   /** 0.1.x paketindeki ad ve açıklama: yalnız bunlara eşitse yenilenir. */
@@ -172,6 +179,28 @@ function upgradeSkills(
   const seeded = new Set(readJson<string[]>(manifestFile) ?? legacy?.skills ?? []);
   let changed = !fs.existsSync(manifestFile);
 
+  // Yeniden adlandırma, "yeni skill" döngüsünden ÖNCE: yoksa yeni ad manifestte
+  // olmadığı için kopyalanır ve eski adlı dizinle yan yana iki kopya kalırdı.
+  const id = path.basename(bundledDir);
+  for (const [from, to] of Object.entries(SKILL_RENAMES)) {
+    if (!fs.existsSync(path.join(bundledSkills, to))) continue;
+    if (seeded.delete(from)) {
+      seeded.add(to);
+      changed = true;
+    }
+    const oldDir = path.join(targetDir, 'skills', from);
+    const newDir = path.join(targetDir, 'skills', to);
+    if (!fs.existsSync(oldDir) || fs.existsSync(newDir)) continue;
+    seeded.add(to);
+    changed = true;
+    if (isPackagedSkill(oldDir, `${id}/skills/${to}/SKILL.md`)) {
+      fs.renameSync(oldDir, newDir);
+      console.log(S.skillRenamed(id, from, to));
+    } else {
+      console.warn(S.skillRenameKept(id, from, to));
+    }
+  }
+
   for (const entry of fs.readdirSync(bundledSkills, { withFileTypes: true })) {
     if (!entry.isDirectory() || seeded.has(entry.name)) continue;
     const dest = path.join(targetDir, 'skills', entry.name);
@@ -214,6 +243,21 @@ function isGeneratedManifest(text: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Dizindeki skill paketten geldiği gibi mi? `SKILL.md` (ya da pasif hâli)
+ * bilinen bir paket sürümüne eşitse evet. Yeniden adlandırılmış skill'lerin
+ * eski yoldaki geçmişi YENİ yolun anahtarındadır (legacy-hashes.mjs).
+ */
+function isPackagedSkill(dir: string, key: string): boolean {
+  const known = LEGACY_CONTENT[key] ?? [];
+  for (const name of ['SKILL.md', 'SKILL.md.disabled']) {
+    const file = path.join(dir, name);
+    if (!fs.existsSync(file)) continue;
+    return known.includes(contentHash(fs.readFileSync(file, 'utf8')));
+  }
+  return false;
 }
 
 function upgradeContent(bundledDir: string, targetDir: string, id: string): void {

@@ -998,6 +998,8 @@ export const en: Dict = {
     narrow: 'Narrow the search or look at another scope.',
     useDiscover: 'You can search and install from “Discover”.',
     off: 'off',
+    deleted: (name: string) => `"${name}" removed.`,
+    extraFiles: (n: number) => `${n} extra file${n === 1 ? '' : 's'}`,
     disable: 'Disable',
     enable: 'Enable',
     delete: 'Delete',

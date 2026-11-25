@@ -6,7 +6,7 @@ import type { MemoryNode } from './types.js';
 /**
  * Ajan hafızası = `<proje>/.claudiva/memory/<ajanId|shared>/*.md`.
  * Her dosya tek bir hafıza: frontmatter (name/description/metadata.type) +
- * gövdede `[[dosya-adi]]` bağlantıları (hafiza-yaz skill'inin ürettiği biçim).
+ * gövdede `[[dosya-adi]]` bağlantıları (save-memory skill'inin ürettiği biçim).
  *
  * Burada düğüm listesi çıkarılır; kenarlar istemcide `[[link]]` → düğüm
  * eşlemesiyle türetilir. AI yok, dosyalar zaten açık bir grafik.
