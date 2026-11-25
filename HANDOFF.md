@@ -32,8 +32,14 @@ Commit edildi: `e107104` (stiller, Cam, sağ panel). Ardından skill adları
 göre çeviri; eski kurulumlar açılışta güvenle taşınır (bkz. server/CLAUDE.md).
 PUSH EDİLMEDİ.
 
-**Sıradaki:** kısa `impeccable audit`, README/DESIGN.md güncellemesi (yeni
-varsayılan stil, açık/koyu, yeni skill adları), sürüm notu, 0.4.0. Eski isteğe bağlı liste: Sohbet'e sağ panel (model/skill/MCP/dosyalar). README ve
+0.4.0 HAZIR (2026-11-25): README (EN+TR) ve DESIGN.md güncel, `chore: release 0.4.0`
++ açıklamalı `v0.4.0` etiketi (sürüm notu etiket mesajında). Denetim kullanıcı
+isteğiyle atlandı. PUSH ve `npm publish` kullanıcıda.
+
+**Eksik:** `docs/screenshots/chat.jpg` ve `board.jpg` hâlâ eski (Gözlemevi koyu);
+Chrome ekran görüntüsü zaman aşımına düştü (pencere arka plandaydı). Cam açık,
+sağ panel açık Sohbet ve yeni widget'lı Pano ile yeniden çekilmeli; sürüm
+gerektirmez (README görselleri ana daldan okunur). Eski isteğe bağlı liste: Sohbet'e sağ panel (model/skill/MCP/dosyalar). README ve
 ekran görüntüleri yeni varsayılan stile göre güncellenmeli.
 
 
