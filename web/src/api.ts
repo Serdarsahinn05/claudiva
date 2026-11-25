@@ -23,6 +23,7 @@ import type {
   UsageHistoryResponse,
   UsageSummary,
 } from './types';
+import { L } from './i18n';
 
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -31,7 +32,11 @@ async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
+  if (!res.ok) {
+    // Sunucu çevrilebilir hatalarda `code` da yollar; metin sunucunun dilinde.
+    const { error, code } = data as { error?: string; code?: string };
+    throw new Error((code && L.apiErrors[code]) || error || `HTTP ${res.status}`);
+  }
   return data as T;
 }
 

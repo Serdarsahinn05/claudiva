@@ -7,7 +7,7 @@ import type {
   TranscriptEvent,
   UsageSummary,
 } from './types';
-import { L } from './i18n';
+import { L, dateLocale } from './i18n';
 
 /**
  * YERLEŞİK SLASH KOMUTLARI — panelde çalışan katman.
@@ -24,6 +24,9 @@ import { L } from './i18n';
  *  - Prompt'a genişleyen HER ŞEY (`/compact`, `/init`, `/review`, `/pr-comments`,
  *    skill'ler, kullanıcının kendi komutları…) olduğu gibi SDK'ya gider.
  *    Panel hiçbir komutu reddetmez.
+ *
+ * Çıktı metni MODEL DEĞİL panel yazar, bu yüzden arayüz diliyle gelir
+ * (`L.cmdOut`). Kullanıcının yazdığı dile uyan yalnız SDK'ya giden komutlardır.
  *
  * Taşınabilirlik: burada projeye özel hiçbir şey yok. Komut seti oturumun
  * kendisinden (SDK) ve panelin kendi defterinden okunuyor, dolayısıyla
@@ -58,6 +61,8 @@ export interface LocalContext {
   refreshAgents: () => Promise<void>;
 }
 
+const O = L.cmdOut;
+
 // ---------------------------------------------------------------- biçimleme
 
 function fmtTokens(n: number): string {
@@ -75,7 +80,7 @@ function fmtReset(iso?: string): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString(dateLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 /**
@@ -96,6 +101,8 @@ function kv(rows: [string, string][], pad = 16): string[] {
   return rows.map(([k, v]) => `  ${k.padEnd(pad)} ${v}`);
 }
 
+const onOff = (v: boolean) => (v ? O.on : O.off);
+
 const STATUS_TR: Record<string, string> = {
   ...L.status,
 };
@@ -106,9 +113,7 @@ const STATUS_TR: Record<string, string> = {
  * neredeyse her zaman budur, o yüzden ajan durumu da söylenir.
  */
 function unreadable(agent: AgentSnapshot): string {
-  return agent.status === 'offline'
-    ? '  (ajan kapalı — bu veri açık oturumdan okunur)'
-    : '  (okunamadı — oturum şu an kontrol isteği kabul etmiyor)';
+  return agent.status === 'offline' ? O.unreadableOffline : O.unreadableBusy;
 }
 
 // ------------------------------------------------------------------ komutlar
@@ -118,16 +123,16 @@ async function usageOutput(ctx: LocalContext): Promise<string> {
   const lines: string[] = [];
 
   const t = tracked.total;
-  lines.push('Bu projedeki kullanım (claudiva sayımı)');
+  lines.push(O.projectUsage);
   lines.push(
-    `  ${fmtTokens(t.inputTokens + t.outputTokens)} token · ${fmtUSD(t.costUSD)} · ${t.requests} istek`,
+    `  ${fmtTokens(t.inputTokens + t.outputTokens)} token · ${fmtUSD(t.costUSD)} · ${O.requests(t.requests)}`,
   );
 
   const rows = Object.entries(tracked.perAgent).filter(([, u]) => u.requests > 0);
   if (rows.length) {
     lines.push('');
     for (const [id, u] of rows.sort((a, b) => b[1].costUSD - a[1].costUSD)) {
-      const name = id === ctx.agent.config.id ? `${id} (bu ajan)` : id;
+      const name = id === ctx.agent.config.id ? `${id} ${O.thisAgent}` : id;
       lines.push(
         `  ${name.padEnd(24)} ${fmtTokens(u.inputTokens + u.outputTokens).padStart(7)} · ${fmtUSD(u.costUSD)}`,
       );
@@ -136,21 +141,21 @@ async function usageOutput(ctx: LocalContext): Promise<string> {
 
   const turn = ctx.agent.lastTurn;
   if (turn) {
-    lines.push(...section('Bu ajanın son turu', kv([
-      ['girdi', `${fmtTokens(turn.inputTokens)} tok`],
-      ['çıktı', `${fmtTokens(turn.outputTokens)} tok`],
-      ['önbellek', `${fmtTokens(turn.cacheReadTokens)} okundu · ${fmtTokens(turn.cacheCreationTokens)} yazıldı`],
-      ['maliyet', fmtUSD(turn.costUSD)],
+    lines.push(...section(O.lastTurnOfAgent, kv([
+      [O.input, `${fmtTokens(turn.inputTokens)} ${O.tok}`],
+      [O.output, `${fmtTokens(turn.outputTokens)} ${O.tok}`],
+      [O.cache, O.cacheRW(fmtTokens(turn.cacheReadTokens), fmtTokens(turn.cacheCreationTokens))],
+      [O.cost, fmtUSD(turn.costUSD)],
     ])));
   }
 
   const b = ctx.budget;
   if (b) {
-    lines.push('', 'Panel bütçesi (bugün)');
+    lines.push('', O.panelBudgetToday);
     if (b.limitUSD && b.pct !== null) {
       lines.push(`  ${bar(b.pct)} %${Math.round(b.pct)}  ${fmtUSD(b.spentUSD)} / ${fmtUSD(b.limitUSD)}`);
     } else {
-      lines.push(`  ${fmtUSD(b.spentUSD)} harcandı · sınır yok (Ayarlar'dan koyabilirsin)`);
+      lines.push(`  ${O.spentNoLimit(fmtUSD(b.spentUSD))}`);
     }
   }
 
@@ -162,17 +167,17 @@ async function usageOutput(ctx: LocalContext): Promise<string> {
 
   lines.push('');
   if (p?.rate_limits_available && usable.length) {
-    lines.push('Hesap plan kotası');
+    lines.push(O.planQuota);
     for (const [key, win] of usable) {
-      const label = WINDOW_LABEL[key] ?? key;
+      const label = O.windows[key] ?? key;
       const reset = fmtReset(win.resets_at);
       lines.push(
         `  ${label.padEnd(18)} ${bar(win.utilization!)} %${String(win.utilization).padStart(3)}${reset ? `  ↻ ${reset}` : ''}`,
       );
     }
   } else {
-    lines.push('Hesap plan kotası okunamadı.');
-    lines.push('  En az bir ajanın çalışıyor olması gerekiyor (kota açık oturumdan okunur).');
+    lines.push(O.planUnreadable);
+    lines.push(O.planNeedsAgent);
   }
 
   return lines.join('\n');
@@ -188,24 +193,16 @@ interface PlanUsage {
   rate_limits?: Record<string, RateWindow | null>;
 }
 
-/** Plan penceresi anahtarlarının okunabilir adları. */
-const WINDOW_LABEL: Record<string, string> = {
-  five_hour: '5 saatlik',
-  seven_day: '7 günlük',
-  seven_day_opus: '7 günlük (Opus)',
-  seven_day_sonnet: '7 günlük (Sonnet)',
-};
-
 async function contextOutput(ctx: LocalContext): Promise<string> {
   const { context } = await api.inspect(ctx.agent.config.id, ['context']);
-  if (!context) return ['Bağlam dökümü alınamadı.', unreadable(ctx.agent)].join('\n');
+  if (!context) return [O.contextUnavailable, unreadable(ctx.agent)].join('\n');
 
   const lines = [
-    `Bağlam penceresi · ${context.model}`,
+    O.contextWindow(context.model),
     `  ${bar(context.percentage)} %${Math.round(context.percentage)}` +
-      `  ${fmtTokens(context.totalTokens)} / ${fmtTokens(context.maxTokens)} tok`,
+      `  ${fmtTokens(context.totalTokens)} / ${fmtTokens(context.maxTokens)} ${O.tok}`,
     '',
-    'Nereye gidiyor',
+    O.whereItGoes,
   ];
 
   const cats = context.categories.filter((c) => c.tokens > 0).sort((a, b) => b.tokens - a.tokens);
@@ -220,9 +217,9 @@ async function contextOutput(ctx: LocalContext): Promise<string> {
     const pct = context.maxTokens ? (c.tokens / context.maxTokens) * 100 : 0;
     lines.push(`  ${c.name.padEnd(width)} ${fmtTokens(c.tokens).padStart(7)}  %${Math.round(pct)}`);
   }
-  if (!cats.length) lines.push('  (bağlam boş — henüz tur yapılmamış)');
+  if (!cats.length) lines.push(O.contextEmpty);
 
-  lines.push('', 'Bağlamı küçültmek için: /compact  (ajanın kendi özetlemesi)');
+  lines.push('', O.compactHint);
   return lines.join('\n');
 }
 
@@ -234,11 +231,9 @@ async function modelOutput(ctx: LocalContext): Promise<string> {
     await api.updateAgent(ctx.agent.config.id, { model: wanted });
     await ctx.refreshAgents();
     return [
-      `Temel model değişti: ${current} → ${wanted}`,
-      '  Oturum açıksa anında uygulanır, değilse bir sonraki başlatmada.',
-      ctx.agent.config.autoModel === false
-        ? ''
-        : '  Not: otomatik model seçimi açık — ajan zor işlerde geçici olarak yükseltebilir.',
+      O.modelChanged(current, wanted),
+      O.modelApplies,
+      ctx.agent.config.autoModel === false ? '' : O.modelAutoNote,
     ]
       .filter(Boolean)
       .join('\n');
@@ -246,18 +241,18 @@ async function modelOutput(ctx: LocalContext): Promise<string> {
 
   const { models } = await api.inspect(ctx.agent.config.id, ['models']);
   const lines = [
-    'Model',
+    O.model,
     ...kv([
-      ['temel', ctx.agent.config.model],
-      ['şu an', current],
-      ['oto seçim', ctx.agent.config.autoModel === false ? 'kapalı' : 'açık'],
+      [O.base, ctx.agent.config.model],
+      [O.now, current],
+      [O.autoPick, onOff(ctx.agent.config.autoModel !== false)],
     ]),
   ];
 
   if (models === null) {
-    lines.push('', 'Seçilebilir modeller okunamadı.', unreadable(ctx.agent));
+    lines.push('', O.modelsUnreadable, unreadable(ctx.agent));
   } else if (models?.length) {
-    lines.push('', 'Seçilebilir modeller');
+    lines.push('', O.models);
     const width = Math.max(...models.map((m) => m.value.length));
     for (const m of models) {
       const mark = m.value === current ? '›' : ' ';
@@ -265,7 +260,7 @@ async function modelOutput(ctx: LocalContext): Promise<string> {
     }
   }
 
-  lines.push('', 'Değiştirmek için: /model <ad>   (ör. /model sonnet)');
+  lines.push('', O.modelHint);
   return lines.join('\n');
 }
 
@@ -277,24 +272,24 @@ async function statusOutput(ctx: LocalContext): Promise<string> {
   const lines = [
     `${a.config.name} · ${STATUS_TR[a.status] ?? a.status}`,
     ...kv([
-      ['rol', a.config.role],
-      ['takım', a.config.team ?? '(yok)'],
-      ['model', `${a.currentModel ?? a.config.model}${a.currentModel && a.currentModel !== a.config.model ? ` (temel: ${a.config.model})` : ''}`],
-      ['oturum', a.sessionId ? a.sessionId.slice(0, 8) : '(yok)'],
-      ['oto onay', a.config.autoApprove ? 'açık' : 'kapalı'],
-      ['hafıza', a.config.memoryMode],
-      ['komut', `${a.commands?.length ?? 0} tane`],
+      [O.role, a.config.role],
+      [O.team, a.config.team ?? O.none],
+      ['model', `${a.currentModel ?? a.config.model}${a.currentModel && a.currentModel !== a.config.model ? O.baseParen(a.config.model) : ''}`],
+      [O.session, a.sessionId ? a.sessionId.slice(0, 8) : O.none],
+      [O.autoApprove, onOff(!!a.config.autoApprove)],
+      [O.memory, a.config.memoryMode],
+      [O.commands, O.count(a.commands?.length ?? 0)],
     ]),
   ];
 
-  lines.push(...section('Kullanım (tüm zamanlar)', kv([
-    ['token', `${fmtTokens(u.inputTokens + u.outputTokens)} (${u.requests} istek)`],
-    ['maliyet', fmtUSD(u.costUSD)],
-    ['son tur', a.lastTurn ? `${fmtTokens(a.lastTurn.inputTokens + a.lastTurn.outputTokens)} tok · ${fmtUSD(a.lastTurn.costUSD)}` : '(henüz yok)'],
+  lines.push(...section(O.usageAllTime, kv([
+    [O.token, `${fmtTokens(u.inputTokens + u.outputTokens)} (${O.requests(u.requests)})`],
+    [O.cost, fmtUSD(u.costUSD)],
+    [O.lastTurn, a.lastTurn ? `${fmtTokens(a.lastTurn.inputTokens + a.lastTurn.outputTokens)} ${O.tok} · ${fmtUSD(a.lastTurn.costUSD)}` : O.notYet],
   ])));
 
   if (context) {
-    lines.push(...section('Bağlam', [
+    lines.push(...section(O.context, [
       `  ${bar(context.percentage)} %${Math.round(context.percentage)}  ${fmtTokens(context.totalTokens)} / ${fmtTokens(context.maxTokens)}`,
     ]));
   }
@@ -302,24 +297,24 @@ async function statusOutput(ctx: LocalContext): Promise<string> {
   if (ctx.budget) {
     const b = ctx.budget;
     const own = b.perAgentUSD[a.config.id] ?? 0;
-    lines.push(...section('Bütçe (bugün)', kv([
-      ['bu ajan', fmtUSD(own)],
-      ['panel', b.limitUSD ? `${fmtUSD(b.spentUSD)} / ${fmtUSD(b.limitUSD)} (%${Math.round(b.pct ?? 0)})` : `${fmtUSD(b.spentUSD)} · sınırsız`],
+    lines.push(...section(O.budgetToday, kv([
+      [O.thisAgentKey, fmtUSD(own)],
+      [O.panel, b.limitUSD ? `${fmtUSD(b.spentUSD)} / ${fmtUSD(b.limitUSD)} (%${Math.round(b.pct ?? 0)})` : `${fmtUSD(b.spentUSD)} · ${O.unlimited}`],
     ])));
   }
 
   if (account) {
-    lines.push(...section('Hesap', kv([
-      ['e-posta', account.email ?? '—'],
-      ['plan', account.subscriptionType ?? '—'],
-      ['sağlayıcı', account.apiProvider ?? '—'],
+    lines.push(...section(O.account, kv([
+      [O.email, account.email ?? '—'],
+      [O.plan, account.subscriptionType ?? '—'],
+      [O.provider, account.apiProvider ?? '—'],
     ])));
   }
 
-  lines.push(...section('Ortam', kv([
-    ['proje', ctx.projectDir || '—'],
-    ['panel', ctx.connected ? 'bağlı' : 'BAĞLANTI YOK'],
-    ['ekip', `${ctx.agents.length} ajan · ${ctx.agents.filter((x) => x.status !== 'offline').length} açık`],
+  lines.push(...section(O.env, kv([
+    [O.project, ctx.projectDir || '—'],
+    [O.panel, ctx.connected ? O.connected : O.disconnected],
+    [O.crew, O.crewCount(ctx.agents.length, ctx.agents.filter((x) => x.status !== 'offline').length)],
   ])));
 
   return lines.join('\n');
@@ -327,7 +322,7 @@ async function statusOutput(ctx: LocalContext): Promise<string> {
 
 async function agentsOutput(ctx: LocalContext): Promise<string> {
   const { agents } = await api.inspect(ctx.agent.config.id, ['agents']);
-  const lines = ['Paneldeki ajanlar'];
+  const lines = [O.panelAgents];
   const width = Math.max(...ctx.agents.map((a) => a.config.id.length), 8);
   for (const a of ctx.agents) {
     const mark = a.config.id === ctx.agent.config.id ? '›' : ' ';
@@ -337,9 +332,9 @@ async function agentsOutput(ctx: LocalContext): Promise<string> {
   }
 
   if (agents === null) {
-    lines.push('', 'Oturum alt ajanları okunamadı.', unreadable(ctx.agent));
+    lines.push('', O.subagentsUnreadable, unreadable(ctx.agent));
   } else if (agents?.length) {
-    lines.push('', `Bu oturumun alt ajanları (Task aracıyla çağrılır) — ${agents.length} tane`);
+    lines.push('', O.subagents(agents.length));
     const w = Math.max(...agents.map((a) => a.name.length));
     for (const a of agents) {
       const desc = a.description.length > 60 ? `${a.description.slice(0, 60)}…` : a.description;
@@ -351,15 +346,15 @@ async function agentsOutput(ctx: LocalContext): Promise<string> {
 
 async function mcpOutput(ctx: LocalContext): Promise<string> {
   const { mcp } = await api.inspect(ctx.agent.config.id, ['mcp']);
-  if (mcp === null) return ['MCP sunucu durumu okunamadı.', unreadable(ctx.agent)].join('\n');
-  if (!mcp?.length) return 'Bu oturumda MCP sunucusu yok.';
+  if (mcp === null) return [O.mcpUnreadable, unreadable(ctx.agent)].join('\n');
+  if (!mcp?.length) return O.mcpNone;
 
   const width = Math.max(...mcp.map((s) => s.name.length));
-  const lines = [`MCP sunucuları — ${mcp.length} tane`];
+  const lines = [O.mcpServers(mcp.length)];
   for (const s of mcp) {
     const mark = s.status === 'connected' ? '●' : s.status === 'failed' ? '✗' : '○';
     lines.push(
-      `  ${mark} ${s.name.padEnd(width)}  ${s.status.padEnd(10)} ${s.toolCount} araç${s.scope ? ` · ${s.scope}` : ''}`,
+      `  ${mark} ${s.name.padEnd(width)}  ${s.status.padEnd(10)} ${O.tools(s.toolCount)}${s.scope ? ` · ${s.scope}` : ''}`,
     );
     if (s.error) lines.push(`      ${s.error}`);
   }
@@ -378,60 +373,60 @@ async function doctorOutput(ctx: LocalContext): Promise<string> {
   const check = (label: string, ok: boolean | null, detail: string) =>
     rows.push([ok === null ? '?' : ok ? '✓' : '✗', label, detail]);
 
-  check('panel ↔ sunucu', ctx.connected, ctx.connected ? 'bağlı' : 'websocket kapalı — sayfayı yenile');
-  check('oturum', a.status !== 'offline', a.status === 'offline' ? 'ajan kapalı' : `${STATUS_TR[a.status]} · ${a.sessionId ? a.sessionId.slice(0, 8) : 'id yok'}`);
-  check('komut listesi', (a.commands?.length ?? 0) > 0, `${a.commands?.length ?? 0} komut`);
+  check(O.dPanel, ctx.connected, ctx.connected ? O.connected : O.dWsClosed);
+  check(O.session, a.status !== 'offline', a.status === 'offline' ? O.dAgentOff : `${STATUS_TR[a.status]} · ${a.sessionId ? a.sessionId.slice(0, 8) : O.dNoId}`);
+  check(O.dCmdList, (a.commands?.length ?? 0) > 0, O.dCmds(a.commands?.length ?? 0));
 
-  if (mcp == null) check('MCP', null, 'okunamadı (oturum kapalı olabilir)');
+  if (mcp == null) check('MCP', null, O.dMcpUnreadable);
   else {
     const bad = mcp.filter((s) => s.status === 'failed' || s.status === 'needs-auth');
-    check('MCP', bad.length === 0, bad.length ? bad.map((s) => `${s.name}: ${s.status}`).join(', ') : `${mcp.length} sunucu bağlı`);
+    check('MCP', bad.length === 0, bad.length ? bad.map((s) => `${s.name}: ${s.status}`).join(', ') : O.dMcpOk(mcp.length));
   }
 
-  if (context == null) check('bağlam', null, 'okunamadı');
-  else check('bağlam', context.percentage < 80, `%${Math.round(context.percentage)} dolu${context.percentage >= 80 ? ' — /compact öner' : ''}`);
+  if (context == null) check(O.dContext, null, O.dUnreadable);
+  else check(O.dContext, context.percentage < 80, `${O.dFull(Math.round(context.percentage))}${context.percentage >= 80 ? O.dSuggestCompact : ''}`);
 
   const b = ctx.budget;
-  if (!b?.limitUSD) check('bütçe', null, 'günlük sınır tanımlı değil (Ayarlar)');
-  else check('bütçe', !b.warn, `${fmtUSD(b.spentUSD)} / ${fmtUSD(b.limitUSD)} (%${Math.round(b.pct ?? 0)})`);
+  if (!b?.limitUSD) check(O.dBudget, null, O.dNoLimit);
+  else check(O.dBudget, !b.warn, `${fmtUSD(b.spentUSD)} / ${fmtUSD(b.limitUSD)} (%${Math.round(b.pct ?? 0)})`);
 
-  check('proje dizini', !!ctx.projectDir, ctx.projectDir || 'okunamadı');
+  check(O.dProjectDir, !!ctx.projectDir, ctx.projectDir || O.dUnreadable);
   if (system) {
-    check('git', !!system.project.gitBranch, system.project.gitBranch ?? 'depo değil — değişiklik geri alınamaz');
+    check('git', !!system.project.gitBranch, system.project.gitBranch ?? O.dNotRepo);
     check('SDK', true, `agent-sdk ${system.claude.sdkVersion} · node ${system.host.nodeVersion}`);
   }
 
   const width = Math.max(...rows.map((r) => r[1].length));
-  return ['Tanılama', ...rows.map(([m, label, detail]) => `  ${m} ${label.padEnd(width)}  ${detail}`)].join('\n');
+  return [O.doctor, ...rows.map(([m, label, detail]) => `  ${m} ${label.padEnd(width)}  ${detail}`)].join('\n');
 }
 
 async function configOutput(ctx: LocalContext): Promise<string> {
   const c = ctx.agent.config;
   const b = ctx.budget;
   const lines = [
-    `Yapılandırma · ${c.name}`,
+    O.configTitle(c.name),
     ...kv([
       ['id', c.id],
-      ['rol', c.role],
-      ['takım', c.team ?? '(yok)'],
-      ['sağlayıcı', c.provider ?? 'claude'],
-      ['temel model', c.model],
-      ['oto model', c.autoModel === false ? 'kapalı' : 'açık'],
-      ['oto onay', c.autoApprove ? 'açık' : 'kapalı'],
-      ['hafıza', c.memoryMode],
-      ['günlük sınır', c.dailyLimitUSD ? fmtUSD(c.dailyLimitUSD) : '(yok)'],
+      [O.role, c.role],
+      [O.team, c.team ?? O.none],
+      [O.provider, c.provider ?? 'claude'],
+      [O.baseModel, c.model],
+      [O.autoModel, onOff(c.autoModel !== false)],
+      [O.autoApprove, onOff(!!c.autoApprove)],
+      [O.memory, c.memoryMode],
+      [O.dailyLimit, c.dailyLimitUSD ? fmtUSD(c.dailyLimitUSD) : O.none],
       ['MCP', String(Object.keys(c.mcpServers ?? {}).length)],
     ]),
   ];
 
-  lines.push(...section('Panel', kv([
-    ['günlük sınır', b?.settings?.dailyLimitUSD ? fmtUSD(b.settings.dailyLimitUSD) : '(yok)'],
-    ['uyarı eşiği', `%${b?.settings?.warnAtPercent ?? 80}`],
-    ['tema', document.documentElement.dataset.theme ?? '(varsayılan)'],
-    ['terminal', localStorage.getItem('claudiva.cli') ?? 'claude'],
+  lines.push(...section(O.panelTitle, kv([
+    [O.dailyLimit, b?.settings?.dailyLimitUSD ? fmtUSD(b.settings.dailyLimitUSD) : O.none],
+    [O.warnAt, `%${b?.settings?.warnAtPercent ?? 80}`],
+    [O.theme, document.documentElement.dataset.theme ?? O.themeDefault],
+    [O.terminal, localStorage.getItem('claudiva.cli') ?? 'claude'],
   ])));
 
-  lines.push('', 'Değiştirmek için: ajan kartındaki düzenle · Ayarlar (bütçe) · Görünüm (tema)');
+  lines.push('', O.configHint);
   return lines.join('\n');
 }
 
@@ -444,27 +439,27 @@ async function memoryOutput(ctx: LocalContext): Promise<string> {
   const list = (ns: typeof nodes) =>
     ns.map((n) => `  ${n.slug.padEnd(28)} ${n.description || n.name}`);
 
-  const lines = [`Hafıza · ${ctx.agent.config.name} (mod: ${ctx.agent.config.memoryMode})`];
-  lines.push(...section(`Özel — ${mine.length} kayıt`, list(mine)));
-  lines.push(...section(`Ortak — ${shared.length} kayıt`, list(shared)));
-  if (!mine.length && !shared.length) lines.push('  (henüz kayıt yok)');
-  lines.push('', 'Haritası için Hafıza panelini aç.');
+  const lines = [O.memoryTitle(ctx.agent.config.name, ctx.agent.config.memoryMode)];
+  lines.push(...section(O.privateN(mine.length), list(mine)));
+  lines.push(...section(O.sharedN(shared.length), list(shared)));
+  if (!mine.length && !shared.length) lines.push(O.noRecords);
+  lines.push('', O.memoryHint);
   return lines.join('\n');
 }
 
 async function todosOutput(ctx: LocalContext): Promise<string> {
   const id = ctx.agent.config.id;
   const mine = ctx.tasks.filter((t) => t.assignedTo === id);
-  if (!mine.length) return `${ctx.agent.config.name} ajanına atanmış görev yok.`;
+  if (!mine.length) return O.noTasks(ctx.agent.config.name);
 
   const MARK: Record<string, string> = { pending: '○', running: '◐', done: '✓', failed: '✗' };
-  const lines = [`Görevler · ${ctx.agent.config.name} — ${mine.length} tane`];
+  const lines = [O.tasksTitle(ctx.agent.config.name, mine.length)];
   for (const t of mine.slice(0, 40)) {
     const title = t.title.length > 48 ? `${t.title.slice(0, 48)}…` : t.title;
-    const chain = t.chainId ? ` [zincir ${(t.stepIndex ?? 0) + 1}]` : '';
-    lines.push(`  ${MARK[t.status] ?? '·'} ${title.padEnd(50)} ${t.assignedBy === 'user' ? 'kullanıcı' : t.assignedBy}${chain}`);
+    const chain = t.chainId ? O.chainStep((t.stepIndex ?? 0) + 1) : '';
+    lines.push(`  ${MARK[t.status] ?? '·'} ${title.padEnd(50)} ${t.assignedBy === 'user' ? O.user : t.assignedBy}${chain}`);
   }
-  if (mine.length > 40) lines.push(`  … ${mine.length - 40} tane daha (Görevler paneli)`);
+  if (mine.length > 40) lines.push(O.moreTasks(mine.length - 40));
   return lines.join('\n');
 }
 
@@ -483,31 +478,31 @@ async function exportOutput(ctx: LocalContext): Promise<string> {
     body = JSON.stringify({ agent: a.config, exportedAt: new Date().toISOString(), events: ctx.events }, null, 2);
   } else {
     const head = [
-      `# ${a.config.name} — terminal dökümü`,
+      O.exTitle(a.config.name),
       '',
-      `- Ajan: \`${a.config.id}\` (${a.config.role})`,
+      `- ${O.exAgent}: \`${a.config.id}\` (${a.config.role})`,
       `- Model: ${a.currentModel ?? a.config.model}`,
-      `- Proje: ${ctx.projectDir}`,
-      `- Dışa aktarma: ${new Date().toLocaleString()}`,
+      `- ${O.exProject}: ${ctx.projectDir}`,
+      `- ${O.exAt}: ${new Date().toLocaleString(dateLocale)}`,
       '',
       '---',
       '',
     ];
     const body_ = ctx.events.map((e) => {
-      const ts = new Date(e.ts).toLocaleTimeString('tr-TR');
+      const ts = new Date(e.ts).toLocaleTimeString(dateLocale);
       switch (e.kind) {
         case 'user':
           return `### › ${ts}\n\n${e.text ?? ''}`;
         case 'text':
           return `${e.text ?? ''}`;
         case 'thinking':
-          return `> _düşünme:_ ${(e.text ?? '').replace(/\n/g, '\n> ')}`;
+          return `> _${O.exThinking}:_ ${(e.text ?? '').replace(/\n/g, '\n> ')}`;
         case 'tool_use':
           return `\`\`\`\n${e.toolName}(${e.input ?? ''})\n\`\`\``;
         case 'tool_result':
           return `\`\`\`\n${e.text ?? ''}\n\`\`\``;
         case 'error':
-          return `**HATA:** ${e.text ?? ''}`;
+          return `**${O.exError}:** ${e.text ?? ''}`;
         default:
           return `_${e.text ?? ''}_`;
       }
@@ -522,35 +517,34 @@ async function exportOutput(ctx: LocalContext): Promise<string> {
   link.click();
   URL.revokeObjectURL(url);
 
-  return `${ctx.events.length} olay ${fmt.toUpperCase()} olarak indirildi: ${name}\n  Başka biçim: /export json  ·  /export md`;
+  return O.exported(ctx.events.length, fmt.toUpperCase(), name);
 }
 
 async function resumeOutput(ctx: LocalContext): Promise<string> {
   const a = ctx.agent;
   const id = a.config.id;
 
+  // İki dilde de iki argüman kabul edilir (eski dökümler/alışkanlık).
   if (ctx.args.trim() === 'yeniden' || ctx.args.trim() === 'restart') {
     await api.stopAgent(id);
     await api.startAgent(id);
     await ctx.refreshAgents();
     return [
-      'Oturum yeniden başlatıldı.',
-      a.sessionId
-        ? `  Kayıtlı oturum (${a.sessionId.slice(0, 8)}) sürdürülmeye çalışılır; eskimişse sıfırdan açılır.`
-        : '  Kayıtlı oturum yoktu — sıfırdan açıldı.',
+      O.restarted,
+      a.sessionId ? O.resumeTried(a.sessionId.slice(0, 8)) : O.resumeFresh,
     ].join('\n');
   }
 
   return [
-    'Oturum',
+    O.sessionTitle,
     ...kv([
-      ['durum', STATUS_TR[a.status] ?? a.status],
-      ['oturum id', a.sessionId ?? '(yok — henüz açılmadı)'],
-      ['döküm', `${ctx.events.length} olay`],
+      [O.state, STATUS_TR[a.status] ?? a.status],
+      [O.sessionId, a.sessionId ?? O.noSession],
+      [O.transcript, O.events(ctx.events.length)],
     ]),
     '',
-    'Sunucu yeniden başladığında oturum bu id ile kendiliğinden sürdürülür.',
-    'Elle yeniden başlatmak için: /resume yeniden',
+    O.resumeAuto,
+    O.resumeHint,
   ].join('\n');
 }
 
@@ -564,15 +558,15 @@ async function helpOutput(ctx: LocalContext): Promise<string> {
 
   const agentCmds = (ctx.agent.commands ?? []).filter((c) => !isLocal(c.name));
   return [
-    `Panelde çalışan komutlar — ${LOCAL_COMMANDS.length} tane`,
-    '  (ajana gönderilmez; veriyi panelin kendisi okur)',
+    O.helpLocal(LOCAL_COMMANDS.length),
+    O.helpLocalNote,
     ...local,
     '',
-    `Ajana giden komutlar — ${agentCmds.length} tane`,
-    '  /compact, /init, /review, skill\'ler ve kendi komutların dahil.',
-    '  "/" yazıp listeden seç; hepsi CLI\'daki gibi çalışır.',
+    O.helpAgent(agentCmds.length),
+    O.helpAgentNote1,
+    O.helpAgentNote2,
     '',
-    'Komut olmayan her şey doğrudan ajana görev olarak gider.',
+    O.helpRest,
   ].join('\n');
 }
 
@@ -619,7 +613,7 @@ export function matchLocal(input: string): { cmd: LocalCommand; args: string } |
 export function localAsSlashCommands(): SlashCommand[] {
   return LOCAL_COMMANDS.map((c) => ({
     name: c.name,
-    description: `(panel) ${c.description}`,
+    description: `${O.panelTag} ${c.description}`,
     argumentHint: c.argumentHint,
     aliases: c.aliases,
   }));

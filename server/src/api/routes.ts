@@ -21,13 +21,25 @@ import {
 import type { BrowserSession } from '../browser.js';
 import { readMemoryGraph } from '../memory.js';
 
+/**
+ * Panelin çevirebileceği hata. `code` arayüz sözlüğünde (`L.apiErrors`)
+ * aranır; tanınmazsa ya da kod yoksa (SDK, git, dosya sistemi hataları)
+ * panel `error` metnini olduğu gibi gösterir. Metin bu yüzden yine yazılır.
+ */
+class ApiError extends Error {
+  constructor(readonly code: string, message: string) {
+    super(message);
+  }
+}
+
 function handle(fn: (req: Request, res: Response) => unknown | Promise<unknown>) {
   return async (req: Request, res: Response) => {
     try {
       const result = await fn(req, res);
       if (!res.headersSent) res.json(result ?? { ok: true });
     } catch (err) {
-      res.status(400).json({ error: (err as Error).message });
+      const code = err instanceof ApiError ? err.code : undefined;
+      res.status(400).json({ error: (err as Error).message, ...(code ? { code } : {}) });
     }
   };
 }
@@ -53,7 +65,7 @@ export function createRoutes(
   /** Panel sırası — :id rotasından ÖNCE gelmeli, yoksa "order" id sanılır. */
   r.put('/agents/order', handle((req) => {
     const ids = req.body?.ids;
-    if (!Array.isArray(ids)) throw new Error('ids dizisi gerekli.');
+    if (!Array.isArray(ids)) throw new ApiError('ids_required', 'ids dizisi gerekli.');
     return manager.reorder(ids.map(String));
   }));
 
@@ -63,29 +75,29 @@ export function createRoutes(
 
   r.get('/agents/:id/transcript', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     return s.transcript;
   }));
 
   r.post('/agents/:id/start', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     s.start();
     return manager.snapshot(s);
   }));
 
   r.post('/agents/:id/stop', handle(async (req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     await s.stop();
     return manager.snapshot(s);
   }));
 
   r.post('/agents/:id/message', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     const text = String(req.body?.text ?? '').trim();
-    if (!text) throw new Error('Boş mesaj gönderilemez.');
+    if (!text) throw new ApiError('empty_message', 'Boş mesaj gönderilemez.');
     s.send(text);
   }));
 
@@ -99,7 +111,7 @@ export function createRoutes(
    */
   r.get('/agents/:id/inspect', handle(async (req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     const all: InspectPart[] = ['context', 'models', 'agents', 'mcp', 'account'];
     const asked = String(req.query.parts ?? '')
       .split(',')
@@ -110,7 +122,7 @@ export function createRoutes(
 
   r.post('/agents/:id/interrupt', handle(async (req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     await s.interrupt();
   }));
 
@@ -120,7 +132,7 @@ export function createRoutes(
    */
   r.post('/agents/:id/local', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     const { kind, text } = req.body ?? {};
     const k = kind === 'user' || kind === 'error' ? kind : 'local';
     s.pushLocal(k, String(text ?? ''));
@@ -129,7 +141,7 @@ export function createRoutes(
   /** Panelin "/clear" komutu: yalnızca görünen dökümü siler, ajanın bağlamı durur. */
   r.post('/agents/:id/clear', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     s.transcript.length = 0;
     // Diskteki döküm de silinmezse yeniden başlatmada geri gelir.
     manager.store.clearTranscript(req.params.id);
@@ -137,10 +149,10 @@ export function createRoutes(
 
   r.post('/agents/:id/permission', handle((req) => {
     const s = manager.get(req.params.id);
-    if (!s) throw new Error('Ajan bulunamadı.');
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
     const { requestId, allow, message } = req.body ?? {};
     if (!s.resolvePermission(String(requestId), Boolean(allow), message)) {
-      throw new Error('İzin isteği bulunamadı (zaman aşımına uğramış olabilir).');
+      throw new ApiError('permission_not_found', 'İzin isteği bulunamadı (zaman aşımına uğramış olabilir).');
     }
   }));
 
@@ -160,7 +172,7 @@ export function createRoutes(
   /** Zincir: adımlar sırayla çalışır, her adım bir öncekinin çıktısını alır. */
   r.post('/tasks/chain', handle((req) => {
     const raw = req.body?.steps;
-    if (!Array.isArray(raw) || !raw.length) throw new Error('En az bir adım gerekli.');
+    if (!Array.isArray(raw) || !raw.length) throw new ApiError('step_required', 'En az bir adım gerekli.');
     return tasks.createChain(
       raw.map((s: Record<string, unknown>, i: number) => ({
         title: String(s.title ?? `Adım ${i + 1}`),
@@ -222,15 +234,15 @@ export function createRoutes(
 
   r.get('/changes/diff', handle(async (req) => {
     const p = String(req.query.path ?? '');
-    if (!p || !safeResolve(p)) throw new Error('Geçersiz yol.');
+    if (!p || !safeResolve(p)) throw new ApiError('invalid_path', 'Geçersiz yol.');
     return { path: p, diff: await diffFile(p) };
   }));
 
   /** Geri alma yıkıcıdır: commit'lenmemiş çalışmayı siler. Panel onay ister. */
   r.post('/changes/revert', handle(async (req) => {
     const p = String(req.body?.path ?? '');
-    if (!p || !safeResolve(p)) throw new Error('Geçersiz yol.');
-    if (!(await isRepo())) throw new Error('Bu klasör bir git deposu değil; geri alınamaz.');
+    if (!p || !safeResolve(p)) throw new ApiError('invalid_path', 'Geçersiz yol.');
+    if (!(await isRepo())) throw new ApiError('not_a_repo', 'Bu klasör bir git deposu değil; geri alınamaz.');
     await revertFile(p);
     changes.forget(p);
     return { ok: true };
@@ -251,7 +263,7 @@ export function createRoutes(
 
   r.get('/files/read', handle(async (req) => {
     const p = String(req.query.path ?? '');
-    if (!p) throw new Error('Yol gerekli.');
+    if (!p) throw new ApiError('path_required', 'Yol gerekli.');
     const content = await readFile(p);
     // Kod panelinde "bu dosyaya kim dokundu" rozeti; git listesinden düşmüş
     // (commit'lenmiş) dosyalarda da atıf görünsün diye ayrıca eklenir.
@@ -365,7 +377,7 @@ export function createRoutes(
       case 'reload':
         return await browser.reload();
       default:
-        throw new Error(`Bilinmeyen eylem: ${action}`);
+        throw new ApiError('unknown_action', `Bilinmeyen eylem: ${action}`);
     }
   }));
 
@@ -386,14 +398,14 @@ export function createRoutes(
   /** Etkin/pasif: `SKILL.md` ↔ `SKILL.md.disabled` (bkz. skills.ts). */
   r.post('/skills/toggle', handle((req) => {
     const { id, enabled } = req.body ?? {};
-    if (!id) throw new Error('Skill kimliği gerekli.');
+    if (!id) throw new ApiError('skill_id_required', 'Skill kimliği gerekli.');
     return setSkillEnabled(String(id), Boolean(enabled));
   }));
 
   /** YIKICI: dizini tamamen siler. Panel onay modalı gösteriyor. */
   r.delete('/skills', handle((req) => {
     const id = String(req.query.id ?? '');
-    if (!id) throw new Error('Skill kimliği gerekli.');
+    if (!id) throw new ApiError('skill_id_required', 'Skill kimliği gerekli.');
     removeSkill(id);
     return { ok: true };
   }));
@@ -405,7 +417,7 @@ export function createRoutes(
    */
   r.post('/skills/install', handle(async (req) => {
     const { repo, skillPath, scope, agentId } = req.body ?? {};
-    if (!repo || !skillPath) throw new Error('repo ve skillPath gerekli.');
+    if (!repo || !skillPath) throw new ApiError('repo_skillpath_required', 'repo ve skillPath gerekli.');
     return await installFromGitHub({
       repo: String(repo),
       skillPath: String(skillPath),
@@ -429,13 +441,13 @@ export function createRoutes(
 
   r.post('/skills/sources', handle((req) => {
     const { repo, label } = req.body ?? {};
-    if (!repo) throw new Error('Depo gerekli.');
+    if (!repo) throw new ApiError('repo_required', 'Depo gerekli.');
     return addSource(String(repo), label ? String(label) : undefined);
   }));
 
   r.delete('/skills/sources', handle((req) => {
     const repo = String(req.query.repo ?? '');
-    if (!repo) throw new Error('Depo gerekli.');
+    if (!repo) throw new ApiError('repo_required', 'Depo gerekli.');
     return removeSource(repo);
   }));
 
@@ -445,11 +457,11 @@ export function createRoutes(
    */
   r.post('/skills/install-many', handle(async (req) => {
     const { items, scope, agentId } = req.body ?? {};
-    if (!Array.isArray(items) || items.length === 0) throw new Error('Kurulacak skill seçilmedi.');
+    if (!Array.isArray(items) || items.length === 0) throw new ApiError('no_skills_selected', 'Kurulacak skill seçilmedi.');
 
     const parsed = items.map((raw: unknown) => {
       const it = (raw ?? {}) as Record<string, unknown>;
-      if (!it.repo || !it.skillPath) throw new Error('Her satırda repo ve skillPath olmalı.');
+      if (!it.repo || !it.skillPath) throw new ApiError('skill_row_invalid', 'Her satırda repo ve skillPath olmalı.');
       return {
         id: String(it.id ?? `${String(it.repo)}:${String(it.skillPath)}`),
         repo: String(it.repo),
@@ -459,7 +471,7 @@ export function createRoutes(
     });
 
     const target = (scope === 'project' || scope === 'agent' ? scope : 'global') as SkillScope;
-    if (target === 'agent' && !agentId) throw new Error('Ajan kapsamı için ajan seçilmeli.');
+    if (target === 'agent' && !agentId) throw new ApiError('agent_scope_required', 'Ajan kapsamı için ajan seçilmeli.');
 
     return await installMany(parsed, target, agentId ? String(agentId) : undefined);
   }));

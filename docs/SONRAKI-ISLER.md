@@ -269,8 +269,7 @@ yeterli.
 
 ## Hatırlatmalar (bu iki işten bağımsız)
 
-- **Kalan çeviri:** `web/src/localCommands.ts` komut çıktıları (~100 satır),
-  sunucu hata metinleri (`server/src/api/routes.ts`, ~21 dizge).
+- ~~Kalan çeviri~~ → 2026-11-25 BİTTİ (`L.cmdOut`, `L.apiErrors`).
 - **npm publish EN SONA** (kullanıcı kararı). `main`e push npm'i etkilemez.
 - Kullanıcı yeni sürümü yerelde `npm run build` + `npm install -g .` ile kullanıyor.
 - Repo klasörünü `claudiva` yapma kontrol listesi: `HANDOFF.md`.

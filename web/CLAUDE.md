@@ -57,6 +57,14 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
 - Tarih/saat biçimi `dateLocale` ile (`'tr-TR'` yazma). Belge dili ve açılış
   perdesi metni `index.html`deki satır içi betikte, `detect()` ile AYNI kuralla.
 - Yeni metin eklerken: önce `tr.ts`e, sonra `en.ts`e; derleme eksik olanı söyler.
+- **Yerel komut çıktısı (`/status`, `/doctor`…) `L.cmdOut`ta.** Bu metni model
+  değil panel yazar, kullanıcının yazdığı dile UYMAZ; yalnız SDK'ya giden komutlar
+  (`/compact`, skill'ler) modelin dilinde döner. `/resume` iki dilde de
+  `yeniden` ve `restart` argümanını kabul eder.
+- **Sunucu hataları KOD taşır:** `routes.ts` `ApiError(code, metin)` →
+  `{ error, code }`; `api.ts` `L.apiErrors[code]`ı gösterir, tanımadığı kodda
+  ya da kodsuz hatada (SDK, git, dosya sistemi) sunucu metnine düşer. Yeni
+  hata eklerken `ApiError` kullan ve kodu iki sözlüğe ekle.
 
 ## Sözdizimi renklendirme (Kod paneli)
 

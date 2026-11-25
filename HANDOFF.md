@@ -1,6 +1,21 @@
 # Devir — Claudiva
 
-# ▶ SONRAKİ OTURUM (2026-11-24 sonu)
+# ▶ 2026-11-25: çeviriler BİTTİ, yayın sende
+
+- [x] **Yerel komut çıktıları** (`localCommands.ts` → `L.cmdOut`) ve **sunucu
+  hataları** (`routes.ts` `ApiError` kodu → `L.apiErrors`) çevrildi. Kurallar
+  `web/CLAUDE.md` → "Arayüz dili". Ölçüldü: `/status`, `/doctor`, `/help` iki
+  dilde canlı sunucuya karşı doğru; `agent_not_found` EN'de "Agent not found.".
+- [x] Yayın öncesi kontrol: `npm run build` ✓, `contrast.mjs` 0 ✓,
+  `npm pack --dry-run` 1.1 MB / 200 dosya ✓, boş dizine kurulum testi
+  (`/`, `/api/budget`, `/api/agents` 200) ✓, `agents/` kişisel içerik yok ✓.
+- [ ] **Kullanıcı yapacak:** `npm login` → `npm whoami` → `npm publish`
+  (etkileşimli, ajan kabuğunda asılı kalır; bu oturumda `npm whoami` E401 verdi).
+- [ ] Sonra repo klasörünü `claudiva` yap (aşağıdaki liste).
+- Bilinen: ajan `config.json` adları (ör. "Proje Yöneticisi") bilerek Türkçe,
+  EN arayüzde de Türkçe görünür.
+
+# (önceki) SONRAKİ OTURUM (2026-11-24 sonu)
 
 Her şey commit edildi ve **push edildi** (`88d9ea9`, origin/main ile eşit).
 Kullanıcı tokeni bittiği için durdu; kaldığı yer:
