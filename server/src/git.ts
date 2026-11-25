@@ -8,6 +8,7 @@
  * devreye girmez, dolayısıyla boşluklu/özel karakterli dosya adları enjeksiyon
  * riski taşımaz.
  */
+import { S } from './i18n.js';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -118,7 +119,7 @@ export async function diffFile(relPath: string): Promise<string> {
     }
   }
   if (out.length > MAX_DIFF_BYTES) {
-    return out.slice(0, MAX_DIFF_BYTES) + '\n… (fark çok uzun, kırpıldı)';
+    return out.slice(0, MAX_DIFF_BYTES) + S.diffTruncated;
   }
   return out;
 }
@@ -149,7 +150,7 @@ export async function revertFile(relPath: string): Promise<void> {
   }
   // İzlenmeyen dosyanın "eski hâli" yok; geri almak = silmek.
   const abs = safeResolve(relPath);
-  if (!abs) throw new Error('Yol proje dizininin dışında.');
+  if (!abs) throw new Error(S.pathOutside);
   const fs = await import('node:fs');
   fs.rmSync(abs, { force: true });
 }

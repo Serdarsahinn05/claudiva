@@ -1,3 +1,4 @@
+import { S } from './i18n.js';
 import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -118,8 +119,7 @@ browser.onChange = (state) => hub.broadcast({ type: 'browser_state', state });
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
     console.error(
-      `\n  Port ${PORT} kullanımda — muhtemelen kapanmamış bir claudiva süreci var.\n` +
-        `  Başka port için: claudiva --port 4700\n`
+      S.portInUse(PORT)
     );
     process.exit(1);
   }
@@ -128,12 +128,13 @@ server.on('error', (err: NodeJS.ErrnoException) => {
 
 server.listen(PORT, () => {
   console.log(`\n  Claudiva  →  http://localhost:${PORT}`);
-  console.log(`  Proje:  ${PROJECT_DIR}`);
-  console.log(`  Ekip:   ${path.join(HOME_DIR, 'agents')}\n`);
+  const pad = Math.max(S.bannerProject.length, S.bannerTeam.length) + 1;
+  console.log(`  ${S.bannerProject.padEnd(pad)} ${PROJECT_DIR}`);
+  console.log(`  ${S.bannerTeam.padEnd(pad)} ${path.join(HOME_DIR, 'agents')}\n`);
 });
 
 async function shutdown() {
-  console.log('Kapanıyor: ajan oturumları durduruluyor...');
+  console.log(S.shuttingDown);
   await manager.stopAll();
   // Döküm 300ms, harcama geçmişi 500ms tamponlanarak yazılıyor; kapanışta
   // tamponda kalanı kaybetme.

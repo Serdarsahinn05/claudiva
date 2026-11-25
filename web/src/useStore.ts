@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import { localizeAgent } from './agentI18n';
+import { locale } from './i18n';
 import type {
   AgentSnapshot,
   BrowserState,
@@ -109,6 +110,8 @@ export function useStore(): Store {
 
       ws.onopen = () => {
         setConnected(true);
+        // Her bağlantıda: sunucu yeniden başlarsa seçimi unutur.
+        void api.setServerLocale(locale).catch(() => {});
         void refreshAgents();
       };
       ws.onclose = () => {

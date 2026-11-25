@@ -109,4 +109,6 @@ export const api = {
   }) => req<BulkResult[]>('POST', '/api/skills/install-many', input),
   info: () => req<{ memoryDir: string; projectDir: string }>('GET', '/api/info'),
   system: () => req<SystemInfo>('GET', '/api/system'),
+  /** Sunucunun kullanıcıya yazdığı notların dili (bkz. server/src/i18n.ts). */
+  setServerLocale: (locale: string) => req<{ locale: string }>('PUT', '/api/locale', { locale }),
 };

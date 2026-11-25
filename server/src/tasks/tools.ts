@@ -24,26 +24,26 @@ export function createTaskServer(tasks: TaskQueue, selfId: string) {
     tools: [
       tool(
         'complete_task',
-        'Sana atanan bir görevi tamamlandı olarak işaretler. Görev mesajındaki id ile çağır ve sonucu özetle. Görevi bitirdiğinde bunu çağırmak ZORUNLUDUR; çağırmazsan görev panelde açık kalır.',
+        'Marks a task assigned to you as completed. Call it with the id from the task message and summarize the result. You MUST call it when you finish the task; otherwise the task stays open in the panel.',
         {
-          task_id: z.string().describe('Görev mesajının başlığındaki id'),
-          summary: z.string().describe('Ne yapıldığının net özeti; panelde görevin sonucu olarak görünür'),
+          task_id: z.string().describe('The id in the task message heading'),
+          summary: z.string().describe('A clear summary of what was done; shown in the panel as the task result'),
           failed: z
             .boolean()
             .optional()
-            .describe('Görev tamamlanamadıysa true ver ve summary alanında nedenini yaz'),
+            .describe('Pass true if the task could not be completed and explain why in summary'),
         },
         async (args) => {
           const task = tasks.get(args.task_id);
-          if (!task) return text(`HATA: Görev bulunamadı: ${args.task_id}`);
+          if (!task) return text(`ERROR: Task not found: ${args.task_id}`);
           if (task.assignedTo !== selfId) {
-            return text(`HATA: ${args.task_id} sana atanmadı (atanan: ${task.assignedTo}).`);
+            return text(`ERROR: ${args.task_id} is not assigned to you (assigned to: ${task.assignedTo}).`);
           }
           if (task.status === 'done' || task.status === 'failed') {
-            return text(`Görev ${args.task_id} zaten kapalı (durum: ${task.status}).`);
+            return text(`Task ${args.task_id} is already closed (status: ${task.status}).`);
           }
           tasks.complete(args.task_id, args.failed ? 'failed' : 'done', args.summary);
-          return text(`Görev ${args.task_id} kapatıldı (durum: ${args.failed ? 'failed' : 'done'}).`);
+          return text(`Task ${args.task_id} closed (status: ${args.failed ? 'failed' : 'done'}).`);
         },
       ),
     ],

@@ -18,6 +18,7 @@
  * Dizin adına dokunulmuyor — dizini gizlemek referans dosyalarını da
  * kaybettirirdi ve geri alma kırılgan olurdu.
  */
+import { S } from './i18n.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -188,7 +189,7 @@ function find(id: string): SkillInfo | null {
  */
 export function setSkillEnabled(id: string, enabled: boolean): SkillInfo {
   const s = find(id);
-  if (!s) throw new Error('Skill bulunamadı.');
+  if (!s) throw new Error(S.skillNotFound);
   const active = path.join(s.dir, 'SKILL.md');
   const off = active + DISABLED_SUFFIX;
 
@@ -196,7 +197,7 @@ export function setSkillEnabled(id: string, enabled: boolean): SkillInfo {
   else if (!enabled && s.enabled) fs.renameSync(active, off);
 
   const next = readOne(s.dir, s.scope, s.agentId);
-  if (!next) throw new Error('Skill durumu okunamadı.');
+  if (!next) throw new Error(S.skillStateUnreadable);
   return next;
 }
 
@@ -207,11 +208,11 @@ export function setSkillEnabled(id: string, enabled: boolean): SkillInfo {
  */
 export function removeSkill(id: string): void {
   const s = find(id);
-  if (!s) throw new Error('Skill bulunamadı.');
+  if (!s) throw new Error(S.skillNotFound);
   // Güvenlik: yalnızca bilinen üç kökün altındaki bir dizin silinebilir.
   const root = path.resolve(skillsRootFor(s.scope, s.agentId));
   const target = path.resolve(s.dir);
-  if (!target.startsWith(root + path.sep)) throw new Error('Skill yolu beklenen kökün dışında.');
+  if (!target.startsWith(root + path.sep)) throw new Error(S.skillPathOutside);
   fs.rmSync(target, { recursive: true, force: true });
 
   /**
@@ -301,29 +302,29 @@ export async function installFromGitHub(opts: {
   agentId?: string;
 }): Promise<SkillInfo> {
   if (!/^[\w.-]+\/[\w.-]+$/.test(opts.repo)) {
-    throw new Error('Depo "sahip/depo" biçiminde olmalı.');
+    throw new Error(S.repoFormat);
   }
-  if (opts.scope === 'agent' && !opts.agentId) throw new Error('Ajan kapsamı için ajan seçilmeli.');
+  if (opts.scope === 'agent' && !opts.agentId) throw new Error(S.agentScopeNeeded);
 
   // Yol SKILL.md'yi gösteriyorsa dizinine çık; kullanıcı ikisini de yazabilir.
   const dirInRepo = opts.skillPath.replace(/\/SKILL\.md$/i, '').replace(/^\/+|\/+$/g, '');
-  if (!dirInRepo || dirInRepo.includes('..')) throw new Error('Geçersiz skill yolu.');
+  if (!dirInRepo || dirInRepo.includes('..')) throw new Error(S.badSkillPath);
 
   const listing = await gh<GhEntry[] | GhEntry>(
     `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(dirInRepo)}`,
   );
   const entries = Array.isArray(listing) ? listing : [listing];
   if (!entries.some((e) => e.type === 'file' && e.name.toLowerCase() === 'skill.md')) {
-    throw new Error(`"${dirInRepo}" altında SKILL.md bulunamadı.`);
+    throw new Error(S.noSkillMd(dirInRepo));
   }
 
   const folder = path.basename(dirInRepo);
   const root = skillsRootFor(opts.scope, opts.agentId);
   const target = path.resolve(root, folder);
   if (!target.startsWith(path.resolve(root) + path.sep)) {
-    throw new Error('Hedef yol kapsam kökünün dışına çıkıyor.');
+    throw new Error(S.targetOutside);
   }
-  if (fs.existsSync(target)) throw new Error(`"${folder}" zaten kurulu. Önce kaldır.`);
+  if (fs.existsSync(target)) throw new Error(S.alreadyInstalled(folder));
 
   /** Depodaki bir dizini özyinelemeli indirir. Dosya sayısı üst sınırlı. */
   let written = 0;
@@ -348,7 +349,7 @@ export async function installFromGitHub(opts: {
       } else if (e.type === 'file' && e.download_url) {
         if (e.size > MAX_ASSET_BYTES) continue;
         const res = await fetch(e.download_url, { headers: { 'User-Agent': 'claudiva' } });
-        if (!res.ok) throw new Error(`İndirilemedi: ${e.path} (${res.status})`);
+        if (!res.ok) throw new Error(S.downloadFailed(e.path, res.status));
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.byteLength > MAX_ASSET_BYTES) continue;
         fs.writeFileSync(dest, buf);
@@ -368,7 +369,7 @@ export async function installFromGitHub(opts: {
   const info = readOne(target, opts.scope, opts.agentId);
   if (!info) {
     fs.rmSync(target, { recursive: true, force: true });
-    throw new Error('Kurulum sonrası SKILL.md okunamadı.');
+    throw new Error(S.skillMdAfterInstall);
   }
 
   writeLock(folder, {

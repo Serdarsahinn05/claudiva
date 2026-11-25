@@ -23,6 +23,7 @@
  *
  * Sonuç diske yazılıyor; panel her açılışta ağa çıkmıyor.
  */
+import { S } from './i18n.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from './paths.js';
@@ -79,7 +80,7 @@ interface CatalogFile {
 const BUILTIN_SOURCES: CatalogSource[] = [
   { repo: 'anthropics/skills', label: 'Anthropic — resmî skill’ler', builtin: true },
   { repo: 'obra/superpowers', label: 'Superpowers', builtin: true },
-  { repo: 'wshobson/agents', label: 'wshobson — geniş koleksiyon', builtin: true },
+  { repo: 'wshobson/agents', label: 'wshobson — large collection', builtin: true },
 ];
 
 // ------------------------------------------------------------------ kaynaklar
@@ -116,7 +117,7 @@ export function listSources(): CatalogSource[] {
 }
 
 function assertRepo(repo: string): void {
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Depo "sahip/depo" biçiminde olmalı.');
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error(S.repoFormat);
 }
 
 export function addSource(repo: string, label?: string): CatalogSource[] {
@@ -156,7 +157,7 @@ async function fetchJson<T>(url: string): Promise<T> {
   });
   if (res.status === 403 || res.status === 429) {
     // Kota mesajı özel: kullanıcı "bozuk" ile "biraz bekle"yi ayırabilmeli.
-    throw new Error('GitHub istek kotası doldu (kimlik doğrulamasız sınır saatte 60). Bir süre sonra yeniden dene.');
+    throw new Error(S.githubRateLimit);
   }
   if (!res.ok) throw new Error(`GitHub ${res.status}`);
   return (await res.json()) as T;
@@ -230,7 +231,7 @@ async function scanRepo(src: CatalogSource): Promise<{ skills: CatalogSkill[]; e
   return {
     skills,
     // Kesilmiş ağaç sessizce eksik katalog demek olurdu; söylenmesi gerekiyor.
-    error: tree.truncated ? 'Depo ağacı çok büyük, liste eksik olabilir.' : undefined,
+    error: tree.truncated ? S.treeTruncated : undefined,
   };
 }
 

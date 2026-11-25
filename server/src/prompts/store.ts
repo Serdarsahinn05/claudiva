@@ -1,3 +1,4 @@
+import { S } from '../i18n.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -36,7 +37,7 @@ export class PromptStore {
 
   update(id: string, patch: Partial<Omit<PromptTemplate, 'id'>>): PromptTemplate {
     const p = this.prompts.find((x) => x.id === id);
-    if (!p) throw new Error('Prompt bulunamadı.');
+    if (!p) throw new Error(S.promptNotFound);
     Object.assign(p, patch);
     this.save();
     return p;
@@ -44,7 +45,7 @@ export class PromptStore {
 
   remove(id: string): void {
     const idx = this.prompts.findIndex((x) => x.id === id);
-    if (idx === -1) throw new Error('Prompt bulunamadı.');
+    if (idx === -1) throw new Error(S.promptNotFound);
     this.prompts.splice(idx, 1);
     this.save();
   }

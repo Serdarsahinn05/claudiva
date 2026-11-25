@@ -1,3 +1,4 @@
+import { isTaskMessage, taskAssigner } from '../taskMessage';
 import type { AgentSnapshot, TranscriptEvent } from '../types';
 import type { CliSkin } from '../cliSkins';
 import { CLI_MARKS } from '../cliSkins';
@@ -42,8 +43,6 @@ type View =
   | { kind: 'tools'; id: string; tools: ToolItem[] }
   | { kind: 'brief'; id: string; title: string; from: string; text: string };
 
-/** Görev kuyruğunun ajana yazdığı mesajın öneki (server/src/tasks/queue.ts). */
-const TASK_PREFIX = '# Görev (id:';
 
 /**
  * Ardışık AYNI sistem satırları tek satıra iner (×N). Ekran görüntüsünde
@@ -76,8 +75,8 @@ function simplify(items: Item[]): View[] {
       else out.push({ kind: 'tools', id: `g-${it.id}`, tools: [it] });
       continue;
     }
-    if (it.kind === 'user' && it.text.startsWith(TASK_PREFIX)) {
-      const from = /atayan:\s*([^\n]+)/.exec(it.text)?.[1]?.trim() ?? '';
+    if (it.kind === 'user' && isTaskMessage(it.text)) {
+      const from = taskAssigner(it.text);
       const title = /^##\s+(.+)$/m.exec(it.text)?.[1]?.trim() ?? '';
       out.push({ kind: 'brief', id: it.id, title, from, text: it.text });
       continue;

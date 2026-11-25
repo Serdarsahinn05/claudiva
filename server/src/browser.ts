@@ -15,6 +15,7 @@
  * ayakta kalır ve yalnızca bu panel "kurulu değil" der — Browser'ı hiç
  * kullanmayan bir kurulumda 300MB'lık bir tarayıcı zorunluluk olmamalı.
  */
+import { S } from './i18n.js';
 import type { Browser, Page } from 'playwright-core';
 
 /** Sabit görüntü alanı; panel tıklama koordinatını buna göre ölçekler. */
@@ -45,10 +46,10 @@ function normalizeUrl(raw: string): string {
   try {
     u = new URL(withProto);
   } catch {
-    throw new Error('Adres çözümlenemedi.');
+    throw new Error(S.badUrl);
   }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-    throw new Error('Yalnızca http ve https adresleri açılabilir.');
+    throw new Error(S.httpOnly);
   }
   return u.toString();
 }
@@ -103,7 +104,7 @@ export class BrowserSession {
     try {
       ({ chromium } = await import('playwright-core'));
     } catch {
-      this.unavailable = 'Playwright kurulu değil (npm i -w server playwright-core).';
+      this.unavailable = S.noPlaywright;
       throw new Error(this.unavailable);
     }
 
@@ -111,9 +112,7 @@ export class BrowserSession {
       this.browser = await chromium.launch({ headless: true });
     } catch (e) {
       // En sık sebep: paket var ama tarayıcı indirilmemiş.
-      this.unavailable =
-        `Chromium başlatılamadı — indirilmemiş olabilir: npx playwright-core install chromium. ` +
-        `(${(e as Error).message.split('\n')[0]})`;
+      this.unavailable = S.noChromium((e as Error).message.split('\n')[0]);
       throw new Error(this.unavailable);
     }
 
@@ -223,7 +222,7 @@ export class BrowserSession {
     return {
       url: page.url(),
       title: await page.title(),
-      text: clean.length > limit ? `${clean.slice(0, limit)}\n… (kırpıldı)` : clean,
+      text: clean.length > limit ? `${clean.slice(0, limit)}\n… (truncated)` : clean,
     };
   }
 

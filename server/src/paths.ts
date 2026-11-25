@@ -1,3 +1,4 @@
+import { S } from './i18n.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -40,11 +41,11 @@ function migrateLegacyDir(legacy: string, next: string): string {
   try {
     if (fs.existsSync(next) || !fs.existsSync(legacy)) return next;
     fs.renameSync(legacy, next);
-    console.log(`[claudiva] ${legacy} → ${next} taşındı.`);
+    console.log(S.migrated(legacy, next));
     return next;
   } catch (err) {
     console.warn(
-      `[claudiva] ${legacy} taşınamadı (${(err as Error).message}); eski klasör kullanılıyor.`
+      S.migrateFailed(legacy, (err as Error).message)
     );
     return legacy;
   }

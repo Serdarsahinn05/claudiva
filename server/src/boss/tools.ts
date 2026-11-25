@@ -2,6 +2,7 @@ import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
 import type { AgentManager } from '../agents/manager.js';
 import type { TaskQueue } from '../tasks/queue.js';
+import { agentFacing } from '../i18n.js';
 
 function text(s: string) {
   return { content: [{ type: 'text' as const, text: s }] };
@@ -18,30 +19,30 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
     tools: [
       tool(
         'list_agents',
-        'Ekipteki tüm ajanları listeler: id, isim, rol, model, anlık durum ve açıklama. Görev dağıtmadan önce çağır.',
+        'Lists every agent on the team: id, name, role, model, current status and description. Call it before delegating.',
         {},
         async () => {
           const rows = manager
             .list()
             .map(
               (a) =>
-                `- id: ${a.config.id} | isim: ${a.config.name} | rol: ${a.config.role} | model: ${a.config.model} | durum: ${a.status}${a.config.description ? ` | açıklama: ${a.config.description}` : ''}`,
+                `- id: ${a.config.id} | name: ${agentFacing(a.config, 'name')} | role: ${a.config.role} | model: ${a.config.model} | status: ${a.status}${a.config.description ? ` | description: ${agentFacing(a.config, 'description')}` : ''}`,
             );
-          return text(rows.length ? rows.join('\n') : 'Ekipte ajan yok.');
+          return text(rows.length ? rows.join('\n') : 'There are no agents on the team.');
         },
       ),
       tool(
         'get_usage',
-        'Ekibin token/maliyet sayımını ve hesabın plan kotasını (5 saatlik / 7 günlük pencere doluluğu) döndürür. Kota kritikse pahalı model yerine ucuzunu seçmek ya da işi bölmek için görev dağıtmadan önce bakabilirsin.',
+        'Returns the team\'s token/cost counts and the account plan quota (5-hour / 7-day window usage). Check it before delegating if the quota is tight, to pick a cheaper model or split the work.',
         {},
         async () => {
           const { total, perAgent } = manager.usageSummary();
           const lines = [
-            `Toplam: ${total.inputTokens + total.outputTokens} token · $${total.costUSD.toFixed(4)} · ${total.requests} istek`,
+            `Total: ${total.inputTokens + total.outputTokens} tokens · $${total.costUSD.toFixed(4)} · ${total.requests} requests`,
           ];
           for (const [id, u] of Object.entries(perAgent)) {
             if (!u.requests) continue;
-            lines.push(`- ${id}: ${u.inputTokens + u.outputTokens} token · $${u.costUSD.toFixed(4)}`);
+            lines.push(`- ${id}: ${u.inputTokens + u.outputTokens} tokens · $${u.costUSD.toFixed(4)}`);
           }
 
           const plan = (await manager.planUsage()) as {
@@ -50,39 +51,39 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
           } | null;
           const rl = plan?.rate_limits;
           if (plan?.rate_limits_available && rl) {
-            lines.push('', 'Plan kotası:');
+            lines.push('', 'Plan quota:');
             for (const [key, win] of Object.entries(rl)) {
               if (!win || typeof win.utilization !== 'number') continue;
-              const resets = win.resets_at ? ` (sıfırlanma: ${win.resets_at})` : '';
-              lines.push(`- ${key}: %${win.utilization} dolu${resets}`);
+              const resets = win.resets_at ? ` (resets: ${win.resets_at})` : '';
+              lines.push(`- ${key}: ${win.utilization}% used${resets}`);
             }
           } else {
-            lines.push('', 'Plan kotası bu oturumda okunamadı (API anahtarı veya kapalı oturum).');
+            lines.push('', 'Could not read the plan quota in this session (API key or closed session).');
           }
           return text(lines.join('\n'));
         },
       ),
       tool(
         'delegate_task',
-        'Bir görevi ekipteki bir ajana atar. wait=true (varsayılan) ise görev bitene kadar bekler ve sonucu döndürür; wait=false ise görev id döndürür, sonucu check_task ile alırsın. Basit görevler için ajanın modeli zaten yapılandırılmıştır; görevi net ve bağımsız yürütülebilir şekilde yaz. Birden fazla bağımsız görevi AYNI anda (paralel tool çağrılarıyla) dağıtabilirsin.',
+        'Assigns a task to one agent on the team. With wait=true (default) it waits until the task finishes and returns the result; with wait=false it returns the task id and you fetch the result with check_task. The agent\'s model is already configured; write the task so it is clear and can be done on its own. For several independent tasks use delegate_tasks.',
         {
-          agent_id: z.string().describe('Görevin atanacağı ajanın id değeri (list_agents çıktısından)'),
-          title: z.string().describe('Görevin kısa başlığı'),
-          task: z.string().describe('Görevin tam açıklaması: hedef, bağlam, beklenen çıktı'),
-          wait: z.boolean().optional().describe('true: sonucu bekle ve döndür (varsayılan). false: hemen dön.'),
+          agent_id: z.string().describe('Id of the agent that gets the task (from list_agents)'),
+          title: z.string().describe('Short title of the task'),
+          task: z.string().describe('Full description of the task: goal, context, expected output'),
+          wait: z.boolean().optional().describe('true: wait and return the result (default). false: return immediately.'),
           after_task_id: z
             .string()
             .optional()
             .describe(
-              'Verilirse görev hemen başlamaz: bu görev bittikten sonra, onun sonucu girdi olarak eklenerek başlar. Zincir kurmak için kullan. Verildiğinde wait yok sayılır ve görev id hemen döner.',
+              'If given, the task does not start right away: it starts after this task finishes, with its result added as input. Use it to build a chain. When given, wait is ignored and the task id returns immediately.',
             ),
         },
         async (args) => {
           if (args.agent_id === selfId) {
-            return text('HATA: Kendine görev atayamazsın; görevi doğrudan kendin yap.');
+            return text('ERROR: You cannot assign a task to yourself; do it directly.');
           }
           if (!manager.get(args.agent_id)) {
-            return text(`HATA: "${args.agent_id}" kimlikli ajan yok. list_agents ile kontrol et.`);
+            return text(`ERROR: There is no agent with id "${args.agent_id}". Check with list_agents.`);
           }
 
           /**
@@ -92,7 +93,7 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
            */
           if (args.after_task_id) {
             const prev = tasks.get(args.after_task_id);
-            if (!prev) return text(`HATA: Görev bulunamadı: ${args.after_task_id}`);
+            if (!prev) return text(`ERROR: Task not found: ${args.after_task_id}`);
             const step = tasks.chainAfter(args.after_task_id, {
               title: args.title,
               prompt: args.task,
@@ -101,8 +102,8 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
               parentTaskId: tasks.currentTaskFor(selfId),
             });
             return text(
-              `Adım zincire eklendi. task_id: ${step.id} — "${prev.title}" (${prev.id}) bittikten ` +
-                `sonra başlayacak. Durumu check_task ile sorgula.`,
+              `Step added to the chain. task_id: ${step.id} — it starts after "${prev.title}" (${prev.id}) ` +
+                `finishes. Check its status with check_task.`,
             );
           }
 
@@ -117,51 +118,51 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
             parentTaskId: tasks.currentTaskFor(selfId),
           });
           if (args.wait === false) {
-            return text(`Görev atandı. task_id: ${task.id} (durumu check_task ile sorgula)`);
+            return text(`Task assigned. task_id: ${task.id} (check its status with check_task)`);
           }
           const done = await tasks.waitFor(task.id);
           // Zaman aşımında görev hâlâ çalışıyor olabilir; bunu "BAŞARISIZ"
           // diye raporlamak yanıltıcıydı — iş sürüyor, sadece bekleme bitti.
           if (done.status === 'running' || done.status === 'pending') {
             return text(
-              `Görev hâlâ sürüyor (task_id: ${done.id}, ajan: ${done.assignedTo}). Bekleme süresi doldu; ` +
-                `sonucu check_task ile sorgula.`,
+              `The task is still running (task_id: ${done.id}, agent: ${done.assignedTo}). The wait timed out; ` +
+                `fetch the result with check_task.`,
             );
           }
           return text(
-            `Görev ${done.status === 'done' ? 'tamamlandı' : 'BAŞARISIZ'} (task_id: ${done.id}, ajan: ${done.assignedTo}).\n\n--- Sonuç ---\n${done.result ?? '(sonuç yok)'}`,
+            `Task ${done.status === 'done' ? 'completed' : 'FAILED'} (task_id: ${done.id}, agent: ${done.assignedTo}).\n\n--- Result ---\n${done.result ?? '(no result)'}`,
           );
         },
       ),
       tool(
         'delegate_tasks',
-        'Birden fazla BAĞIMSIZ görevi FARKLI ajanlara AYNI ANDA dağıtır. Kaç ajan gerekiyorsa o kadarını tek çağrıda ver — iki ajan da olabilir, altı ajan da (ör. frontend + backend + araştırmacı + testçi + dokümancı hepsi paralel). Hepsi aynı anda başlar; wait=true (varsayılan) ise hepsi bitene kadar bekler ve tüm sonuçları birlikte döndürür — toplam süre en uzun görev kadardır, görevlerin toplamı kadar değil. Bağımsız işleri tek tek delegate_task ile sırayla vermek yerine BUNU kullan. Bağımlı/sıralı işler için delegate_task after_task_id kullan.',
+        'Hands several INDEPENDENT tasks to DIFFERENT agents AT THE SAME TIME. Give as many agents as the work needs in one call — two or six (e.g. frontend + backend + researcher + tester + docs all in parallel). They all start at once; with wait=true (default) it waits until all finish and returns every result together — the total time is the longest task, not the sum. Use THIS instead of handing out independent work one by one with delegate_task. For dependent/sequential work use delegate_task with after_task_id.',
         {
           tasks: z
             .array(
               z.object({
-                agent_id: z.string().describe('Görevin atanacağı ajanın id değeri (list_agents çıktısından)'),
-                title: z.string().describe('Görevin kısa başlığı'),
-                task: z.string().describe('Görevin tam açıklaması: hedef, bağlam, beklenen çıktı'),
+                agent_id: z.string().describe('Id of the agent that gets the task (from list_agents)'),
+                title: z.string().describe('Short title of the task'),
+                task: z.string().describe('Full description of the task: goal, context, expected output'),
               }),
             )
             .min(1)
-            .describe('Aynı anda dağıtılacak bağımsız görevler'),
+            .describe('Independent tasks to hand out at the same time'),
           wait: z
             .boolean()
             .optional()
-            .describe('true: hepsi bitene kadar bekle ve tüm sonuçları döndür (varsayılan). false: hemen id listesiyle dön.'),
+            .describe('true: wait until all finish and return every result (default). false: return the id list immediately.'),
         },
         async (args) => {
           // Önce hepsini doğrula: biri geçersizse hiçbirini dağıtma (kısmi
           // dağıtım, "3 ajana verdim" beklentisini sessizce bozardı).
           const errors: string[] = [];
           args.tasks.forEach((t, i) => {
-            if (t.agent_id === selfId) errors.push(`#${i + 1}: kendine görev atayamazsın`);
-            else if (!manager.get(t.agent_id)) errors.push(`#${i + 1}: "${t.agent_id}" kimlikli ajan yok`);
+            if (t.agent_id === selfId) errors.push(`#${i + 1}: you cannot assign a task to yourself`);
+            else if (!manager.get(t.agent_id)) errors.push(`#${i + 1}: there is no agent with id "${t.agent_id}"`);
           });
           if (errors.length) {
-            return text(`HATA: hiçbir görev dağıtılmadı. Sorunlar:\n${errors.join('\n')}\nlist_agents ile kontrol et.`);
+            return text(`ERROR: no task was handed out. Problems:\n${errors.join('\n')}\nCheck with list_agents.`);
           }
 
           // Ebeveyn TEK KEZ okunur: dağıtım senkron ama `currentTaskFor` canlı
@@ -179,44 +180,44 @@ export function createTeamServer(manager: AgentManager, tasks: TaskQueue, selfId
           );
 
           if (args.wait === false) {
-            const lines = dispatched.map((d) => `- task_id: ${d.id} | ajan: ${d.assignedTo} | ${d.title}`);
-            return text(`${dispatched.length} görev aynı anda dağıtıldı:\n${lines.join('\n')}\nSonuçları check_task ile sorgula.`);
+            const lines = dispatched.map((d) => `- task_id: ${d.id} | agent: ${d.assignedTo} | ${d.title}`);
+            return text(`${dispatched.length} tasks handed out at once:\n${lines.join('\n')}\nFetch the results with check_task.`);
           }
 
           const done = await Promise.all(dispatched.map((d) => tasks.waitFor(d.id)));
           const blocks = done.map((t) => {
             const head =
-              t.status === 'done' ? 'tamamlandı' : t.status === 'running' || t.status === 'pending' ? 'HÂLÂ SÜRÜYOR (bekleme doldu)' : 'BAŞARISIZ';
-            return `### ${t.title} (task_id: ${t.id}, ajan: ${t.assignedTo}) — ${head}\n${t.result ?? '(sonuç yok)'}`;
+              t.status === 'done' ? 'completed' : t.status === 'running' || t.status === 'pending' ? 'STILL RUNNING (wait timed out)' : 'FAILED';
+            return `### ${t.title} (task_id: ${t.id}, agent: ${t.assignedTo}) — ${head}\n${t.result ?? '(no result)'}`;
           });
-          return text(`${done.length} paralel görevin sonucu:\n\n${blocks.join('\n\n---\n\n')}`);
+          return text(`Results of ${done.length} parallel tasks:\n\n${blocks.join('\n\n---\n\n')}`);
         },
       ),
       tool(
         'check_task',
-        'Bir görevin durumunu ve (bittiyse) sonucunu döndürür.',
+        'Returns a task\'s status and, if it finished, its result.',
         {
-          task_id: z.string().describe('delegate_task tarafından döndürülen görev id'),
+          task_id: z.string().describe('Task id returned by delegate_task'),
         },
         async (args) => {
           const task = tasks.get(args.task_id);
-          if (!task) return text(`Görev bulunamadı: ${args.task_id}`);
+          if (!task) return text(`Task not found: ${args.task_id}`);
           return text(
-            `Görev ${task.id} | ajan: ${task.assignedTo} | durum: ${task.status}` +
-              (task.result ? `\n\n--- Sonuç ---\n${task.result}` : ''),
+            `Task ${task.id} | agent: ${task.assignedTo} | status: ${task.status}` +
+              (task.result ? `\n\n--- Result ---\n${task.result}` : ''),
           );
         },
       ),
       tool(
         'list_tasks',
-        'Tüm görevleri (son 30) durumlarıyla listeler.',
+        'Lists all tasks (latest 30) with their status.',
         {},
         async () => {
           const rows = tasks
             .list()
             .slice(0, 30)
-            .map((t) => `- ${t.id} | ${t.title} | ajan: ${t.assignedTo} | atayan: ${t.assignedBy} | durum: ${t.status}`);
-          return text(rows.length ? rows.join('\n') : 'Görev yok.');
+            .map((t) => `- ${t.id} | ${t.title} | agent: ${t.assignedTo} | assigned by: ${t.assignedBy} | status: ${t.status}`);
+          return text(rows.length ? rows.join('\n') : 'No tasks.');
         },
       ),
     ],

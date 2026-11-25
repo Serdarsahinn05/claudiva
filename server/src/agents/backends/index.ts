@@ -1,3 +1,4 @@
+import { S } from '../../i18n.js';
 import type { AgentBackend } from '../backend.js';
 import { ClaudeBackend } from './claudeBackend.js';
 
@@ -14,7 +15,7 @@ export function createBackend(provider: 'claude'): AgentBackend {
       // ProviderId genişleyip buraya yeni bir dal eklenmeden derlenirse
       // TS burada yakalar (exhaustiveness check).
       const _exhaustive: never = provider;
-      throw new Error(`Bilinmeyen sağlayıcı: ${_exhaustive}`);
+      throw new Error(S.unknownProvider(String(_exhaustive)));
     }
   }
 }

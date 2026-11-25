@@ -24,7 +24,7 @@
   değişince İKİ dosyayı birlikte güncelle.
 - [x] Arayüzde sabit kalmış ~35 Türkçe metin `L.extra`ya taşındı (tarama betiği:
   JSX metin düğümleri + title/aria-label/placeholder).
-- [ ] **Sunucu tarafı i18n YOK (npm öncesi önemli):** `server/src` ~208 Türkçe dizge.
+- [x] **Sunucu tarafı i18n YAPILDI** (`server/src/i18n.ts`, kurallar `server/CLAUDE.md` → "Sunucunun dili"). Eski not: `server/src` ~208 Türkçe dizge.
   Ajana gidenler (görev kuyruğu çerçevesi `# Görev (id:` …, `complete_task` talimatı)
   İngilizce kullanıcıda alt ajanları TÜRKÇE cevaba itiyor (demo çekiminde ölçüldü);
   dökümdeki sistem notları ("Oturum sürdürülüyor") da Türkçe. Önek sabitleri eski

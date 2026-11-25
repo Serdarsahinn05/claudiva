@@ -28,16 +28,16 @@ export function createBrowserServer(browser: BrowserSession) {
     tools: [
       tool(
         'open',
-        'Bir web adresini tarayıcıda açar ve sayfanın metnini döndürür. Kullanıcı ' +
-          'aynı sayfayı panelde canlı görür. Yalnızca http/https.',
+        'Opens a web address in the browser and returns the page text. The user ' +
+          'sees the same page live in the panel. http/https only.',
         {
-          url: z.string().describe('Açılacak adres (ör. https://example.com)'),
+          url: z.string().describe('Address to open (e.g. https://example.com)'),
         },
         async (args) => {
           try {
             await browser.navigate(args.url);
             const r = await browser.readText();
-            return text(`Açıldı: ${r.title}\n${r.url}\n\n${r.text}`);
+            return text(`Opened: ${r.title}\n${r.url}\n\n${r.text}`);
           } catch (e) {
             return text(`HATA: ${(e as Error).message}`);
           }
@@ -45,10 +45,10 @@ export function createBrowserServer(browser: BrowserSession) {
       ),
       tool(
         'read',
-        'Açık sayfanın metnini ve bağlantılarını döndürür. Gezinmeden önce ' +
-          'sayfada ne olduğunu anlamak için kullan.',
+        'Returns the open page\'s text and links. Use it to understand what is ' +
+          'on the page before navigating.',
         {
-          links: z.boolean().optional().describe('Bağlantı listesi de gelsin mi (varsayılan: hayır)'),
+          links: z.boolean().optional().describe('Also return the list of links (default: no)'),
         },
         async (args) => {
           try {
@@ -56,7 +56,7 @@ export function createBrowserServer(browser: BrowserSession) {
             if (!args.links) return text(`${r.title}\n${r.url}\n\n${r.text}`);
             const ls = await browser.links();
             const list = ls.map((l) => `- ${l.text} → ${l.href}`).join('\n');
-            return text(`${r.title}\n${r.url}\n\n${r.text}\n\n--- Bağlantılar ---\n${list}`);
+            return text(`${r.title}\n${r.url}\n\n${r.text}\n\n--- Links ---\n${list}`);
           } catch (e) {
             return text(`HATA: ${(e as Error).message}`);
           }
@@ -64,8 +64,8 @@ export function createBrowserServer(browser: BrowserSession) {
       ),
       tool(
         'click',
-        'Sayfada bir noktaya tıklar. Koordinatlar görüntü alanına göredir ' +
-          '(1280x800, sol üst 0,0). Önce read ile sayfayı oku.',
+        'Clicks a point on the page. Coordinates are relative to the viewport ' +
+          '(1280x800, top left 0,0). Read the page with read first.',
         {
           x: z.number().describe('Yatay koordinat (0-1280)'),
           y: z.number().describe('Dikey koordinat (0-800)'),
@@ -73,7 +73,7 @@ export function createBrowserServer(browser: BrowserSession) {
         async (args) => {
           try {
             const s = await browser.click(args.x, args.y);
-            return text(`Tıklandı (${args.x},${args.y}). Şimdiki sayfa: ${s.title} — ${s.url}`);
+            return text(`Clicked (${args.x},${args.y}). Current page: ${s.title} — ${s.url}`);
           } catch (e) {
             return text(`HATA: ${(e as Error).message}`);
           }
@@ -81,16 +81,16 @@ export function createBrowserServer(browser: BrowserSession) {
       ),
       tool(
         'type',
-        'Odaktaki alana metin yazar. Önce ilgili alana click ile tıkla. ' +
-          'submit=true ise sonunda Enter basar.',
+        'Types text into the focused field. Click the field with click first. ' +
+          'With submit=true it presses Enter at the end.',
         {
-          text: z.string().describe('Yazılacak metin'),
-          submit: z.boolean().optional().describe('Sonunda Enter basılsın mı'),
+          text: z.string().describe('Text to type'),
+          submit: z.boolean().optional().describe('Press Enter at the end'),
         },
         async (args) => {
           try {
             const s = await browser.type(args.text, args.submit === true);
-            return text(`Yazıldı. Şimdiki sayfa: ${s.title} — ${s.url}`);
+            return text(`Typed. Current page: ${s.title} — ${s.url}`);
           } catch (e) {
             return text(`HATA: ${(e as Error).message}`);
           }
@@ -98,22 +98,22 @@ export function createBrowserServer(browser: BrowserSession) {
       ),
       tool(
         'scroll',
-        'Sayfayı dikey kaydırır. Pozitif değer aşağı, negatif yukarı.',
-        { dy: z.number().describe('Kaydırma miktarı (piksel), ör. 600') },
+        'Scrolls the page vertically. Positive goes down, negative goes up.',
+        { dy: z.number().describe('Scroll amount in pixels, e.g. 600') },
         async (args) => {
           try {
             await browser.scroll(args.dy);
             const r = await browser.readText();
-            return text(`Kaydırıldı.\n\n${r.text}`);
+            return text(`Scrolled.\n\n${r.text}`);
           } catch (e) {
             return text(`HATA: ${(e as Error).message}`);
           }
         },
       ),
-      tool('back', 'Tarayıcıda bir sayfa geri gider.', {}, async () => {
+      tool('back', 'Goes back one page in the browser.', {}, async () => {
         try {
           const s = await browser.back();
-          return text(`Geri gidildi. Şimdiki sayfa: ${s.title} — ${s.url}`);
+          return text(`Went back. Current page: ${s.title} — ${s.url}`);
         } catch (e) {
           return text(`HATA: ${(e as Error).message}`);
         }

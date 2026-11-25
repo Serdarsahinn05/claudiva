@@ -10,6 +10,7 @@
  * kapı). Panel yalnızca OKUR — yazma ucu bilerek yok; dosyayı değiştiren tek
  * özne ajanın kendisi ve o da izin kapısından geçiyor.
  */
+import { S } from './i18n.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { PROJECT_DIR } from './paths.js';
@@ -64,7 +65,7 @@ export interface TreeEntry {
  */
 export async function listDir(relPath: string): Promise<TreeEntry[]> {
   const abs = safeResolve(relPath || '.');
-  if (!abs) throw new Error('Yol proje dizininin dışında.');
+  if (!abs) throw new Error(S.pathOutside);
 
   const entries = await fs.readdir(abs, { withFileTypes: true });
   const out: TreeEntry[] = [];
@@ -117,10 +118,10 @@ export interface FileContent {
 
 export async function readFile(relPath: string): Promise<FileContent> {
   const abs = safeResolve(relPath);
-  if (!abs) throw new Error('Yol proje dizininin dışında.');
+  if (!abs) throw new Error(S.pathOutside);
 
   const st = await fs.stat(abs);
-  if (!st.isFile()) throw new Error('Bu bir dosya değil.');
+  if (!st.isFile()) throw new Error(S.notAFile);
 
   const base: FileContent = {
     path: relPath.replace(/\\/g, '/'),

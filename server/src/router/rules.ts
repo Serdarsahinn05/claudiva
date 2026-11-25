@@ -1,3 +1,4 @@
+import { S } from '../i18n.js';
 /**
  * JEV yönlendiricisi — kural katmanı (0 token, 0 ms).
  *
@@ -60,13 +61,13 @@ export function classifyByRules(title: string, prompt: string): RuleVerdict | nu
   const text = norm(`${title}\n${prompt}`);
   const count = text.split(/\s+/).filter(Boolean).length;
 
-  if (count > 220) return { tier: 'large', why: `uzun görev (${count} kelime)` };
-  if (LARGE.test(text)) return { tier: 'large', why: 'geniş kapsam işareti' };
+  if (count > 220) return { tier: 'large', why: S.whyLong(count) };
+  if (LARGE.test(text)) return { tier: 'large', why: S.whyWide };
 
   const changes = CHANGE.test(text);
-  if (!changes && READ.test(text) && count <= 40) return { tier: 'small', why: 'kısa okuma/soru' };
+  if (!changes && READ.test(text) && count <= 40) return { tier: 'small', why: S.whyShortRead };
   // Değiştiren ve ayrıntılı tarif edilmiş iş: orta. Kısa bir "düzelt"in
   // gerçekten küçük mü büyük mü olduğu metinden çıkmaz → kararsız bırak.
-  if (changes && count > 40) return { tier: 'medium', why: 'ayrıntılı değişiklik' };
+  if (changes && count > 40) return { tier: 'medium', why: S.whyDetailed };
   return null;
 }

@@ -18,24 +18,24 @@ export function createSelfServer(session: AgentSession) {
     tools: [
       tool(
         'set_model',
-        'Bu oturumun modelini değiştirir. Görev basitse haiku, ortaysa sonnet, ' +
-          'zorsa (mimari, karmaşık hata ayıklama, kritik kod) opus seç. ' +
-          'Geçiş anında uygulanır; göreve yeni modelle devam edersin. ' +
-          'Temel model değişmez; oturum yeniden başlarsa temele dönülür.',
+        'Changes this session\'s model. Pick haiku for a simple task, sonnet for a medium one, ' +
+          'opus for a hard one (architecture, complex debugging, critical code). ' +
+          'The switch applies immediately; you continue the task on the new model. ' +
+          'The base model does not change; if the session restarts it goes back to the base.',
         {
-          model: z.enum(['haiku', 'sonnet', 'opus']).describe('Geçilecek model'),
-          reason: z.string().describe('Tek cümlelik gerekçe (panelde gösterilir)'),
+          model: z.enum(['haiku', 'sonnet', 'opus']).describe('Model to switch to'),
+          reason: z.string().describe('One-sentence reason (shown in the panel)'),
         },
         async (args) => {
           if (args.model === session.currentModel) {
-            return text(`Zaten ${args.model} modelindesin; değişiklik yapılmadı.`);
+            return text(`You are already on ${args.model}; nothing changed.`);
           }
           try {
             await session.switchModel(args.model, args.reason);
           } catch (err) {
             return text(`HATA: ${(err as Error).message}`);
           }
-          return text(`Model ${args.model} olarak değiştirildi. Göreve bu modelle devam et.`);
+          return text(`Model changed to ${args.model}. Continue the task on this model.`);
         },
       ),
     ],

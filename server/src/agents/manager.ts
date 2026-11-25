@@ -1,3 +1,4 @@
+import { S } from '../i18n.js';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -110,7 +111,7 @@ export class AgentManager extends EventEmitter {
         // Eski config.json dosyalarında provider yok — 'claude' say (geriye uyum).
         configs.push({ ...raw, provider: raw.provider ?? 'claude' });
       } catch (err) {
-        console.error(`Bozuk config atlandı: ${file}`, err);
+        console.error(S.badConfig(file), err);
       }
     }
     // Panel sırası: order verilmişse ona, yoksa oluşturulma zamanına göre.
@@ -205,7 +206,7 @@ export class AgentManager extends EventEmitter {
       const b = this.budget();
       if (b.exceeded && !this.budgetAnnounced) {
         this.budgetAnnounced = true;
-        session.pushLocal('error', `Günlük bütçe sınırı aşıldı ($${b.spentUSD.toFixed(4)} / $${b.limitUSD?.toFixed(2)}). Yeni iş kabul edilmiyor.`);
+        session.pushLocal('error', S.budgetExceeded(b.spentUSD.toFixed(4), b.limitUSD?.toFixed(2) ?? '?'));
         this.emit('agents_changed');
       } else if (!b.exceeded) {
         this.budgetAnnounced = false;
@@ -286,7 +287,7 @@ export class AgentManager extends EventEmitter {
     if (b.exceeded) {
       return {
         ok: false,
-        reason: `Günlük bütçe sınırı aşıldı ($${b.spentUSD.toFixed(4)} / $${b.limitUSD?.toFixed(2)}). Sınırı Ayarlar'dan değiştirebilirsin.`,
+        reason: S.budgetExceededTask(b.spentUSD.toFixed(4), b.limitUSD?.toFixed(2) ?? '?'),
       };
     }
     if (agentId) {
@@ -296,7 +297,7 @@ export class AgentManager extends EventEmitter {
       if (own && own > 0 && spent >= own) {
         return {
           ok: false,
-          reason: `"${cfg?.name}" ajanının günlük sınırı aşıldı ($${spent.toFixed(4)} / $${own.toFixed(2)}).`,
+          reason: S.agentBudgetExceeded(cfg?.name ?? agentId, spent.toFixed(4), own.toFixed(2)),
         };
       }
     }
@@ -330,7 +331,7 @@ export class AgentManager extends EventEmitter {
       try {
         fs.writeFileSync(file, JSON.stringify(s.config, null, 2), 'utf-8');
       } catch (err) {
-        console.error(`Sıra yazılamadı: ${file}`, err);
+        console.error(S.orderWriteFailed(file), err);
       }
     });
     this.emit('agents_changed');
@@ -439,7 +440,7 @@ export class AgentManager extends EventEmitter {
     },
   ): Promise<AgentSnapshot> {
     const session = this.sessions.get(id);
-    if (!session) throw new Error('Ajan bulunamadı.');
+    if (!session) throw new Error(S.agentNotFound(id));
     const { personality, ...configPatch } = patch;
     // create() ile aynı kural: boş metin takımsızlık demektir, "" bir takım değil.
     if ('team' in configPatch) configPatch.team = configPatch.team?.trim() || undefined;
@@ -456,7 +457,7 @@ export class AgentManager extends EventEmitter {
 
   async remove(id: string): Promise<void> {
     const session = this.sessions.get(id);
-    if (!session) throw new Error('Ajan bulunamadı.');
+    if (!session) throw new Error(S.agentNotFound(id));
     await session.stop();
     this.sessions.delete(id);
     fs.rmSync(agentDir(id), { recursive: true, force: true });

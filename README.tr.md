@@ -364,8 +364,6 @@ yayınlama, sürüm yükseltme ve `npx` / global kurulum / `npm link` farkı:
 - Browser paneli için Chromium'u ayrıca indirmeniz gerekir (yukarıya bakın).
 - Ajan `complete_task` aracını çağırmadan önce `ToolSearch` ile yüklemek zorunda
   kalıyor; fazladan bir tur maliyeti var, işlevi bozmuyor.
-- Sunucunun dökümlere yazdığı bazı notlar (oturum başladı, görev durduruldu) ve
-  görev kuyruğunun ajanlara gönderdiği çerçeve metni hâlâ Türkçe.
 
 ## ✨ Nasıl yazıldı
 

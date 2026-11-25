@@ -16,6 +16,7 @@ import {
   type TranscriptKind,
 } from '../types.js';
 import { agentWorkspaceDir } from '../paths.js';
+import { S } from '../i18n.js';
 
 const MAX_TRANSCRIPT = 500;
 
@@ -178,8 +179,8 @@ export class AgentSession extends EventEmitter {
     this.pushEvent({
       kind: 'system',
       text: resumeId
-        ? `Oturum sürdürülüyor (model: ${this.currentModel})`
-        : `Oturum başlatıldı (model: ${this.currentModel})`,
+        ? S.sessionResumed(this.currentModel)
+        : S.sessionStarted(this.currentModel),
     });
     void this.refreshCommands();
   }
@@ -251,7 +252,7 @@ export class AgentSession extends EventEmitter {
 
   async interrupt(): Promise<void> {
     await this.backend?.interrupt();
-    this.pushEvent({ kind: 'system', text: 'Görev kullanıcı tarafından durduruldu.' });
+    this.pushEvent({ kind: 'system', text: S.taskStoppedByUser });
   }
 
   /** Panelden temel model değişikliği. Hata olursa sessizce yutulur —
@@ -281,11 +282,11 @@ export class AgentSession extends EventEmitter {
       await this.backend?.setModel(model);
     } catch {
       this.currentModel = prev;
-      throw new Error('Model değiştirilemedi (oturum akış durumunda değil).');
+      throw new Error(S.modelSwitchFailed);
     }
     this.pushEvent({
       kind: 'system',
-      text: `Model geçişi: ${prev} → ${model}${reason ? ` — ${reason}` : ''}`,
+      text: S.modelSwitch(prev, model, reason),
     });
     this.emit('model_changed', model);
   }
@@ -297,7 +298,7 @@ export class AgentSession extends EventEmitter {
     if (allow) {
       p.resolve({ behavior: 'allow', updatedInput: p.info.input });
     } else {
-      p.resolve({ behavior: 'deny', message: message || 'Kullanıcı bu işlemi reddetti.' });
+      p.resolve({ behavior: 'deny', message: message || 'The user denied this action.' });
     }
     this.emit('permission_resolved', requestId);
     if (this.pending.size === 0 && this.status === 'waiting') this.setStatus('working');
@@ -342,7 +343,7 @@ export class AgentSession extends EventEmitter {
         opts.signal.addEventListener('abort', () => {
           if (this.pending.delete(info.id)) {
             this.emit('permission_resolved', info.id);
-            resolve({ behavior: 'deny', message: 'İşlem iptal edildi.' });
+            resolve({ behavior: 'deny', message: 'The action was cancelled.' });
           }
         });
       });
@@ -356,7 +357,7 @@ export class AgentSession extends EventEmitter {
    */
   private cleanup(abandon = true): void {
     for (const [id, p] of this.pending) {
-      p.resolve({ behavior: 'deny', message: 'Oturum kapandı.' });
+      p.resolve({ behavior: 'deny', message: 'The session closed.' });
       this.emit('permission_resolved', id);
     }
     this.pending.clear();
@@ -389,7 +390,7 @@ export class AgentSession extends EventEmitter {
       this.store?.clearSessionId(this.config.id);
       this.pushEvent({
         kind: 'system',
-        text: 'Önceki oturum yüklenemedi (kayıt eskimiş olabilir); sıfırdan başlatıldı.',
+        text: S.resumeFallback,
       });
       this.start();
       // Görev kimliğiyle birlikte: aksi hâlde yeniden gönderilen görev
@@ -473,7 +474,7 @@ export class AgentSession extends EventEmitter {
           !finished?.routed &&
           this.currentModel !== this.config.model
         ) {
-          void this.switchModel(this.config.model, 'tur bitti — temel modele dönüş').catch(() => {});
+          void this.switchModel(this.config.model, S.reasonTurnEnded).catch(() => {});
         }
         this.emit('turn_complete', e.text, e.isError, finished?.taskId);
         break;

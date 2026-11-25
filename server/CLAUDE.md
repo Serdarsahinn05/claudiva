@@ -84,7 +84,7 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   dönüş. Dönüş açık kalsaydı ardışık küçük görevler "sıcak, düşürme yok"
   kuralına takılıp hep temel modelde kalırdı. Ajanın KENDİ `set_model`
   yükseltmesinde dönüş sürer.
-- Sınıflandırıcıda `thinking: disabled` ve `<istek>` sarmalayıcısı ŞART (ölçüldü:
+- Sınıflandırıcıda `thinking: disabled` ve `<request>` (eski adıyla `<istek>`) sarmalayıcısı ŞART (ölçüldü:
   düşünme açıkken 6 kat pahalı + 4 sn; çıplak mesaj görev sanıldı).
 - Eşleme: küçük→haiku, orta→sonnet, büyük→temel modelin altına düşmez ama Opus'a
   kendiliğinden çıkmaz (Opus yalnız temeli Opus olan ajanda).
@@ -98,6 +98,30 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   Sınır: aynı tokenların temel modelde de harcanacağını varsayar (karşı-olgusal).
 - Canlı doğrulama (4611, scratch): kural yolu 3 ms, sınıflandırıcı 3-4 sn
   $0.0006; dört görevin oturumu haiku ile açıldı, turlar haiku'da.
+
+## Sunucunun dili (`server/src/i18n.ts`)
+
+- **İki kitle, iki kural.** Ajana giden HER metin İngilizce ve sabit: araç
+  açıklamaları, görev çerçevesi (`# Task (id: … — assigned by: …`), ret
+  mesajları, model hatırlatması, hafıza/kimlik talimatı, sınıflandırıcı istemi.
+  Kullanıcıya görünen metin (döküm notları, görev sonucu notları, hatalar,
+  konsol) `S.<anahtar>` ile sunucunun diline göre.
+- **Neden ajana İngilizce:** Türkçe çerçeve, İngilizce kullanıcının alt
+  ajanlarını Türkçe cevaba itiyordu (demo çekiminde ölçüldü). Çerçeve "görevin
+  yazıldığı dilde cevap ver" der. Ölçüldü (2026-11-25, haiku): İngilizce istek →
+  lider + iki alt ajan İngilizce; Türkçe istek → üçü de Türkçe. `list_agents` ve
+  kimlik satırı paket ajanının İngilizce adını verir (`agentFacing`).
+- **Dil kaynağı:** önce `LC_ALL`/`LANG`, yoksa `Intl`; panel her WebSocket
+  bağlantısında `PUT /api/locale` ile kendi dilini bildirir (bellekte; yeniden
+  başlayınca işletim sistemi diline döner). Not yazıldığı anın dilinde kalıcıdır.
+- `bin/claudiva.js` derlenmeden çalıştığı için `i18n.ts`i içe aktaramaz; aynı
+  algılama kuralıyla kendi küçük sözlüğünü taşır.
+- **Bilerek Türkçe kalanlar:** yönlendirici kural kelimeleri (`rules.ts`, Türkçe
+  istekleri de eşleştirir), sınıflandırıcı cevap ayrıştırması, `agentUpgrade.ts`
+  LEGACY tablosu (eski kurulumu tanır), ad temizleme düzenli ifadeleri,
+  `routes.ts` hata metinleri (kodludur, panel `L.apiErrors` ile kendi dilinde
+  gösterir).
+- Eski önek `# Görev (id: … — atayan:` panelde hâlâ tanınır (`web/src/taskMessage.ts`).
 
 ## Görev zincirleri
 

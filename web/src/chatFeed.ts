@@ -13,6 +13,7 @@
  * altında saklanır. Döküm satır satır gösterilseydi sohbet değil terminal
  * olurdu.
  */
+import { isTaskMessage } from './taskMessage';
 import type { AgentSnapshot, PermissionRequestInfo, Task, TranscriptEvent } from './types';
 import { stripBrief } from './brief';
 import { parseReply, type ReplyRef } from './reply';
@@ -55,8 +56,6 @@ export type ChatItem =
   | { type: 'permission'; id: string; ts: number; agentId: string; req: PermissionRequestInfo }
   | { type: 'note'; id: string; ts: number; agentId: string; text: string; tone: 'local' | 'error' };
 
-/** Görev kuyruğunun çalışana yazdığı mesaj — delegasyon kartının kopyası. */
-const TASK_PREFIX = '# Görev (id:';
 
 /** Bir ajanın dökümünü balonlara çevirir. */
 export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatItem[] {
@@ -82,7 +81,8 @@ export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatI
         // GÖSTERİLMEZ (delegasyon kartı onu zaten söylüyor) ama turu açar.
         closeTurn();
         const text = e.text ?? '';
-        if (text.startsWith(TASK_PREFIX)) break;
+        // Görev kuyruğunun çalışana yazdığı mesaj — delegasyon kartının kopyası.
+        if (isTaskMessage(text)) break;
         // Sıra önemli: brif yanıt bloğunun ALTINA eklenir, önce o kesilir.
         const { text: own, briefed } = stripBrief(text);
         const { reply, text: body } = parseReply(own);

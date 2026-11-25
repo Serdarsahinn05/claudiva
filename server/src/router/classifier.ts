@@ -25,11 +25,13 @@ export interface ClassifierVerdict {
 }
 
 const SYSTEM =
-  'Bir yazılım ekibine gelen isteği iş büyüklüğüne göre sınıflandır. ' +
-  'KÜÇÜK: okuma, listeleme, özet, tek satırlık düzeltme, basit soru. ' +
-  'ORTA: tek dosyada özellik ya da hata düzeltme, test yazma, belge güncelleme. ' +
-  'BÜYÜK: birden çok dosya, mimari karar, belirsiz ya da araştırma gerektiren iş. ' +
-  'Yalnızca tek kelimeyle cevap ver: KÜÇÜK, ORTA ya da BÜYÜK.';
+  // Ajana giden metin: İngilizce (bkz. i18n.ts). İstek Türkçe de olabilir;
+  // parse() iki dilin cevabını da tanır.
+  'Classify a request sent to a software team by the size of the work. ' +
+  'SMALL: reading, listing, summarizing, a one-line fix, a simple question. ' +
+  'MEDIUM: a feature or bug fix in one file, writing tests, updating docs. ' +
+  'LARGE: several files, an architecture decision, unclear work or work that needs research. ' +
+  'Answer with a single word only: SMALL, MEDIUM or LARGE.';
 
 const TIMEOUT_MS = 10_000;
 /** Sınıflandırıcıya giden metnin üst sınırı: uzun görev zaten kuralla "büyük". */
@@ -52,7 +54,7 @@ export async function classify(title: string, prompt: string): Promise<Classifie
   let cost = 0;
   try {
     for await (const m of query({
-      prompt: `<istek>\n${body}\n</istek>\nSınıf:`,
+      prompt: `<request>\n${body}\n</request>\nClass:`,
       options: {
         model: 'haiku',
         systemPrompt: SYSTEM,

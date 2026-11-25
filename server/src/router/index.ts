@@ -14,6 +14,7 @@
  * ~$0.0006, ~2.3 sn) → o da yoksa ajanın temel modeli. Bu modül oturuma
  * DOKUNMAZ; kararı döndürür, uygulamayı AgentSession yapar.
  */
+import { S } from '../i18n.js';
 import type { TaskRoute } from '../types.js';
 import { classifyByRules, type Tier } from './rules.js';
 import { classify } from './classifier.js';
@@ -58,11 +59,11 @@ export async function routeTask(title: string, prompt: string, s: RouteState): P
   // Oturum başka bir turun ortasında: model değişimi o turu yarıda başka
   // modele geçirirdi. Sınıflandırıcı da çağrılmaz (2.3 sn boşa beklenmesin).
   if (s.alive && s.busy) {
-    return { model: s.current, by: 'default', why: 'oturum meşgul, model korundu', applied: 'kept', ms: 0 };
+    return { model: s.current, by: 'default', why: S.whyBusy, applied: 'kept', ms: 0 };
   }
   let tier: Tier | undefined;
   let by: TaskRoute['by'] = 'default';
-  let why = 'kural emin değil, sınıflandırıcı cevap vermedi: temel model';
+  let why = S.whyFallback;
   let classifierCostUSD: number | undefined;
 
   const rule = classifyByRules(title, prompt);
@@ -75,7 +76,7 @@ export async function routeTask(title: string, prompt: string, s: RouteState): P
     if (c) {
       tier = c.tier;
       by = 'classifier';
-      why = 'sınıflandırıcı';
+      why = S.whyClassifier;
       classifierCostUSD = c.costUSD;
     }
   }
@@ -92,7 +93,7 @@ export async function routeTask(title: string, prompt: string, s: RouteState): P
     // Sıcak oturumu ucuz modele düşürmek önbelleği çöpe atar: model korunur.
     model = s.current;
     applied = 'kept';
-    if (target !== s.current) why += ` (sıcak oturum, ${target} yerine ${s.current} korundu)`;
+    if (target !== s.current) why += S.whyWarm(target, s.current);
   }
 
   return {

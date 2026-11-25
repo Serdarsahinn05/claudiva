@@ -363,8 +363,6 @@ developer notes are written in Turkish.
 - The Browser panel needs Chromium downloaded separately (see above).
 - An agent has to load the `complete_task` tool with `ToolSearch` before calling
   it; that costs an extra turn but doesn't break anything.
-- Some server-written notes in transcripts (session started, task stopped) and
-  the wrapper text the task queue sends to agents are still in Turkish.
 
 ## ✨ How it was written
 

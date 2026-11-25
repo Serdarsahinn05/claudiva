@@ -13,6 +13,7 @@ import {
 import { AsyncQueue } from '../asyncQueue.js';
 import type { AgentConfig, SlashCommand } from '../../types.js';
 import { agentDir, agentMemoryDir, SHARED_MEMORY_DIR } from '../../paths.js';
+import { S, agentFacing } from '../../i18n.js';
 import type {
   AgentBackend,
   BackendCapabilities,
@@ -116,7 +117,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     // Panelin yerleşik komutları bu yüzden karşılıksız kalıyordu.
     const wrapped =
       this.config.autoModel !== false && opts.reminder !== false && !isSlashCommand(text)
-        ? `[Hatırlatma: yanıtlamadan önce görevin zorluğunu değerlendir; mevcut model (${this.resolveModel()}) uygun değilse önce mcp__self__set_model ile değiştir: basit→haiku, orta→sonnet, zor→opus.]\n\n${text}`
+        ? `[Reminder: before answering, judge how hard the task is; if the current model (${this.resolveModel()}) does not fit, switch first with mcp__self__set_model: simple→haiku, medium→sonnet, hard→opus.]\n\n${text}`
         : text;
     this.queue?.push({
       type: 'user',
@@ -281,11 +282,11 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
     }
 
     const memoryInstructions = memoryDirs.length
-      ? `\n\n# Hafıza\nKalıcı hafıza klasörlerin: ${memoryDirs.join(' , ')}\n` +
-        `Bir göreve başlamadan önce ilgili hafıza dosyalarını oku. Görev sırasında öğrendiğin ` +
-        `kalıcı değerde bilgileri (kararlar, tercihler, proje bilgisi) bu klasörlere markdown ` +
-        `dosyası olarak yaz; dosya başına tek konu, [[wikilink]] ile ilişkilendir. ` +
-        `Zaten kayıtlı bilgiyi tekrar yazma, güncelle.`
+      ? `\n\n# Memory\nYour persistent memory folders: ${memoryDirs.join(' , ')}\n` +
+        `Before starting a task, read the relevant memory files. Write information of lasting ` +
+        `value you learn during a task (decisions, preferences, project facts) into these folders ` +
+        `as markdown files; one topic per file, linked with [[wikilink]]. ` +
+        `Do not write down what is already recorded; update it.`
       : '';
 
     const autoModelInstructions =
@@ -295,7 +296,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
           // Sonnet'e bir geçiş ≈ $0.24), bu yüzden ajan yalnız GERÇEKTEN
           // gerektiğinde yükseltsin. Sohbet mesajlarında eski davranış sürer.
           `\n\n# Model choice\n` +
-          `Your base model: ${config.model}. For task messages ("# Görev (id: …)") the panel has ` +
+          `Your base model: ${config.model}. For task messages ("# Task (id: …)") the panel has ` +
           `already picked a model sized to the task; do not switch just to re-evaluate. Call ` +
           `mcp__self__set_model only if the work turns out clearly harder than the current model ` +
           `can handle (escalate), or for a plain chat message whose size clearly mismatches the model:\n` +
@@ -336,7 +337,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
         type: 'preset',
         preset: 'claude_code',
         append:
-          `# Kimlik\nSen "${config.name}" adlı bir ajansın. Rolün: ${config.role}.\n\n` +
+          `# Identity\nYou are an agent named "${agentFacing(config, 'name')}". Your role: ${config.role}.\n\n` +
           this.personality +
           memoryInstructions +
           autoModelInstructions,
@@ -379,7 +380,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
       // doğrudan fırlatma. İkincisinde de yakalamalıyız, yoksa ajan anlaşılmaz
       // bir hatayla çevrimdışı kalır ve kayıtlı bozuk id bir daha hep denenir.
       if (!this.sawInit && this.resumeAttempt) this.resumeFailed = true;
-      else this.emit('message', { kind: 'error', text: `Oturum hatası: ${(err as Error).message}` } satisfies BackendEvent);
+      else this.emit('message', { kind: 'error', text: S.sessionError((err as Error).message) } satisfies BackendEvent);
     } finally {
       const resumeFailed = this.resumeFailed;
       this.q = null;

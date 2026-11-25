@@ -21,6 +21,7 @@
  *     sürümle değiştirilir; pasif skill adını korur. Bilinmeyen özet = kullanıcı
  *     düzenlemiştir, dokunulmaz. Yalnız VAR OLAN dosya yazılır; silinen geri gelmez.
  */
+import { S } from './i18n.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -115,17 +116,17 @@ export function upgradeSeededAgent(
   try {
     upgradeConfig(bundledDir, targetDir, legacy);
   } catch (err) {
-    console.warn(`[claudiva] ${id} yapılandırması güncellenemedi: ${(err as Error).message}`);
+    console.warn(S.upgradeConfigFailed(id, (err as Error).message));
   }
   try {
     upgradeSkills(bundledDir, targetDir, legacy, copyDir);
   } catch (err) {
-    console.warn(`[claudiva] ${id} skill'leri güncellenemedi: ${(err as Error).message}`);
+    console.warn(S.upgradeSkillsFailed(id, (err as Error).message));
   }
   try {
     upgradeContent(bundledDir, targetDir, id);
   } catch (err) {
-    console.warn(`[claudiva] ${id} dosya içerikleri güncellenemedi: ${(err as Error).message}`);
+    console.warn(S.upgradeContentFailed(id, (err as Error).message));
   }
 }
 
@@ -241,7 +242,7 @@ function upgradeContent(bundledDir: string, targetDir: string, id: string): void
         const bundled = fs.readFileSync(source, 'utf8');
         if (current !== contentHash(bundled)) fs.writeFileSync(file, bundled, 'utf8');
       } catch (err) {
-        console.warn(`[claudiva] ${file} güncellenemedi: ${(err as Error).message}`);
+        console.warn(S.upgradeFileFailed(file, (err as Error).message));
       }
     }
   }

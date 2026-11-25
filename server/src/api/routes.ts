@@ -20,6 +20,7 @@ import {
 } from '../skillCatalog.js';
 import type { BrowserSession } from '../browser.js';
 import { readMemoryGraph } from '../memory.js';
+import { getLocale, setLocale } from '../i18n.js';
 
 /**
  * Panelin çevirebileceği hata. `code` arayüz sözlüğünde (`L.apiErrors`)
@@ -510,6 +511,14 @@ export function createRoutes(
 
   /** Köprü ekranının telemetrisi: host makine, proje ve Claude/SDK bilgileri. */
   r.get('/system', handle(() => systemInfo()));
+
+  /**
+   * Panelin arayüz dili. Sunucu kullanıcıya görünen notları (döküm, görev
+   * sonucu, hata) bu dilde yazar; panel her WebSocket bağlantısında bildirir
+   * (sunucu yeniden başlarsa bellekteki seçim gider, işletim sistemi diline döner).
+   */
+  r.get('/locale', handle(() => ({ locale: getLocale() })));
+  r.put('/locale', handle((req) => ({ locale: setLocale(req.body?.locale) })));
 
   return r;
 }
