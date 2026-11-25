@@ -1,6 +1,6 @@
 {
   "name": "claudiva",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Multi-agent orchestration panel for Claude Code — run, watch and coordinate several agents in one project",
   "keywords": [
     "claude",
