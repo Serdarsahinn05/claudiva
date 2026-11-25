@@ -1,6 +1,48 @@
 # Devir — Claudiva
 
-# ▶ 2026-11-25: çeviriler BİTTİ, yayın sende
+# ▶ SIRADAKİ İŞ (2026-11-25 sonu, kullanıcı kararları — yeniden sorma)
+
+Durum: 0.2.1 push edildi (npm'de 0.1.1, yayın kullanıcıda). Sonrasında
+commit edilenler: Stüdyo Genel Durum (`StudioOverview.tsx`), açık palette
+terminal koyu kart (`b298ee9`, push EDİLMEDİ). 4600 (kullanıcının sunucusu)
+ve 4621 (demo `%TEMP%/claude/cm-demo`) açık kalmış olabilir: porta göre kapat.
+
+**1. Paletler kalkıyor, yalnız STİL kalıyor.** Kullanıcı: "Obsidyen, Karbon,
+Aurora birbirinin aynı; bunlar yalnız renk değiştiren tema, gereksiz."
+- Kalan: **Gözlemevi, Stüdyo, Fosfor** — her stil TEK sabit görünüm.
+- Silinecek paletler: `night`, `day`, `carbon`, `aurora`, `graphite` (Stüdyo'nun
+  koyu sürümü), ve palet seçimi. Her stil kendi tek paletiyle: Gözlemevi →
+  `obsidian`, Stüdyo → `paper`, Fosfor → `phosphor`.
+- Dokunulacak yerler: `themes.ts` (THEMES, DEFAULT_THEME), `themes.css`
+  (blokları sil; `obsidian` bloğu premium ortak blokla birlikte), `appStyle.ts`
+  (`STYLE_GROUPS`, `STYLE_DEFAULT_THEME`, `syncPalette` → stil seçilince palet
+  ZORLA o stilinki), `index.html` satır içi betik (`own`/`dflt`, kayıtlı eski
+  palet → stilin paleti), `contrast.mjs` `plates` dizisi, i18n `themes.*`,
+  `ThemePicker` (palet ızgarası gider), komut paletindeki tema komutları
+  (`themeCommands`), README/DESIGN.md/web CLAUDE.md'deki palet anlatımları.
+- Açık palette terminal kartı (`--terminal-*`) artık yalnız `paper`da gerekir.
+- **Kural (kalıcı):** kullanıcı "yeni tema ekle" derse yeni STİL eklenir
+  (`styles.css` bloğu + kendi paleti), palet değil.
+
+**2. Tema/stil seçimi Ayarlar'a taşınır.** Başlıktaki Görünüm düğmesi ve
+`ThemePicker` modalı kalkar; seçim Ayarlar → Arayüz bölümüne (mod ve dil
+seçiminin yanına) stil kartları olarak girer. Terminal tipi (CLI skin)
+seçimi de oraya. Komut paletindeki "Görünüm" komutu Ayarlar'ı o bölümde açsın.
+
+**3. Ayarlar modalının boyu sabit kalsın.** Şu an soldaki menüden bölüm
+seçince modalın yüksekliği içeriğe göre büyüyüp küçülüyor. İstenen: modal
+sabit yükseklik (ör. `height: min(720px, 86vh)`), sağ içerik alanı kendi
+içinde kaydırılır (`overflow-y: auto`, `min-height: 0`). `Settings.tsx` ve
+`.modal`/ayarlar CSS'i. Ölç: bölümler arasında geçerken modal yüksekliği
+değişmemeli.
+
+**4. Sonra:** kullanıcı yeni stiller tarif edecek; her biri yeni stil olarak.
+
+Doğrulama: `npm run build`, `node web/scripts/contrast.mjs`, 4621 demo
+verisiyle üç stilde Paneller/Sohbet/Pano/Genel Durum bakışı, eski kayıtlı
+palet (`claudiva.theme = 'carbon'` vb.) açılışta stilin paletine düşmeli.
+
+# 2026-11-25: çeviriler BİTTİ, yayın sende
 
 - [x] **Yerel komut çıktıları** (`localCommands.ts` → `L.cmdOut`) ve **sunucu
   hataları** (`routes.ts` `ApiError` kodu → `L.apiErrors`) çevrildi. Kurallar
