@@ -60,6 +60,12 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   **JSX'e düz metin YAZMA** (`<h2>Harcama</h2>`, `title="Kapat"`): Türkçe karakter
   taşımayan kaçaklar ("Kadir", "Toplam") ancak JSX metin düğümü taramasıyla
   bulundu (2026-11-25, ~35 kaçak `L.extra`ya taşındı).
+- **Skill adı/açıklaması dile göre** (`skillI18n.ts`, 2026-11-25): paket
+  skill'lerinin dizin adı (slash komutu) ve `SKILL.md`si İngilizce; panel
+  başlığı ve açıklamayı arayüz diliyle gösterir, yanında `/komut`. Çeviri yalnız
+  diskteki açıklama tablodaki `en` metnine BİREBİR eşitse uygulanır; `SKILL.md`
+  açıklaması değişirse tabloyu da güncelle, yoksa ham metin görünür. Arama
+  çeviride de arar. Kullanan yerler: Skills paneli, Sohbet sağ paneli.
 - **Ajan adı/açıklaması dile göre** (`agentI18n.ts`): paket ajanları
   `config.json`da `i18n: { tr, en }` taşır. `useStore.refreshAgents` store'a
   girerken BİR KEZ `localizeAgent` uygular (75 gösterim yeri `config.name`

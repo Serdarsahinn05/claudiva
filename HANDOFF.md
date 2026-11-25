@@ -27,8 +27,13 @@ Sonra (aynı gün): Cam açık SU YEŞİLİ (Gözlemevi açık turkuaz kalır), 
 ağı Stüdyo/Fosfor Genel Durum'unda, Sohbet'e sağ panel (`ChatInspector.tsx`).
 Hepsi 4621'de bakıldı. Hâlâ COMMIT YOK.
 
-**Sıradaki:** commit (docs/*.jpg hariç), kısa `impeccable audit`, README/DESIGN.md
-güncellemesi, 0.4.0. Eski isteğe bağlı liste: Sohbet'e sağ panel (model/skill/MCP/dosyalar). README ve
+Commit edildi: `e107104` (stiller, Cam, sağ panel). Ardından skill adları
+İngilizce (`e12df1f` + özet tablosu ve ilk-taşıma uyarısı düzeltmesi), panelde dile
+göre çeviri; eski kurulumlar açılışta güvenle taşınır (bkz. server/CLAUDE.md).
+PUSH EDİLMEDİ.
+
+**Sıradaki:** kısa `impeccable audit`, README/DESIGN.md güncellemesi (yeni
+varsayılan stil, açık/koyu, yeni skill adları), sürüm notu, 0.4.0. Eski isteğe bağlı liste: Sohbet'e sağ panel (model/skill/MCP/dosyalar). README ve
 ekran görüntüleri yeni varsayılan stile göre güncellenmeli.
 
 

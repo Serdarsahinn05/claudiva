@@ -184,15 +184,14 @@ function upgradeSkills(
   const id = path.basename(bundledDir);
   for (const [from, to] of Object.entries(SKILL_RENAMES)) {
     if (!fs.existsSync(path.join(bundledSkills, to))) continue;
-    if (seeded.delete(from)) {
-      seeded.add(to);
-      changed = true;
-    }
+    // Manifestte eski ad yoksa bu kurulum zaten taşınmıştır (ya da skill hiç
+    // tohumlanmamıştır): her açılışta aynı uyarıyı yeniden basmamak için çık.
+    if (!seeded.delete(from)) continue;
+    seeded.add(to);
+    changed = true;
     const oldDir = path.join(targetDir, 'skills', from);
     const newDir = path.join(targetDir, 'skills', to);
     if (!fs.existsSync(oldDir) || fs.existsSync(newDir)) continue;
-    seeded.add(to);
-    changed = true;
     if (isPackagedSkill(oldDir, `${id}/skills/${to}/SKILL.md`)) {
       fs.renameSync(oldDir, newDir);
       console.log(S.skillRenamed(id, from, to));

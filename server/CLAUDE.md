@@ -324,6 +324,18 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   - Paket ajanının adı ya da açıklaması değişirse eski değeri `LEGACY` tablosuna EKLE.
   - **`config.json` `i18n` alanı (dile göre ad/açıklama) paketin meta verisidir:** her açılışta paketteki hâline eşitlenir (LEGACY kaydı olmayan ajanda da). Kullanıcının adı `name`de kalır; panel çeviriyi yalnız `name === i18n.tr.name` iken gösterir (`web/src/agentI18n.ts`).
   - **`agentLegacyContent.ts` ÜRETİLİR:** `node server/scripts/legacy-hashes.mjs` git geçmişindeki BÜTÜN sürümleri tarar (ilk tablo yalnız v0.1.1 + HEAD biliyordu; v0.1.1 öncesi kurulumlar hiç güncellenmedi, ölçüldü). Paket ajan dosyası değişince commit'ten SONRA yeniden çalıştır. Commit'te hiç olmamış ama sahada görülen eski içerik betikteki `SAHADA_GORULEN`e girer (yalnız paketin eski hâli olduğu doğrulanmışsa).
+  - **Skill ADLARI İngilizce (2026-11-25):** tek tablo `skillRenames.ts`
+    (eski → yeni). `upgradeSkills` "yeni skill" döngüsünden ÖNCE taşır: manifestte
+    eski ad varsa yenisiyle değiştirir; eski dizinin `SKILL.md`si (ya da `.disabled`)
+    YENİ yolun anahtarındaki bir özete eşitse dizini `renameSync` ile taşır, içerik
+    sonra kural 3 ile yenilenir. Eşit değilse (kullanıcı düzenlemiş) eski adıyla
+    KALIR ve yeni ad kopyalanmaz. Manifestte eski ad YOKSA dokunulmaz (zaten
+    taşınmış ya da kullanıcının kendi skill'i) ve uyarı tekrar basılmaz.
+    `legacy-hashes.mjs` tabloyu METİN olarak okuyup eski yolun geçmişini yeni
+    anahtara yazar (satır biçimi `"eski": "yeni",`). Yeni adlar yerleşik
+    komutlarla çakışmaz (`code-review`, `review`, `debug`, `plan` YOK). Ölçüldü
+    (4621 demo, gerçek eski kurulum): 40 taşındı, düzenlenmiş 1 kaldı, silinmiş 1
+    geri gelmedi; ikinci açılış sessiz.
   - **Özet sondaki boşluğu kırpar** (`trimEnd`): eski manifestler aynı içerikte ama sondaki satır sonu eksikti, tek bayt yüzünden eşleşmiyordu.
   - **`writeAgentFiles` plugin.json'u yalnız YOKSA yazar.** Eskiden her ajan güncellemesinde (oto-onay düğmesi dahil) `"<ad> skill'leri"` diye yeniden yazıp paketteki açıklamayı eziyordu; bu üretilmiş kalıp ada göre değiştiği için özetle tanınamaz, `isGeneratedManifest` onu ayrıca tanıyıp onarır.
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
