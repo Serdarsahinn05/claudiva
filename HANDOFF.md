@@ -18,8 +18,8 @@
   sonrası tek `delegate_tasks` → docs iki dosyayı yazdı, lider özetledi. Not: oto-onay
   kapalı ajanda alt ajan izin bekler, lider o sürede `delegate_tasks` içinde bloklu kalır.
 - [x] **README iki dilli:** `README.md` İngilizce (varsayılan; GitHub ve npm bunu
-  gösterir), `README.tr.md` Türkçe, ikisinin başında dil bağlantısı. Pakete yalnız
-  `README.md` girer. Ekran görüntüleri `docs/screenshots/` (panels, chat, board,
+  gösterir), `README.tr.md` Türkçe, ikisinin başında dil bağlantısı. npm bütün `README*`
+  dosyalarını `files`tan bağımsız pakete koyar (ölçüldü: ikisi de giriyor, 18 KB). Ekran görüntüleri `docs/screenshots/` (panels, chat, board,
   studio, phosphor): scratch demo (`my-app`, haiku, ~$0.27), İngilizce arayüz. README
   değişince İKİ dosyayı birlikte güncelle.
 - [x] Arayüzde sabit kalmış ~35 Türkçe metin `L.extra`ya taşındı (tarama betiği:
