@@ -1,5 +1,37 @@
 # Devir — Claudiva
 
+# ▶ 2026-11-25 akşamı: açık/koyu mod + Cam stili EKLENDİ (commit BEKLİYOR)
+
+Kullanıcı kararları (yeniden sorma): ana stil **Cam** (açık = Vireon/Optivue,
+koyu = Astrabit/Ventra); her stilin altında Açık/Koyu modu; Gözlemevi açık =
+Vireon renkleri, Stüdyo koyu = eski Grafit, Fosfor açık = InsightOS renkleri.
+Işık ve Atölye stilleri önizlendi, BEĞENİLMEDİ, eklenmedi. Önizleme:
+https://claude.ai/artifact/WetjE1G2wkAiHFGKFeB3a8
+
+Yapılan: 5 palet (`themes.css`), `appStyle.ts` stil × mod, `index.html` betiği,
+`styles.css` Cam token'ları, `index.css` "CAM STİLİ" kabuk kuralları, Ayarlar'da
+mod seçici, komut paleti, i18n, `contrast.mjs` (8 palet geçiyor), `npm run build`
+geçiyor, 4621 demosunda dört stilin yeni modları gözle doğrulandı.
+
+Ek (aynı gün): Cam'ın Genel Durum ekranı `GlassOverview.tsx` YAPILDI (kahraman
+kart, Lidere sor, bütçe kadranı, ısı haritası, son devirler, delegasyon ağı);
+4621 demosunda açık/koyu ve dar/geniş gözde bakıldı. "Lidere sor" gönderimi
+canlı ajana karşı DENENMEDİ (ücretli). Ayarlar'daki Kaydet düğmesi i18n'e
+bağlandı. **Commit yapılmadı (kullanıcı: şimdilik commit yok; `docs/*.jpg`
+referans görselleri commit'e GİRMEYECEK).**
+
+Pano'ya da eklendi: `heatmap`, `dial`, `network` widget'ları (galeri + varsayılan
+dizilimde ağ ve ısı haritası). 4621 demosunda bakıldı.
+
+Sonra (aynı gün): Cam açık SU YEŞİLİ (Gözlemevi açık turkuaz kalır), delegasyon
+ağı Stüdyo/Fosfor Genel Durum'unda, Sohbet'e sağ panel (`ChatInspector.tsx`).
+Hepsi 4621'de bakıldı. Hâlâ COMMIT YOK.
+
+**Sıradaki:** commit (docs/*.jpg hariç), kısa `impeccable audit`, README/DESIGN.md
+güncellemesi, 0.4.0. Eski isteğe bağlı liste: Sohbet'e sağ panel (model/skill/MCP/dosyalar). README ve
+ekran görüntüleri yeni varsayılan stile göre güncellenmeli.
+
+
 # ▶ SIRADAKİ İŞ (2026-11-25 sonu, kullanıcı kararları — yeniden sorma)
 
 Durum: 0.2.1 push edildi (npm'de 0.1.1, yayın kullanıcıda). Sonrasında

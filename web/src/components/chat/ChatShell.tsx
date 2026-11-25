@@ -26,6 +26,7 @@ import { sendToAgent } from '../../agentSend';
 import { Avatar, ChatMessage } from './ChatMessage';
 import { clock } from './chatFormat';
 import { ChatComposer, type ReplyTarget } from './ChatComposer';
+import { ChatInspector } from './ChatInspector';
 import { quoteOf } from '../../reply';
 import { L, dateLocale } from '../../i18n';
 
@@ -47,6 +48,19 @@ interface Props {
 type Conv = { kind: 'team' } | { kind: 'dm'; id: string };
 
 const SEEN_KEY = 'claudiva.chat.seen';
+const INFO_KEY = 'claudiva.chat.info';
+
+/** Sağ panel: kullanıcının son seçimi; seçim yoksa geniş ekranda açık. */
+function loadInfoOpen(): boolean {
+  try {
+    const v = localStorage.getItem(INFO_KEY);
+    if (v === '1') return true;
+    if (v === '0') return false;
+  } catch {
+    /* gizli sekme */
+  }
+  return window.innerWidth >= 1280;
+}
 
 function loadSeen(): Record<string, number> {
   try {
@@ -59,7 +73,17 @@ function loadSeen(): Record<string, number> {
 export function ChatShell(props: Props) {
   const { agents, tasks, transcripts, permissions, team, onTeam } = props;
   const [conv, setConv] = useState<Conv>({ kind: 'team' });
-  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoOpen, setInfoOpenState] = useState(loadInfoOpen);
+  const setInfoOpen = (fn: (v: boolean) => boolean) =>
+    setInfoOpenState((v) => {
+      const next = fn(v);
+      try {
+        localStorage.setItem(INFO_KEY, next ? '1' : '0');
+      } catch {
+        /* gizli sekme: seçim oturumluk kalır */
+      }
+      return next;
+    });
   const [seen, setSeen] = useState<Record<string, number>>(loadSeen);
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
 
@@ -430,8 +454,18 @@ export function ChatShell(props: Props) {
 
       {infoOpen && (
         <aside className="chat-info" aria-label={L.chat.infoAria}>
-          <div className="chat-list-sec">{L.chat.members}</div>
-          {members.map((a) => (
+          {conv.kind === 'team' && lead && <div className="chat-list-sec">{L.chat.ciLead}</div>}
+          {lead && (
+            <ChatInspector
+              key={lead.config.id}
+              agent={lead}
+              budget={props.budget}
+              compact={conv.kind === 'team'}
+              refreshAgents={props.refreshAgents}
+            />
+          )}
+          {conv.kind === 'team' && <div className="chat-list-sec">{L.chat.members}</div>}
+          {conv.kind === 'team' && members.map((a) => (
             <button key={a.config.id} className="chat-member" onClick={() => setConv({ kind: 'dm', id: a.config.id })}>
               <Avatar agent={a} size="sm" />
               <span className="chat-conv-body">

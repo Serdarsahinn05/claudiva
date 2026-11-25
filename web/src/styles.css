@@ -119,7 +119,7 @@
   /* Doku yok, ışık var: sağ üstten limon, sol alttan soğuk mavi sızma.
      Yıldız alanı kapalı, gök ızgarası yok. */
   --texture:
-    radial-gradient(900px 520px at 92% -8%, rgb(var(--accent-rgb) / 0.16), transparent 70%),
+    radial-gradient(900px 520px at 92% -8%, rgb(var(--accent-glow-rgb, var(--accent-rgb)) / 0.16), transparent 70%),
     radial-gradient(700px 460px at 4% 108%, rgb(var(--aux-rgb) / 0.07), transparent 70%),
     var(--hull-0);
   --texture-blend: normal, normal, normal;
@@ -129,8 +129,75 @@
 :root[data-style='phosphor'],
 :root[data-style='phosphor'] [data-theme] {
   --label-fg: var(--muted);
-  /* Limon hap, koyu yazı. */
-  --btn-primary-bg: var(--hud);
-  --btn-primary-border: var(--hud);
-  --btn-primary-fg: rgb(var(--bg-rgb));
+  /* Limon hap, koyu yazı. Açık modda (lumen) vurgu metin için koyu zeytin;
+     düğme referansın limon dolgusunu --accent-fill'den alır. */
+  --btn-primary-bg: var(--accent-fill, var(--hud));
+  --btn-primary-border: var(--accent-fill, var(--hud));
+  --btn-primary-fg: var(--accent-fill-fg, rgb(var(--bg-rgb)));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CAM — buzlu kartlar, ayrık paneller (2026-11-25, varsayılan stil)
+   Referanslar docs/ altında: açık mod (mist) Vireon + Optivue, koyu mod
+   (grove) Astrabit + Ventra. Önizleme: claude.ai/artifact/WetjE1G2wkAiHFGKFeB3a8
+
+   Paneller kenardan kenara çizgiyle değil, aralarında boşluk olan buzlu
+   kartlarla ayrılır: o kurallar index.css "CAM STİLİ" bölümünde (bu dosya
+   kural yazmaz). Burada yalnız token.
+
+   Font: Sora (@fontsource/sora). index.css'te @import edilir ama
+   tarayıcı font dosyasını ancak bir metin o aileyi KULLANINCA indirir;
+   öteki stillerde 0 bayt font trafiği.
+   ═══════════════════════════════════════════════════════════════════ */
+:root[data-style='glass'] {
+  --font-ui: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-meta: var(--font-ui);
+  --title-style: normal;
+  --title-weight: 600;
+
+  /* Küçük bölüm etiketleri büyük harf + geniş aralık (önizlemedeki gibi),
+     ama mono değil. */
+  --upper: uppercase;
+  --track: 0.08em;
+  --caps-scale: 1.05;
+
+  --radius: 10px;
+  --radius-lg: 18px;
+  --chip-radius: 999px;
+  --btn-radius: 999px;
+  --btn-case: none;
+  --bubble-tail: 14px;
+
+  --event-border-style: solid;
+  --event-bg: rgb(var(--surface-2-rgb) / 0.7);
+  --event-shadow: none;
+  --live-border: rgb(var(--accent-rgb) / 0.55);
+  --status-tint: 14%;
+  --status-border: transparent;
+
+  /* Gök yok; iki yumuşak ışık lekesi (sağ üst vurgu, sol alt ikinci aura).
+     Buzlu cam ancak arkasında renk varsa okunur. */
+  --texture:
+    radial-gradient(1200px 760px at 100% -12%, rgb(var(--accent-glow-rgb, var(--accent-rgb)) / 0.34), transparent 64%),
+    radial-gradient(1000px 700px at -6% 112%, rgb(var(--aura-2-rgb, var(--aux-rgb)) / var(--aura-2-a, 0.2)), transparent 66%),
+    var(--hull-0);
+  --texture-blend: normal, normal, normal;
+  --starfield-a: 0;
+  --glow-a: 1;
+
+  /* Terminal iki modda da panelin içinde yuvarlak bir kart. */
+  --terminal-inset: 8px;
+  --terminal-radius: 14px;
+
+  /* Kabuk aralığı: kartlar arası boşluk ve dış kenar. */
+  --shell-gap: 10px;
+}
+:root[data-style='glass'],
+:root[data-style='glass'] [data-theme] {
+  --label-fg: var(--muted);
+  /* Birincil eylem: referansın parlak dolgusu, koyu yazı. */
+  --btn-primary-bg: var(--accent-fill, var(--hud));
+  --btn-primary-border: var(--accent-fill, var(--hud));
+  --btn-primary-fg: var(--accent-fill-fg, rgb(var(--bg-rgb)));
 }

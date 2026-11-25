@@ -475,6 +475,11 @@ export default function App() {
           onOpenSettings={() => setSettingsOpen(true)}
           refreshAgents={store.refreshAgents}
           loadTranscript={store.loadTranscript}
+          onOpenAgent={(id) => {
+            // Terminal Paneller kabuğunda yaşar: oraya geçip gözü aç.
+            setUiMode('panels');
+            openTerminal(id);
+          }}
         />
       ) : uiMode === 'chat' ? (
         <ChatShell

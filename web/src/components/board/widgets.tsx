@@ -24,6 +24,7 @@ import { answerPermission, permissionSummary } from '../../permissions';
 import { Avatar } from '../chat/ChatMessage';
 import { buildFeed, previewOf } from '../../chatFeed';
 import { L, dateLocale } from '../../i18n';
+import { BudgetDial, DelegationNet, Heatmap, findLead, useUsageHistory } from '../GlassOverview';
 
 export interface WidgetData {
   agents: AgentSnapshot[];
@@ -34,6 +35,8 @@ export interface WidgetData {
   onOpenSettings: () => void;
   refreshAgents: () => Promise<void>;
   loadTranscript: (id: string) => Promise<void>;
+  /** Bir ajanın terminalini açar (delegasyon ağındaki düğüm). */
+  onOpenAgent?: (id: string) => void;
 }
 
 /** Aralıklı yenilenen tek bir uç okuması (widget kapanınca durur). */
@@ -538,6 +541,22 @@ export function NotesWidget(_: WidgetData) {
   );
 }
 
+// ------------------------------------------------------------ Cam'dan gelen üçlü
+// Genel Durum'daki (GlassOverview) bileşenlerin AYNISI, `bare` kipte: kart
+// çerçevesi ve başlık Pano'nun. Veri ve kurallar tek yerde kalır.
+export function HeatmapWidget({ agents }: WidgetData) {
+  const hist = useUsageHistory();
+  return <Heatmap bare agents={agents} turns={hist?.turns ?? null} since={hist?.since ?? null} />;
+}
+
+export function DialWidget({ budget, onOpenSettings }: WidgetData) {
+  return <BudgetDial bare budget={budget} onOpenSettings={onOpenSettings} />;
+}
+
+export function NetworkWidget({ agents, tasks, onOpenAgent }: WidgetData) {
+  return <DelegationNet bare agents={agents} tasks={tasks} lead={findLead(agents)} onOpenAgent={onOpenAgent ?? (() => {})} />;
+}
+
 export const WIDGETS = {
   compose: ComposeWidget,
   flow: FlowWidget,
@@ -553,4 +572,7 @@ export const WIDGETS = {
   changes: ChangesWidget,
   system: SystemWidget,
   notes: NotesWidget,
+  heatmap: HeatmapWidget,
+  dial: DialWidget,
+  network: NetworkWidget,
 } as const;

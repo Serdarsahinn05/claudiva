@@ -339,7 +339,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved, init
         <button onClick={onClose}>{section === 'butce' ? L.actions.cancel : L.common.close}</button>
         {section === 'butce' && (
           <button className="primary" disabled={busy} onClick={() => void save()}>
-            {busy ? 'Kaydediliyor…' : 'Kaydet'}
+            {busy ? L.actions.saving : L.common.save}
           </button>
         )}
       </div>

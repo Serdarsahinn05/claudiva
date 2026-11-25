@@ -226,3 +226,261 @@
   --cam-filter: saturate(0.8) brightness(0.9);
   --cam-scanline: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   AÇIK/KOYU MOD PALETLERİ (2026-11-25)
+   Her stilin bir açık, bir koyu paleti var (appStyle.ts STYLE_PALETTES +
+   index.html betiği, AYNI tablo). Serbest palet seçimi YOK: kullanıcı stili
+   ve modu seçer, palet ikisinden türer.
+     Cam       → mist (açık)  · grove (koyu)
+     Gözlemevi → tide (açık)  · obsidian (koyu)
+     Stüdyo    → paper (açık) · graphite (koyu)
+     Fosfor    → lumen (açık) · phosphor (koyu)
+   Referanslar docs/ altında: tide = Vireon (a4c14be…jpg), lumen = InsightOS
+   (4065c7e…jpg), mist = Vireon + Optivue, grove = Astrabit + Ventra.
+
+   Açık zeminde limon ve açık turkuaz YAZI olarak okunmaz. Bu yüzden
+   --accent metin için koyulaştırılmış tondur; referansın parlak rengi
+   dolgu/ışık olarak --accent-fill ve --accent-glow-rgb ile gelir. Stil
+   blokları (styles.css) birincil düğmeyi ve dokuyu bunlardan okur,
+   tanımsızsa --hud / --accent'e düşer.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Açık paletlerin ortak davranışı: terminal panelin üstünde kart
+   (paper ile aynı karar, bkz. web/CLAUDE.md). */
+[data-theme='tide'], [data-theme='lumen'], [data-theme='mist'] {
+  --terminal-inset: 10px;
+  --terminal-radius: 12px;
+  --shadow-screen: 0 10px 28px rgb(16 32 40 / 0.16), 0 2px 6px rgb(16 32 40 / 0.10);
+  --shadow-card: 0 1px 2px rgb(16 32 40 / 0.05), 0 8px 24px -12px rgb(16 32 40 / 0.16);
+  --shadow-pop: 0 10px 28px rgb(16 32 40 / 0.14);
+  --shadow-modal: 0 22px 54px rgb(16 32 40 / 0.20);
+  --scrim: rgb(18 24 28 / 0.32);
+  --cam-filter: saturate(0.9) brightness(1.02);
+  --cam-scanline: 0;
+}
+
+/* GÖZLEMEVİ · AÇIK (tide): Vireon. Gri-beyaz zemin, sağ üstten turkuaz
+   geçiş, beyaz plaka. Obsidyen'in cyan vurgusunun gündüz eşi. */
+[data-theme='tide'] {
+  --bg-rgb:        236 239 240;
+  --surface-rgb:   255 255 255;
+  --surface-2-rgb: 246 248 249;
+  --surface-3-rgb: 234 239 241;
+  --void-rgb:      248 250 250;
+
+  --edge-rgb:      218 225 228;
+  --edge-lit-rgb:  192 202 207;
+
+  --fg-rgb:        18 24 28;
+  --muted-rgb:     82 94 102;
+  --dim-rgb:       104 116 124;
+
+  --accent-rgb:    12 122 136;    /* koyu turkuaz: metin ve çizgi */
+  --accent-2-rgb:   8 100 112;
+  --accent-glow-rgb: 98 216 224;  /* referansın parlak turkuazı */
+
+  --ok-rgb:        21 128 61;
+  --warn-rgb:      161 98 7;
+  --err-rgb:       200 38 38;
+  --aux-rgb:       37 99 200;     /* çalışıyor: mavi, turkuazdan ayrı */
+  --inert-rgb:     170 178 184;
+
+  --syn-com-rgb:   100 110 120;
+  --syn-key-rgb:     8 100 112;
+  --syn-str-rgb:    21 120 60;
+  --syn-num-rgb:   166 72 10;
+  --syn-fn-rgb:     29 88 210;
+  --syn-typ-rgb:   176 30 95;
+  --syn-var-rgb:    31 41 55;
+  --syn-op-rgb:     75 85 99;
+  --syn-pun-rgb:    95 103 116;
+
+  --radius: 4px;
+  --radius-lg: 6px;
+  --glow-a: 0.6;
+  --starfield-a: 0.25;
+
+  --texture:
+    radial-gradient(1100px 680px at 100% -10%, rgb(var(--accent-glow-rgb) / 0.42), transparent 68%),
+    radial-gradient(900px 600px at 0% 110%, rgb(160 220 240 / 0.30), transparent 70%),
+    repeating-linear-gradient(0deg, rgb(var(--edge-rgb) / 0.45) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(90deg, rgb(var(--edge-rgb) / 0.45) 0 1px, transparent 1px 140px),
+    var(--hull-0);
+  --texture-blend: normal, normal, normal, normal, normal;
+}
+
+/* STÜDYO · KOYU (graphite): 2026-11-25'te silinen Grafit, mod olarak geri. */
+[data-theme='graphite'] {
+  --bg-rgb:        12 12 14;
+  --surface-rgb:   20 20 23;
+  --surface-2-rgb: 27 27 31;
+  --surface-3-rgb: 36 36 41;
+  --void-rgb:      15 15 17;
+
+  --edge-rgb:      40 40 46;
+  --edge-lit-rgb:  62 62 70;
+
+  --fg-rgb:        237 237 240;
+  --muted-rgb:     161 161 172;
+  --dim-rgb:       122 122 134;
+
+  --accent-rgb:    167 139 250;
+  --accent-2-rgb:  139 92 246;
+
+  --ok-rgb:        74 222 128;
+  --warn-rgb:      251 191 36;
+  --err-rgb:       248 113 113;
+  --aux-rgb:       96 165 250;
+  --inert-rgb:     82 82 91;
+
+  --syn-com-rgb:   138 138 152;
+  --syn-key-rgb:   196 181 253;
+  --syn-str-rgb:   134 239 172;
+  --syn-num-rgb:   253 186 116;
+  --syn-fn-rgb:    147 197 253;
+  --syn-typ-rgb:   249 168 212;
+  --syn-var-rgb:   228 228 231;
+  --syn-op-rgb:    161 161 170;
+  --syn-pun-rgb:   140 140 152;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 12px 32px rgb(0 0 0 / 0.5);
+  --shadow-modal: 0 24px 64px rgb(0 0 0 / 0.6);
+  --scrim: rgb(0 0 0 / 0.6);
+
+  --cam-filter: saturate(0.8) brightness(0.92);
+  --cam-scanline: 0;
+}
+
+/* FOSFOR · AÇIK (lumen): InsightOS. Lavanta zemin, beyaz kart, limon dolgu
+   ve parıltı, mor ikincil. Limon yazı değil: metin vurgusu koyu zeytin. */
+[data-theme='lumen'] {
+  --bg-rgb:        239 238 250;
+  --surface-rgb:   255 255 255;
+  --surface-2-rgb: 248 248 252;
+  --surface-3-rgb: 236 236 245;
+  --void-rgb:      250 250 253;
+
+  --edge-rgb:      226 225 238;
+  --edge-lit-rgb:  204 203 220;
+
+  --fg-rgb:        14 14 20;
+  --muted-rgb:     92 91 112;
+  --dim-rgb:       108 107 128;
+
+  --accent-rgb:    77 110 0;      /* koyu zeytin-limon: metin */
+  --accent-2-rgb:  60 90 0;
+  --accent-glow-rgb: 198 244 50;  /* referansın limonu */
+  --accent-fill: rgb(198 244 50);
+  --accent-fill-fg: rgb(16 20 0);
+
+  --ok-rgb:        22 128 70;
+  --warn-rgb:      161 98 7;
+  --err-rgb:       200 38 50;
+  --aux-rgb:       91 43 255;     /* çalışıyor: mor (referansın ikincili) */
+  --inert-rgb:     176 176 190;
+
+  --syn-com-rgb:   100 100 118;
+  --syn-key-rgb:    77 110 0;
+  --syn-str-rgb:    21 120 60;
+  --syn-num-rgb:   166 72 10;
+  --syn-fn-rgb:     70 40 210;
+  --syn-typ-rgb:   176 30 95;
+  --syn-var-rgb:    31 31 45;
+  --syn-op-rgb:     75 75 95;
+  --syn-pun-rgb:    95 95 115;
+}
+
+/* CAM · AÇIK (mist): Vireon + Optivue, su yeşili (2026-11-25 kullanıcı:
+   Gözlemevi açığı turkuaz, Cam açığı su yeşili). Gri-beyaz zemin, sağ üstte su yeşili,
+   sol altta lavanta ışık; kartlar buzlu beyaz (styles.css "CAM"). */
+[data-theme='mist'] {
+  --bg-rgb:        235 241 239;
+  --surface-rgb:   255 255 255;
+  --surface-2-rgb: 245 249 247;
+  --surface-3-rgb: 232 241 237;
+  --void-rgb:      248 251 250;
+
+  --edge-rgb:      215 228 223;
+  --edge-lit-rgb:  190 209 202;
+
+  --fg-rgb:        18 26 28;
+  --muted-rgb:     84 98 104;
+  --dim-rgb:       102 116 122;
+
+  --accent-rgb:    10 120 82;     /* koyu su yeşili: metin */
+  --accent-2-rgb:   8 98 66;
+  --accent-glow-rgb: 72 222 168;  /* su yeşili (Gözlemevi açığın turkuazından ayrı) */
+  --accent-fill: rgb(140 232 196);
+  --accent-fill-fg: rgb(4 56 38);
+  --aura-2-rgb:    203 196 245;   /* sol alt lavanta */
+  --aura-2-a:      0.45;
+  --glass-a:       0.72;          /* kart gövdesinin opaklığı */
+
+  --ok-rgb:        21 128 61;
+  --warn-rgb:      161 98 7;
+  --err-rgb:       200 38 38;
+  --aux-rgb:       29 110 200;
+  --inert-rgb:     170 180 184;
+
+  --syn-com-rgb:   100 112 118;
+  --syn-key-rgb:     8 98 66;
+  --syn-str-rgb:    21 120 60;
+  --syn-num-rgb:   166 72 10;
+  --syn-fn-rgb:     29 88 210;
+  --syn-typ-rgb:   176 30 95;
+  --syn-var-rgb:    31 41 48;
+  --syn-op-rgb:     75 87 95;
+  --syn-pun-rgb:    95 106 114;
+}
+
+/* CAM · KOYU (grove): Astrabit + Ventra. Orman yeşili gece, tepeden nane
+   ışık hüzmesi, cam yüzey. */
+[data-theme='grove'] {
+  --bg-rgb:         5 11  9;
+  --surface-rgb:   13 27 23;
+  --surface-2-rgb: 19 36 31;
+  --surface-3-rgb: 27 48 42;
+  --void-rgb:       4  9  7;
+
+  --edge-rgb:      31 54 47;
+  --edge-lit-rgb:  54 88 78;
+
+  --fg-rgb:        232 243 239;
+  --muted-rgb:     138 167 159;
+  --dim-rgb:       108 138 129;
+
+  --accent-rgb:    62 224 192;
+  --accent-2-rgb:  30 190 160;
+  --accent-glow-rgb: 110 255 210;
+  --accent-fill: rgb(62 224 192);
+  --accent-fill-fg: rgb(3 42 34);
+  --aura-2-rgb:    18 90 64;
+  --aura-2-a:      0.55;
+  --glass-a:       0.5;
+
+  --ok-rgb:        132 225 120;
+  --warn-rgb:      251 191 36;
+  --err-rgb:       251 113 133;
+  --aux-rgb:       125 211 252;
+  --inert-rgb:     58 80 72;
+
+  --syn-com-rgb:   122 148 140;
+  --syn-key-rgb:    62 224 192;
+  --syn-str-rgb:   134 239 172;
+  --syn-num-rgb:   253 205 96;
+  --syn-fn-rgb:    147 197 253;
+  --syn-typ-rgb:   196 181 253;
+  --syn-var-rgb:   226 236 232;
+  --syn-op-rgb:    152 172 165;
+  --syn-pun-rgb:   132 152 145;
+
+  --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 10px 30px -14px rgb(0 0 0 / 0.6);
+  --shadow-pop: 0 14px 36px rgb(0 0 0 / 0.6);
+  --shadow-modal: 0 28px 70px rgb(0 0 0 / 0.7);
+  --scrim: rgb(1 6 4 / 0.66);
+
+  --cam-filter: saturate(0.8) brightness(0.9);
+  --cam-scanline: 0;
+}

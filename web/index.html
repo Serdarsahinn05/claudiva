@@ -43,17 +43,29 @@
       // Stil (styles.css). Yedek ad appStyle.ts DEFAULT_STYLE ile AYNI olmalı.
       try {
         var st = localStorage.getItem('claudiva.style');
-        document.documentElement.dataset.style = st === 'studio' || st === 'phosphor' ? st : 'observatory';
+        document.documentElement.dataset.style =
+          st === 'observatory' || st === 'studio' || st === 'phosphor' || st === 'glass' ? st : 'glass';
       } catch (e) {
-        document.documentElement.dataset.style = 'observatory';
+        document.documentElement.dataset.style = 'glass';
       }
       try {
-        // Palet stilden türer (2026-11-25: her stilin tek paleti; appStyle.ts
-        // STYLE_DEFAULT_THEME ile AYNI tablo). Kayıtlı eski palet yok sayılır.
-        var t = { observatory: 'obsidian', studio: 'paper', phosphor: 'phosphor' }[document.documentElement.dataset.style] || 'obsidian';
-        document.documentElement.dataset.theme = t;
+        // Palet stil + moddan türer (appStyle.ts STYLE_PALETTES ve NATURAL_MODE
+        // ile AYNI tablolar). Mod stil başına `claudiva.mode`da; kayıtlı eski
+        // palet yok sayılır.
+        var pal = {
+          glass: { light: 'mist', dark: 'grove' },
+          observatory: { light: 'tide', dark: 'obsidian' },
+          studio: { light: 'paper', dark: 'graphite' },
+          phosphor: { light: 'lumen', dark: 'phosphor' }
+        };
+        var nat = { glass: 'light', observatory: 'dark', studio: 'light', phosphor: 'dark' };
+        var s2 = document.documentElement.dataset.style;
+        var md = null;
+        try { md = (JSON.parse(localStorage.getItem('claudiva.mode') || '{}') || {})[s2]; } catch (e2) {}
+        if (md !== 'light' && md !== 'dark') md = nat[s2] || 'light';
+        document.documentElement.dataset.theme = (pal[s2] || pal.glass)[md];
       } catch (e) {
-        document.documentElement.dataset.theme = 'obsidian';
+        document.documentElement.dataset.theme = 'mist';
       }
     </script>
     <!--

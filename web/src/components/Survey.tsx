@@ -14,6 +14,7 @@ import { PhosphorHero } from './PhosphorHero';
 import { useAppStyle } from '../appStyle';
 import { L, dateLocale } from '../i18n';
 import { StudioOverview } from './StudioOverview';
+import { DelegationNet, GlassOverview, findLead } from './GlassOverview';
 
 interface Props {
   agents: AgentSnapshot[];
@@ -154,6 +155,10 @@ export function Survey({
   // listesi + devir kartıyla (StudioOverview) çizer; gök haritası Gözlemevi'nin.
   const appStyle = useAppStyle();
   const phosphor = appStyle === 'phosphor';
+  // Cam kendi kart ızgarasını çizer (GlassOverview: ısı haritası, bütçe
+  // kadranı, lidere sor, delegasyon ağı); bütçe/kota/token okumaları onun
+  // içinde ya da altta kalır.
+  const glass = appStyle === 'glass';
   const studio = appStyle === 'studio';
   const [plan, setPlan] = useState<Record<string, RateWindow | null> | null>(null);
   const [planAvailable, setPlanAvailable] = useState(false);
@@ -193,8 +198,17 @@ export function Survey({
   const p = phrase(agents, tasks, budget);
 
   return (
-    <div className={`survey${phosphor ? ' px' : studio ? ' st' : ''}`}>
-      {phosphor ? (
+    <div className={`survey${phosphor ? ' px' : studio ? ' st' : glass ? ' gl-s' : ''}`}>
+      {glass ? (
+        <GlassOverview
+          agents={agents}
+          tasks={tasks}
+          budget={budget}
+          sentence={`${p.lead}${p.count}${p.tail}`}
+          onOpenAgent={onOpenAgent}
+          onOpenSettings={onOpenSettings}
+        />
+      ) : phosphor ? (
         <PhosphorHero
           agents={agents}
           tasks={tasks}
@@ -219,13 +233,15 @@ export function Survey({
       )}
 
       <div className="survey-body">
-        {studio ? (
+        {glass ? null : studio ? (
           <StudioOverview agents={agents} tasks={tasks} selectedId={selectedId} onOpenAgent={onOpenAgent} />
         ) : (
           !phosphor && <Sky agents={agents} tasks={tasks} selectedId={selectedId} onOpen={onOpenAgent} />
         )}
 
         <div className="eph">
+          {/* Cam'da bütçe üstteki kadranda; ikinci kez gösterilmez. */}
+          {!glass && (
           <Mod label={L.survey.dailyBudget} onClick={onOpenSettings}>
             {budget && budget.limitUSD ? (
               <>
@@ -248,6 +264,7 @@ export function Survey({
               </>
             )}
           </Mod>
+          )}
 
           <Mod label={L.survey.planQuota}>
             {planWindows.length ? (
@@ -282,6 +299,12 @@ export function Survey({
           </Mod>
         </div>
       </div>
+
+      {/* Delegasyon ağı: Cam'da GlassOverview'ün içinde; Gözlemevi'nde gök
+          haritasının takımyıldız çizgileri zaten bunu gösteriyor. */}
+      {(studio || phosphor) && (
+        <DelegationNet agents={agents} tasks={tasks} lead={findLead(agents)} onOpenAgent={onOpenAgent} />
+      )}
 
       <div className="survey-foot">
         <Mod label={L.survey.project}>

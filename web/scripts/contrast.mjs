@@ -130,6 +130,12 @@ const plates = [
   // Stüdyo paletleri (nötr ürün yüzeyi).
   plate('paper', themesCss, "[data-theme='paper']"),
   plate('phosphor', themesCss, "[data-theme='phosphor']"),
+  // Açık/koyu mod paletleri (2026-11-25).
+  plate('tide', themesCss, "[data-theme='tide']"),
+  plate('graphite', themesCss, "[data-theme='graphite']"),
+  plate('lumen', themesCss, "[data-theme='lumen']"),
+  plate('mist', themesCss, "[data-theme='mist']"),
+  plate('grove', themesCss, "[data-theme='grove']"),
 ];
 
 let failed = 0;

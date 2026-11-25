@@ -1,6 +1,7 @@
 import { L } from './i18n';
 /**
- * Palet kayıt defteri — 2026-11-25'ten beri HER STİLİN TEK PALETİ var.
+ * Palet kayıt defteri. 2026-11-25 akşamından beri her stilin bir AÇIK, bir
+ * KOYU paleti var; palet stil + moddan türer (appStyle.ts STYLE_PALETTES).
  *
  * Kullanıcı kararı: yalnız renk değiştiren paletler (Gece, Gündüz, Karbon,
  * Aurora, Grafit, Kırmızı Fener) kaldırıldı; "yeni tema" yeni STİL demektir
@@ -11,7 +12,7 @@ import { L } from './i18n';
  * scripts/contrast.mjs ile ÖLÇÜLÜR.
  */
 
-export type ThemeGroup = 'Premium' | 'Stüdyo' | 'Fosfor';
+export type ThemeGroup = 'Premium' | 'Stüdyo' | 'Fosfor' | 'Cam';
 
 export interface ThemeDef {
   id: string;
@@ -46,12 +47,20 @@ export const THEMES: ThemeDef[] = [
     desc: L.themes.phosphor.desc,
     group: 'Fosfor',
   },
+
+  // --- Açık/koyu mod paletleri (2026-11-25; stil × mod, bkz. appStyle.ts) ---
+  { id: 'tide', name: L.themes.tide.name, desc: L.themes.tide.desc, group: 'Premium' },
+  { id: 'graphite', name: L.themes.graphite.name, desc: L.themes.graphite.desc, group: 'Stüdyo' },
+  { id: 'lumen', name: L.themes.lumen.name, desc: L.themes.lumen.desc, group: 'Fosfor' },
+  { id: 'mist', name: L.themes.mist.name, desc: L.themes.mist.desc, group: 'Cam' },
+  { id: 'grove', name: L.themes.grove.name, desc: L.themes.grove.desc, group: 'Cam' },
 ];
 
 /** Grup sırası — seçicide bu düzende listelenir. */
-export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Stüdyo', 'Fosfor'];
+export const THEME_GROUPS: ThemeGroup[] = ['Cam', 'Premium', 'Stüdyo', 'Fosfor'];
 
-export const DEFAULT_THEME = 'obsidian';
+/** Varsayılan stil Cam, doğal modu açık → mist. index.html betiğiyle AYNI. */
+export const DEFAULT_THEME = 'mist';
 const STORAGE_KEY = 'claudiva.theme';
 
 function isKnown(id: string | null): id is string {

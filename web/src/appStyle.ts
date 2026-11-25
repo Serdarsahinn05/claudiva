@@ -1,44 +1,63 @@
 /**
- * Tasarım stili: renkten AYRI eksen (bkz. styles.css).
+ * Tasarım stili ve renk modu.
  *
- *  · `observatory` — Gözlemevi, gök plakası (varsayılan; index.css'in kendisi).
+ *  · `glass`       — Cam (varsayılan, 2026-11-25): buzlu kartlar, ayrık paneller.
+ *  · `observatory` — Gözlemevi, gök plakası (index.css'in kendisi).
  *  · `studio`      — Stüdyo, sade SaaS yüzeyi.
  *  · `phosphor`    — Fosfor, gece yarısı ürün sayfası (limon ışık).
  *
- * `data-style` <html>'e yazılır. İlk boyamadan önce `index.html`'deki satır
- * içi betik uygular (tema ile aynı sebep: React'e bırakılırsa bir kare eski
- * stil görünür). Buradaki DEFAULT_STYLE ile o betikteki yedek ad AYNI olmalı.
+ * Her stilin bir AÇIK, bir KOYU paleti var (`STYLE_PALETTES`). Kullanıcı stili
+ * ve modu seçer; palet ikisinden türer, ayrıca seçilmez. Mod stil BAŞINA
+ * hatırlanır (`claudiva.mode` = { stil: mod }): Gözlemevi'ni koyu, Cam'ı açık
+ * kullanan biri stil değiştirince ikisi de kendi modunda açılır. Kayıt yoksa
+ * stilin doğal modu (`NATURAL_MODE`).
  *
- * Stil ve palet TEK yerden seçilir: Görünüm menüsü (ThemePicker). Önce
- * Ayarlar'da ayrı bir stil seçicisi vardı ve iki menü birbirinin üstüne
- * yazıyordu (Stüdyo + Obsidyen gibi yarım karışımlar). Artık her stilin kendi
- * palet grupları var (`STYLE_GROUPS`); Görünüm yalnız onları gösterir, stil
- * değişince ya da açılışta uyumsuz bir kayıt bulunursa palet stilin
- * varsayılanına çekilir. Aynı kural `index.html`deki satır içi betikte de var
- * (ilk karede yanlış palet görünmesin).
+ * `data-style` ve `data-theme` <html>'e yazılır. İlk boyamadan önce
+ * `index.html`'deki satır içi betik uygular (React'e bırakılırsa bir kare
+ * eski görünüm çizilir). Buradaki tablolar ile o betikteki tablolar AYNI
+ * olmalı: DEFAULT_STYLE, STYLE_PALETTES, NATURAL_MODE.
  */
 import { useSyncExternalStore } from 'react';
 import { L } from './i18n';
-import { DEFAULT_THEME, getTheme, setTheme } from './themes';
+import { getTheme, setTheme } from './themes';
 
-export type AppStyle = 'observatory' | 'studio' | 'phosphor';
+export type AppStyle = 'glass' | 'observatory' | 'studio' | 'phosphor';
+export type ColorMode = 'light' | 'dark';
 
 export const APP_STYLES: { id: AppStyle; label: string; desc: string }[] = [
+  { id: 'glass', label: L.appStyle.glass, desc: L.appStyle.glassDesc },
   { id: 'observatory', label: L.appStyle.observatory, desc: L.appStyle.observatoryDesc },
   { id: 'studio', label: L.appStyle.studio, desc: L.appStyle.studioDesc },
   { id: 'phosphor', label: L.appStyle.phosphor, desc: L.appStyle.phosphorDesc },
 ];
 
-const STORAGE_KEY = 'claudiva.style';
-export const DEFAULT_STYLE: AppStyle = 'observatory';
+/** Stil × mod → palet. index.html'deki satır içi betikle AYNI olmalı. */
+export const STYLE_PALETTES: Record<AppStyle, Record<ColorMode, string>> = {
+  glass: { light: 'mist', dark: 'grove' },
+  observatory: { light: 'tide', dark: 'obsidian' },
+  studio: { light: 'paper', dark: 'graphite' },
+  phosphor: { light: 'lumen', dark: 'phosphor' },
+};
+
+/** Kayıt yokken stilin açıldığı mod. index.html'deki betikle AYNI olmalı. */
+export const NATURAL_MODE: Record<AppStyle, ColorMode> = {
+  glass: 'light',
+  observatory: 'dark',
+  studio: 'light',
+  phosphor: 'dark',
+};
+
+const STYLE_KEY = 'claudiva.style';
+const MODE_KEY = 'claudiva.mode';
+export const DEFAULT_STYLE: AppStyle = 'glass';
 
 function isKnown(v: string | null): v is AppStyle {
-  return v === 'observatory' || v === 'studio' || v === 'phosphor';
+  return v === 'glass' || v === 'observatory' || v === 'studio' || v === 'phosphor';
 }
 
-function load(): AppStyle {
+function loadStyle(): AppStyle {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STYLE_KEY);
     if (isKnown(saved)) return saved;
   } catch {
     // Gizli sekmede localStorage kapalı olabilir; varsayılan yeterli.
@@ -46,41 +65,81 @@ function load(): AppStyle {
   return DEFAULT_STYLE;
 }
 
-let current: AppStyle = load();
+function loadModes(): Partial<Record<AppStyle, ColorMode>> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(MODE_KEY) || '{}');
+    const out: Partial<Record<AppStyle, ColorMode>> = {};
+    for (const s of APP_STYLES) {
+      const m = raw?.[s.id];
+      if (m === 'light' || m === 'dark') out[s.id] = m;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+let current: AppStyle = loadStyle();
+let modes = loadModes();
 const listeners = new Set<() => void>();
 
 export function getAppStyle(): AppStyle {
   return current;
 }
 
-/** Stilin TEK paleti. index.html'deki satır içi betikle AYNI olmalı. */
-export const STYLE_DEFAULT_THEME: Record<AppStyle, string> = {
-  observatory: DEFAULT_THEME,
-  studio: 'paper',
-  phosphor: 'phosphor',
-};
-
-/** Palet stilden türer: stilin paleti değilse ona çekilir. */
-function syncPalette(style: AppStyle): void {
-  if (getTheme() !== STYLE_DEFAULT_THEME[style]) setTheme(STYLE_DEFAULT_THEME[style]);
+export function modeFor(style: AppStyle): ColorMode {
+  return modes[style] ?? NATURAL_MODE[style];
 }
 
-// Açılışta: eski bir palet kaydı (ör. Karbon) kalmışsa stilin paletine çek.
-syncPalette(current);
+export function getColorMode(): ColorMode {
+  return modeFor(current);
+}
+
+export function paletteFor(style: AppStyle, mode: ColorMode = modeFor(style)): string {
+  return STYLE_PALETTES[style][mode];
+}
+
+/** Palet stil + moddan türer; uymuyorsa ona çekilir. */
+function syncPalette(): void {
+  const want = paletteFor(current);
+  if (getTheme() !== want) setTheme(want);
+}
+
+// Açılışta: eski bir palet kaydı (ör. Karbon) kalmışsa stil + modun paletine çek.
+syncPalette();
+
+function emit(): void {
+  for (const l of listeners) l();
+}
 
 export function setAppStyle(style: AppStyle): void {
   if (!isKnown(style) || style === current) return;
   current = style;
   document.documentElement.dataset.style = style;
   try {
-    localStorage.setItem(STORAGE_KEY, style);
+    localStorage.setItem(STYLE_KEY, style);
   } catch {
     /* yukarıdaki gerekçe */
   }
+  syncPalette();
+  emit();
+}
 
-  syncPalette(style);
+export function setColorMode(mode: ColorMode): void {
+  if (mode !== 'light' && mode !== 'dark') return;
+  if (modeFor(current) === mode) return;
+  modes = { ...modes, [current]: mode };
+  try {
+    localStorage.setItem(MODE_KEY, JSON.stringify(modes));
+  } catch {
+    /* yukarıdaki gerekçe */
+  }
+  syncPalette();
+  emit();
+}
 
-  for (const l of listeners) l();
+export function toggleColorMode(): void {
+  setColorMode(getColorMode() === 'light' ? 'dark' : 'light');
 }
 
 function subscribe(cb: () => void): () => void {
@@ -90,4 +149,8 @@ function subscribe(cb: () => void): () => void {
 
 export function useAppStyle(): AppStyle {
   return useSyncExternalStore(subscribe, getAppStyle);
+}
+
+export function useColorMode(): ColorMode {
+  return useSyncExternalStore(subscribe, getColorMode);
 }

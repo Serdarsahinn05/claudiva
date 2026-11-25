@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from './Modal';
-import { APP_STYLES, setAppStyle } from '../appStyle';
+import { APP_STYLES, setAppStyle, toggleColorMode } from '../appStyle';
 import type { AgentSnapshot } from '../types';
 import { L } from '../i18n';
 
@@ -112,7 +112,13 @@ export function themeCommands(): Command[] {
     hint: st.desc,
     keywords: 'tema theme stil style görünüm appearance',
     run: () => setAppStyle(st.id),
-  }));
+  })).concat({
+    id: 'mode:toggle',
+    label: L.themePicker.toggleMode,
+    hint: `${L.themePicker.light} / ${L.themePicker.dark}`,
+    keywords: 'mod mode açık koyu light dark tema theme gece gündüz',
+    run: toggleColorMode,
+  });
 }
 
 export function agentCommands(

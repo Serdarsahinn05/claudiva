@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { APP_STYLES, STYLE_DEFAULT_THEME, setAppStyle, useAppStyle } from '../appStyle';
+import type React from 'react';
+import { APP_STYLES, modeFor, paletteFor, setAppStyle, setColorMode, useAppStyle, useColorMode } from '../appStyle';
+import type { ColorMode } from '../appStyle';
 import { CLI_MARKS, CLI_SKINS, getCliSkin, setCliSkin } from '../cliSkins';
 import type { CliSkin } from '../cliSkins';
 import { L } from '../i18n';
@@ -10,11 +12,35 @@ import { L } from '../i18n';
  *
  * Seçim anında uygulanır: ayarlar penceresi de stili izlediği için seçim
  * yapıldığı anda çerçeve, düğmeler ve tipografi gözünün önünde değişir.
- * Palet ayrıca seçilmez; her stilin tek paleti var (themes.ts).
+ * Palet ayrıca seçilmez: stil + mod (Açık/Koyu) paleti belirler (appStyle.ts).
+ * Mod stil başına hatırlanır; kartların önizlemesi her stilin KENDİ modunu
+ * gösterir, yani seçince ne görüleceğini.
  */
 export function AppearanceChoices() {
   const [cli, setCli] = useState<CliSkin>(getCliSkin);
   const style = useAppStyle();
+  const mode = useColorMode();
+  const MODES: { id: ColorMode; label: string; icon: React.ReactNode }[] = [
+    {
+      id: 'light',
+      label: L.themePicker.light,
+      icon: (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+          <circle cx="8" cy="8" r="3" />
+          <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" />
+        </svg>
+      ),
+    },
+    {
+      id: 'dark',
+      label: L.themePicker.dark,
+      icon: (
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+          <path d="M13 9.5A5.5 5.5 0 1 1 6.5 3a4.5 4.5 0 0 0 6.5 6.5Z" />
+        </svg>
+      ),
+    },
+  ];
 
   function pickCli(id: CliSkin) {
     setCliSkin(id);
@@ -37,7 +63,7 @@ export function AppearanceChoices() {
             >
               {/* Önizleme stilin KENDİ paletiyle çizilir (data-theme); stil
                   token'ları kökte yaşadığı için yazı ve köşe satır içi örneklenir. */}
-              <span className={`style-prev style-prev-${st.id}`} data-theme={STYLE_DEFAULT_THEME[st.id]} aria-hidden="true">
+              <span className={`style-prev style-prev-${st.id}`} data-theme={paletteFor(st.id, modeFor(st.id))} aria-hidden="true">
                 <span className="style-prev-title">
                   {st.id === 'phosphor' ? (
                     <>
@@ -56,6 +82,25 @@ export function AppearanceChoices() {
               </span>
               <span className="theme-card-name">{st.label}</span>
               <span className="theme-card-desc">{st.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mod: seçili stilin açık ya da koyu paleti. */}
+      <div>
+        <div className="theme-group-label">{L.themePicker.mode}</div>
+        <div className="mode-seg" role="radiogroup" aria-label={L.themePicker.mode}>
+          {MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={mode === m.id}
+              onClick={() => setColorMode(m.id)}
+            >
+              {m.icon}
+              {m.label}
             </button>
           ))}
         </div>

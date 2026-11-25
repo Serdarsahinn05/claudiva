@@ -31,7 +31,11 @@ export type WidgetType =
   | 'quota'
   | 'changes'
   | 'system'
-  | 'notes';
+  | 'notes'
+  // 2026-11-25: Cam'ın Genel Durum'undan (GlassOverview.tsx) gelen üçlü.
+  | 'heatmap'
+  | 'dial'
+  | 'network';
 
 export interface Widget {
   id: string;
@@ -45,8 +49,8 @@ export interface Widget {
 /** Galeri grupları; sıra galerideki sıradır. */
 export const WIDGET_GROUPS: { key: 'work' | 'team' | 'cost' | 'project'; types: WidgetType[] }[] = [
   { key: 'work', types: ['compose', 'flow', 'approvals', 'activity', 'actions'] },
-  { key: 'team', types: ['agents', 'tokens', 'stats'] },
-  { key: 'cost', types: ['budget', 'cost', 'quota'] },
+  { key: 'team', types: ['agents', 'network', 'heatmap', 'tokens', 'stats'] },
+  { key: 'cost', types: ['budget', 'dial', 'cost', 'quota'] },
   { key: 'project', types: ['changes', 'system', 'notes'] },
 ];
 export const WIDGET_TYPES: WidgetType[] = WIDGET_GROUPS.flatMap((g) => g.types);
@@ -67,6 +71,9 @@ export const DEFAULT_SIZE: Record<WidgetType, { w: number; h: number }> = {
   changes: { w: 6, h: 4 },
   system: { w: 4, h: 4 },
   notes: { w: 4, h: 4 },
+  heatmap: { w: 6, h: 4 },
+  dial: { w: 4, h: 4 },
+  network: { w: 6, h: 5 },
 };
 
 export const ROW_PX = 56;
@@ -91,6 +98,9 @@ export const DEFAULT_BOARD: Widget[] = [
   at('approvals', 4, 2),
   at('agents', 8, 4),
   at('cost', 4, 4),
+  // Satırı tam doldurur (6 + 6): kartlar arasında boşluk kalmasın.
+  at('network', 6, 5),
+  at('heatmap', 6, 5),
 ];
 
 const KEY = 'claudiva.board.v2';

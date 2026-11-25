@@ -50,6 +50,8 @@ interface Props {
   onOpenSettings: () => void;
   refreshAgents: () => Promise<void>;
   loadTranscript: (id: string) => Promise<void>;
+  /** Ajanın terminalini açar (Pano'dan Paneller'e geçerek). */
+  onOpenAgent?: (id: string) => void;
 }
 
 export function BoardShell(props: Props) {
@@ -177,6 +179,7 @@ export function BoardShell(props: Props) {
     onOpenSettings: props.onOpenSettings,
     refreshAgents: props.refreshAgents,
     loadTranscript: props.loadTranscript,
+    onOpenAgent: props.onOpenAgent,
   };
 
   return (

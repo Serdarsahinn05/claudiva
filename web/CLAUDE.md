@@ -201,6 +201,18 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
 - Erişilebilirlik (2026-11-25 denetimi): ileti bölgesi `role="log"`
   (`aria-relevant="additions"`: akan metin duyurulmaz, yeni balon duyurulur),
   Görev/Soru ve Plan çipleri `aria-pressed`, yazı alanı `aria-label`.
+- **Sağ panel ajan bölümü `chat/ChatInspector.tsx`** (2026-11-25; maket
+  `claude.ai/artifact/NFBFnmdd9cWwh2xZVDqQwD`). DM'de o ajan, ekip sohbetinde
+  lider (`compact`: skill/MCP/dosya yok) + bugünkü üyeler/açık görevler. Model
+  `PUT /api/agents/:id` (oturumda canlı `setModel`), seçenekler/bağlam/MCP
+  `inspect` (kapalı oturumda `null` → "okunamadı", uydurma yok). Bağlam çubuğu:
+  HEADROOM çıkarılır, en büyük 4 + "diğer" (5 renk, tekrar yok). Skill aç/kapat
+  `toggleSkill`; genel/proje kapsamlıda "bütün ekibi etkiler" uyarısı, genel
+  skill'ler (kullanıcının `~/.claude`'u) varsayılan KATLI. Dosyalar
+  `/api/changes` `touches[].agentId`. Açık/kapalı `claudiva.chat.info`; kayıt
+  yoksa ≥1280px'de açık. Ölçüldü (4621): kapalı/açık oturum, oto-onay
+  aç-kapa sunucuya yazıldı ve geri alındı. Skill aç/kapat CANLI DENENMEDİ
+  (gerçek `~/.claude` dosyasını yeniden adlandırır).
 - Okunmamış sayacı `claudiva.chat.seen`. İlk ziyarette mevcut geçmiş "görülmüş"
   sayılır. Güncelleme İŞLEVSEL olmak zorunda (`markSeen`): aynı karede iki
   efekt yazıyor, eski durumu okuyan ikincisi birincinin yazdığını eziyordu.
@@ -220,7 +232,7 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
 ## Pano modu (üçüncü arayüz modu)
 
 - `uiMode` = `board`. Kabuk `components/board/BoardShell.tsx`, widget'lar
-  `widgets.tsx` (14 tür), galeri `WidgetGallery.tsx`, saf yerleşim modeli
+  `widgets.tsx` (17 tür), galeri `WidgetGallery.tsx`, saf yerleşim modeli
   `board.ts` (`claudiva.board.v2`). Sohbet gibi yalnız GÖRÜNÜM: aynı store,
   yeni uç yok. Takım kapsamı üst çubuktaki takım sekmesinden gelir.
 - **12 sütun × SABİT satır (`ROW_PX` 56, `GAP_PX` 16); widget `w` (2-12) ve
@@ -243,6 +255,12 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
 - **Gönderim/izin tek yoldan:** "Ekibe yaz" = `buildBrief` + `api.sendMessage`
   (Orchestrator ile aynı); onay = `answerPermission`; "Son mesajlar" =
   `buildFeed` + `previewOf` (sohbetle aynı akış).
+- **Isı haritası, bütçe kadranı, delegasyon ağı** (2026-11-25) Cam'ın Genel
+  Durum'undaki bileşenlerin AYNISI (`GlassOverview.tsx`, `bare` kip: çerçeve ve
+  başlık Pano'nun); veri kuralı tek yerde. Tur geçmişi `useUsageHistory`.
+  Ağ düğümüne tıklamak Paneller'e geçip terminali açar (`onOpenAgent`, App.tsx).
+  Varsayılan dizilime bir satır eklendi (ağ 6 + ısı haritası 6); kayıtlı panolar
+  değişmez, galeriden eklenir.
 - **Buzlu cam ancak arkasında renk varsa okunur:** `.board` zemininde tema
   token'larından üç ışık lekesi, kartlar `backdrop-filter`. Her stilde çalışır.
 - **İki ölçülmüş tuzak:** kartın sınıfı `w-<tür>`, `bw-<tür>` DEĞİL
@@ -368,6 +386,36 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   sayfanın kendisidir, ikinci bir kopya aynı adları tekrarlıyordu.
 
 ## Stil katmanı (renkten ayrı eksen)
+
+- **2026-11-25 akşamı: AÇIK/KOYU MOD + Cam stili (varsayılan).** Her stilin iki
+  paleti var, palet stil × moddan türer (`appStyle.ts` `STYLE_PALETTES`,
+  `NATURAL_MODE`, `index.html` betiği AYNI tablo): Cam → mist/grove,
+  Gözlemevi → tide/obsidian, Stüdyo → paper/graphite, Fosfor → lumen/phosphor.
+  Mod stil BAŞINA hatırlanır (`claudiva.mode` = `{stil: mod}`); seçim Ayarlar →
+  Arayüz'de stil kartlarının altında, komut paletinde "Açık/koyu modu değiştir".
+  Varsayılan stil `glass` (Cam), açık mod (`mist`). Referanslar `docs/*.jpg`,
+  önizleme `claude.ai/artifact/WetjE1G2wkAiHFGKFeB3a8`.
+- **Açık zeminde limon/açık turkuaz YAZI olmaz:** `--accent` metin için koyu ton;
+  referansın parlak rengi `--accent-fill`/`--accent-fill-fg` (birincil düğme) ve
+  `--accent-glow-rgb` (doku ışığı). Stil blokları bunları `var(--x, --hud)` ile
+  okur. Kontrast sekiz palette ölçüldü (`contrast.mjs`, hepsi geçiyor).
+- **Cam'ın kabuk kuralları `index.css` sonunda "CAM STİLİ"** (styles.css kural
+  yazmaz): başlık, şerit, yan yuvalar, döşeli gözler ve ekip çubuğu ayrık buzlu
+  kart (`--shell-gap`, `--glass-a`). `backdrop-filter` yalnız bu büyük
+  yüzeylerde. Seçici `.app > header`, `header` DEĞİL: panel başlık çubuğu
+  (`.pf-bar`) da bir `<header>`.
+- **Cam'ın Genel Durum'u `GlassOverview.tsx`** (dal `Survey.tsx`, CSS `.gl-*` ve
+  `.survey.gl-s`, index.css sonu): koyu kahraman kart (durum cümlesi + sayılar),
+  Lidere sor (`buildBrief(..., { ask: true })`, Pano'yla aynı yol; cevap
+  liderin terminalinde, kartta UYDURULMAZ), bütçe kadranı, ajan × gün ısı
+  haritası (`/api/usage/history` token toplamı, kayıt başlangıcı yazılır), son
+  devirler, delegasyon ağı (görev `assignedBy → assignedTo`; `user` kenar değil;
+  running akar, izin bekleyen kehribar). Kırılmalar `@container`. Kartlar buzlu
+  DEĞİL (zaten buzlu gözün içinde). Altıgen glifi (⬡) Sora'da yok, SVG çizilir.
+  Ağ Stüdyo ve Fosfor'un Genel Durum'unda da var (`Survey.tsx`, okumaların
+  altında); Gözlemevi'nde yok, gök haritasının takımyıldız çizgileri aynı işi görüyor.
+- Sora fontu `@fontsource/sora`, index.css'te @import; dosyayı tarayıcı ancak
+  Cam seçilince indirir.
 
 - **İki eksen:** `data-theme` = palet (`themes.css`), `data-style` = tasarım dili
   (`styles.css`: yazı tipi, başlık biçimi, köşe, doku, gök süsü, etiket tonu).

@@ -129,6 +129,31 @@ function Thumb({ type }: { type: WidgetType }) {
       );
     case 'notes':
       return <span className="wt-box tall">{rows(3)}</span>;
+    case 'heatmap':
+      return (
+        <span className="wt-heat">
+          {[0, 1, 2, 3, 1, 0, 2, 4, 3, 2, 0, 1, 3, 4, 1, 2, 1, 0, 2, 3, 4].map((l, i) => (
+            <b key={i} className={`l${l}`} />
+          ))}
+        </span>
+      );
+    case 'dial':
+      return (
+        <span className="wt-dial">
+          <b />
+        </span>
+      );
+    case 'network':
+      return (
+        <span className="wt-net">
+          <i className="live" />
+          <span>
+            <i />
+            <i className="live" />
+            <i />
+          </span>
+        </span>
+      );
   }
 }
 

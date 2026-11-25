@@ -58,7 +58,7 @@ Rules:
 Sohbet modu, `.claudiva` geçişi, İngilizce ajan dosyaları, stil katmanı
 (Gözlemevi/Stüdyo/Fosfor), **Pano modu**, isteğe bağlı **JEV model
 yönlendiricisi** (varsayılan kapalı), sade terminal dökümü. **Sıradaki iş ve
-kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma. (2026-11-25: paletler kalkıyor, yalnız stiller kalıyor; seçim Ayarlar'a; Ayarlar modalı sabit boy.)
+kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma. (2026-11-25 akşamı: serbest palet yok ama her stilin Açık/Koyu modu var; varsayılan stil Cam. Ayrıntı `HANDOFF.md` başı ve `web/CLAUDE.md` → "Stil katmanı".)
 
 **Faz 4 = ikinci sağlayıcı ve kullanıcı onu BİLEREK ertelemişti**, açmadan önce
 sor. **3D ofis de sona bırakıldı**; three.js eklemeden önce sor.
