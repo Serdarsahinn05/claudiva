@@ -48,17 +48,9 @@
         document.documentElement.dataset.style = 'observatory';
       }
       try {
-        var t = localStorage.getItem('claudiva.theme') || 'obsidian';
-        // Kaldırılmış palet (Kırmızı Fener, 2026-11-25): themes.ts getTheme ile AYNI düşüş.
-        if (t === 'redlight') t = 'obsidian';
-        // Stil↔palet uyumu (appStyle.ts syncPalette ile AYNI kural): Stüdyo
-        // yalnız kendi paletleriyle, Gözlemevi onlarsız açılır.
-        var ds = document.documentElement.dataset.style;
-        var own = { studio: ['paper', 'graphite'], phosphor: ['phosphor'] };
-        var dflt = { studio: 'paper', phosphor: 'phosphor' };
-        var foreign = t === 'paper' || t === 'graphite' || t === 'phosphor';
-        if (own[ds] && own[ds].indexOf(t) < 0) t = dflt[ds];
-        if (!own[ds] && foreign) t = 'obsidian';
+        // Palet stilden türer (2026-11-25: her stilin tek paleti; appStyle.ts
+        // STYLE_DEFAULT_THEME ile AYNI tablo). Kayıtlı eski palet yok sayılır.
+        var t = { observatory: 'obsidian', studio: 'paper', phosphor: 'phosphor' }[document.documentElement.dataset.style] || 'obsidian';
         document.documentElement.dataset.theme = t;
       } catch (e) {
         document.documentElement.dataset.theme = 'obsidian';

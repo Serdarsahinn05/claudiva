@@ -7,7 +7,7 @@ commit edilenler: Stüdyo Genel Durum (`StudioOverview.tsx`), açık palette
 terminal koyu kart (`b298ee9`, push EDİLMEDİ). 4600 (kullanıcının sunucusu)
 ve 4621 (demo `%TEMP%/claude/cm-demo`) açık kalmış olabilir: porta göre kapat.
 
-**1. Paletler kalkıyor, yalnız STİL kalıyor.** Kullanıcı: "Obsidyen, Karbon,
+**1. ✅ YAPILDI (2026-11-25): Paletler kalktı, yalnız STİL kaldı.** Kullanıcı: "Obsidyen, Karbon,
 Aurora birbirinin aynı; bunlar yalnız renk değiştiren tema, gereksiz."
 - Kalan: **Gözlemevi, Stüdyo, Fosfor** — her stil TEK sabit görünüm.
 - Silinecek paletler: `night`, `day`, `carbon`, `aurora`, `graphite` (Stüdyo'nun

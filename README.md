@@ -274,13 +274,13 @@ agent as it is. The panel never rejects a command.
 
 ## 🎨 Appearance and language
 
-Style and colour are two separate axes, both picked from the **Appearance** menu.
+There are three styles, picked from the **Appearance** menu. Each style is a complete look with its own colours; there is no separate palette to pick.
 
-| Style | Feel | Palettes |
+| Style | Feel | Colours |
 |---|---|---|
-| **Observatory** (default) | A star atlas: engraved headings, paper grain, a starfield | Obsidian (default), Carbon, Aurora, Night, Day |
-| **Studio** | A clean product surface: sans-serif, soft corners, no texture | Paper, Graphite |
-| **Phosphor** | A midnight product page: bold headings, italic serif accents, lime light | Phosphor |
+| **Observatory** (default) | A star atlas: engraved headings, paper grain, a starfield | Obsidian: ink black, cyan accent |
+| **Studio** | A clean product surface: sans-serif, soft corners, no texture | Paper: light, violet accent |
+| **Phosphor** | A midnight product page: bold headings, italic serif accents, lime light | Graphite black, lime accent |
 
 <table>
 <tr>
@@ -294,7 +294,7 @@ Style and colour are two separate axes, both picked from the **Appearance** menu
 </table>
 
 Contrast isn't approved by eye, it is measured: `node web/scripts/contrast.mjs`
-checks every palette against the thresholds and exits non-zero if one fails.
+checks every style's colours against the thresholds and exits non-zero if one fails.
 
 The interface is available in **English** and **Turkish** (Settings → Interface,
 or `Ctrl+K` → "Change language"); the first visit follows your browser's

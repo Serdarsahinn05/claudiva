@@ -1,31 +1,17 @@
 import { L } from './i18n';
 /**
- * Plaka kayıt defteri.
+ * Palet kayıt defteri — 2026-11-25'ten beri HER STİLİN TEK PALETİ var.
  *
- * Renkler burada DURMAZ — onlar themes.css'te token olarak yaşar. Burası
- * yalnızca "hangi plakalar var, nasıl adlandırılır" sorusunu yanıtlar.
- *
- * İki aile var ve ikisi farklı bir şeyi taklit eder.
- *
- * PLAKALAR — bir gözlem koşulu. Kağıt, mürekkep, tane:
- *   · Gece          — karanlık odada saatlerce açık duran plaka
- *   · Gündüz        — aydınlık odada okunan basılı plaka
- *
- * PREMIUM — işlenmiş bir yüzey. Cam ve anodize metal, mürekkep değil ışık:
- *   · Obsidyen — mürekkep siyahı, cyan (varsayılan)
- *   · Karbon   — anodize grafit, buz cyanı
- *   · Aurora   — menekşeli siyah, cyan vurgu
- *
- * Varsayılan Obsidyen'dir. Kırmızı Fener (`redlight`) 2026-11-25'te kullanıcı
- * isteğiyle kaldırıldı; kayıtlı seçimi olan Obsidyen'e düşer (`isKnown` +
- * index.html satır içi betiği).
- *
- * Yeni plaka: themes.css'e bir blok + buraya bir satır + scripts/contrast.mjs
- * içindeki `plates` dizisine bir satır. Kontrast ÖLÇÜLÜR:
- * fg ≥7, muted ≥4.5, dim/accent/err/ok/warn/aux ≥3.
+ * Kullanıcı kararı: yalnız renk değiştiren paletler (Gece, Gündüz, Karbon,
+ * Aurora, Grafit, Kırmızı Fener) kaldırıldı; "yeni tema" yeni STİL demektir
+ * (styles.css + appStyle.ts). Palet stilden türer, ayrıca seçilmez:
+ *   Gözlemevi → obsidian · Stüdyo → paper · Fosfor → phosphor
+ * Kayıtlı eski bir palet açılışta stilin paletine düşer (index.html betiği +
+ * appStyle.ts syncPalette, ikisi AYNI kural). Renkler themes.css'te; kontrast
+ * scripts/contrast.mjs ile ÖLÇÜLÜR.
  */
 
-export type ThemeGroup = 'Plakalar' | 'Premium' | 'Stüdyo' | 'Fosfor';
+export type ThemeGroup = 'Premium' | 'Stüdyo' | 'Fosfor';
 
 export interface ThemeDef {
   id: string;
@@ -36,18 +22,6 @@ export interface ThemeDef {
 }
 
 export const THEMES: ThemeDef[] = [
-  {
-    id: 'night',
-    name: L.themes.night.name,
-    desc: L.themes.night.desc,
-    group: 'Plakalar',
-  },
-  {
-    id: 'day',
-    name: L.themes.day.name,
-    desc: L.themes.day.desc,
-    group: 'Plakalar',
-  },
 
   // --- Premium baskılar: işlenmiş yüzey, soğuk vurgu (bkz. themes.css) ---
   {
@@ -56,30 +30,12 @@ export const THEMES: ThemeDef[] = [
     desc: L.themes.obsidian.desc,
     group: 'Premium',
   },
-  {
-    id: 'carbon',
-    name: L.themes.carbon.name,
-    desc: L.themes.carbon.desc,
-    group: 'Premium',
-  },
-  {
-    id: 'aurora',
-    name: L.themes.aurora.name,
-    desc: L.themes.aurora.desc,
-    group: 'Premium',
-  },
 
   // --- Stüdyo paletleri: nötr ürün yüzeyi (bkz. themes.css, styles.css) ---
   {
     id: 'paper',
     name: L.themes.paper.name,
     desc: L.themes.paper.desc,
-    group: 'Stüdyo',
-  },
-  {
-    id: 'graphite',
-    name: L.themes.graphite.name,
-    desc: L.themes.graphite.desc,
     group: 'Stüdyo',
   },
 
@@ -93,7 +49,7 @@ export const THEMES: ThemeDef[] = [
 ];
 
 /** Grup sırası — seçicide bu düzende listelenir. */
-export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Plakalar', 'Stüdyo', 'Fosfor'];
+export const THEME_GROUPS: ThemeGroup[] = ['Premium', 'Stüdyo', 'Fosfor'];
 
 export const DEFAULT_THEME = 'obsidian';
 const STORAGE_KEY = 'claudiva.theme';

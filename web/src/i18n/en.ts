@@ -382,14 +382,9 @@ export const en: Dict = {
   },
 
   themes: {
-    night: { name: 'Night', desc: 'Night-ink ground, stardust text, vermilion annotations' },
-    day: { name: 'Day', desc: 'Printed plate: paper ground, black ink, a bright room' },
     obsidian: { name: 'Obsidian', desc: 'Ink-black obsidian with a single cool light: cyan' },
-    carbon: { name: 'Carbon', desc: 'Anodized graphite with ice cyan — neutral for long sessions' },
-    aurora: { name: 'Aurora', desc: 'Violet-tinted black with cyan accents; thinking stands apart by tone' },
     paper: { name: 'Paper', desc: 'Light neutral surface, a single violet accent: a bright office' },
     phosphor: { name: 'Phosphor', desc: 'Graphite-black ground, lime accent, light bleeding in from the corner' },
-    graphite: { name: 'Graphite', desc: 'Dark neutral surface, soft violet accent: long sessions' },
   },
 
   cliSkins: {

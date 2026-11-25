@@ -339,7 +339,12 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   yok, `themes.ts`'teki `DEFAULT_THEME` yalnızca seçicinin bildiği değer.
   Ayrışırlarsa panel bir temayla boyanır, seçici başkasını işaretli gösterir.
   Şu an ikisi de `obsidian`.
-- **İki tema ailesi.** *Plakalar* bir gözlem koşulunu taklit eder (kağıt,
+- **2026-11-25: PALET SEÇİMİ KALKTI, her stilin TEK paleti var** (Gözlemevi →
+  obsidian, Stüdyo → paper, Fosfor → phosphor; `appStyle.ts` STYLE_DEFAULT_THEME +
+  `index.html` betiği, AYNI tablo). Gece/Gündüz/Karbon/Aurora/Grafit silindi;
+  kayıtlı eski palet yok sayılır (ölçüldü). **"Yeni tema" = yeni STİL**, palet
+  değil. Aşağıdaki aile/plaka notları tarihçedir.
+- **(tarihçe) İki tema ailesi.** *Plakalar* bir gözlem koşulunu taklit eder (kağıt,
   mürekkep, tane): Gece · Gündüz. *Premium* işlenmiş bir yüzeyi
   (cam/anodize metal, mürekkep değil ışık): Obsidyen (varsayılan) · Karbon ·
   Aurora — siyah gövde, cyan vurgu, grain 0.42→0.10 ve `overlay` karışım.

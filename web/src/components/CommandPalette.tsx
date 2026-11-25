@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from './Modal';
-import { THEMES, setTheme } from '../themes';
+import { APP_STYLES, setAppStyle } from '../appStyle';
 import type { AgentSnapshot } from '../types';
 import { L } from '../i18n';
 
@@ -104,14 +104,14 @@ export function CommandPalette({ commands, onClose }: Props) {
   );
 }
 
-/** Tema seçenekleri palete ayrı komutlar olarak açılır — modal açmadan geçiş. */
+/** Stiller palete ayrı komutlar olarak açılır — modal açmadan geçiş. Palet stilden türer. */
 export function themeCommands(): Command[] {
-  return THEMES.map((t) => ({
-    id: `theme:${t.id}`,
-    label: `Tema: ${t.name}`,
-    hint: t.group,
-    keywords: 'tema theme renk görünüm',
-    run: () => setTheme(t.id),
+  return APP_STYLES.map((st) => ({
+    id: `style:${st.id}`,
+    label: `${L.themePicker.style}: ${st.label}`,
+    hint: st.desc,
+    keywords: 'tema theme stil style görünüm appearance',
+    run: () => setAppStyle(st.id),
   }));
 }
 

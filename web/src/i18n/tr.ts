@@ -393,14 +393,9 @@ export const tr = {
   },
 
   themes: {
-    night: { name: 'Gece', desc: 'Gece mürekkebi zemin, yıldız tozu metin, vermilyon ek açıklama' },
-    day: { name: 'Gündüz', desc: 'Basılı plaka: kağıt zemin, siyah mürekkep, aydınlık oda' },
     obsidian: { name: 'Obsidyen', desc: 'Mürekkep siyahı obsidyen, tek soğuk kaynak: cyan' },
-    carbon: { name: 'Karbon', desc: 'Anodize grafit gövde, buz cyanı — uzun oturum için nötr' },
-    aurora: { name: 'Aurora', desc: 'Menekşeli siyah, cyan vurgu; düşünme kanalı tonla ayrışır' },
     paper: { name: 'Kâğıt', desc: 'Açık nötr yüzey, tek mor vurgu: aydınlık ofis' },
     phosphor: { name: 'Fosfor', desc: 'Grafit-siyah zemin, limon vurgu ve köşeden sızan ışık' },
-    graphite: { name: 'Grafit', desc: 'Koyu nötr yüzey, yumuşak mor vurgu: uzun oturum' },
   },
 
   cliSkins: {

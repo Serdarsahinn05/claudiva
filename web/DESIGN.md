@@ -630,7 +630,7 @@ on `data-theme`.
 | Corners | 2/3px (premium 4/6px) | 6/10px |
 | Texture | grain, graticule, starfield | none, flat ground |
 | Labels | vermilion/cyan small caps | muted small caps, 0.06em |
-| Palettes | Night, Day, Obsidian, Carbon, Aurora | Paper (light), Graphite (dark), single indigo accent |
+| Palette | Obsidian only (since 2026-11-25 every style has exactly one palette) | Paper only |
 
 Studio rules: no ornament that is not data; status colors stay distinct from
 the accent; contrast is measured with `scripts/contrast.mjs` like every plate.

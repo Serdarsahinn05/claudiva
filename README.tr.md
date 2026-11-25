@@ -276,13 +276,13 @@ hiçbir komutu reddetmez.
 
 ## 🎨 Görünüm ve dil
 
-Stil ve renk iki ayrı eksendir; ikisi de **Görünüm** menüsünden seçilir.
+Üç stil vardır, **Görünüm** menüsünden seçilir. Her stil kendi renkleriyle birlikte tam bir görünümdür; ayrıca seçilecek bir palet yoktur.
 
-| Stil | His | Paletler |
+| Stil | His | Renkler |
 |---|---|---|
-| **Gözlemevi** (varsayılan) | Gök atlası: gravür başlıklar, kâğıt tanesi, yıldız alanı | Obsidyen (varsayılan), Karbon, Aurora, Gece, Gündüz |
-| **Stüdyo** | Sade bir ürün yüzeyi: sans-serif, yumuşak köşe, doku yok | Kâğıt, Grafit |
-| **Fosfor** | Gece yarısı ürün sayfası: kalın başlık, italik serif vurgu, limon ışık | Fosfor |
+| **Gözlemevi** (varsayılan) | Gök atlası: gravür başlıklar, kâğıt tanesi, yıldız alanı | Obsidyen: mürekkep siyahı, cyan vurgu |
+| **Stüdyo** | Sade bir ürün yüzeyi: sans-serif, yumuşak köşe, doku yok | Kâğıt: açık, mor vurgu |
+| **Fosfor** | Gece yarısı ürün sayfası: kalın başlık, italik serif vurgu, limon ışık | Grafit-siyah, limon vurgu |
 
 <table>
 <tr>
@@ -296,7 +296,7 @@ Stil ve renk iki ayrı eksendir; ikisi de **Görünüm** menüsünden seçilir.
 </table>
 
 Kontrast göz kararıyla onaylanmaz, ölçülür: `node web/scripts/contrast.mjs`
-bütün paletleri eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
+her stilin renklerini eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
 
 Arayüz **Türkçe** ve **İngilizce** kullanılabilir (Ayarlar → Arayüz ya da
 `Ctrl+K` → "Dili değiştir"); ilk açılışta tarayıcınızın dilini izler. Hazır

@@ -19,7 +19,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { L } from './i18n';
-import { DEFAULT_THEME, THEMES, getTheme, setTheme, type ThemeGroup } from './themes';
+import { DEFAULT_THEME, getTheme, setTheme } from './themes';
 
 export type AppStyle = 'observatory' | 'studio' | 'phosphor';
 
@@ -53,31 +53,19 @@ export function getAppStyle(): AppStyle {
   return current;
 }
 
-/** Her stilin seçilebilir palet grupları (Görünüm menüsü bunları gösterir). */
-export const STYLE_GROUPS: Record<AppStyle, ThemeGroup[]> = {
-  observatory: ['Premium', 'Plakalar'],
-  studio: ['Stüdyo'],
-  phosphor: ['Fosfor'],
-};
-
-/** Stilin varsayılan paleti. index.html'deki satır içi betikle AYNI olmalı. */
+/** Stilin TEK paleti. index.html'deki satır içi betikle AYNI olmalı. */
 export const STYLE_DEFAULT_THEME: Record<AppStyle, string> = {
   observatory: DEFAULT_THEME,
   studio: 'paper',
   phosphor: 'phosphor',
 };
 
-function paletteFits(style: AppStyle, themeId: string): boolean {
-  const group = THEMES.find((t) => t.id === themeId)?.group;
-  return !!group && STYLE_GROUPS[style].includes(group);
-}
-
-/** Palet stile uymuyorsa stilin varsayılanına çeker. */
+/** Palet stilden türer: stilin paleti değilse ona çekilir. */
 function syncPalette(style: AppStyle): void {
-  if (!paletteFits(style, getTheme())) setTheme(STYLE_DEFAULT_THEME[style]);
+  if (getTheme() !== STYLE_DEFAULT_THEME[style]) setTheme(STYLE_DEFAULT_THEME[style]);
 }
 
-// Açılışta: eski bir kayıt (ör. Stüdyo + Obsidyen) kalmışsa düzelt.
+// Açılışta: eski bir palet kaydı (ör. Karbon) kalmışsa stilin paletine çek.
 syncPalette(current);
 
 export function setAppStyle(style: AppStyle): void {

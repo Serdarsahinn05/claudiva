@@ -125,15 +125,10 @@ function plate(name, css, selector) {
   return [name, { ...base, ...own }];
 }
 const plates = [
-  ['night', base],
-  plate('day', themesCss, "[data-theme='day']"),
   // Premium aile — aynı eşikler geçerli, ayrıcalık yok.
   plate('obsidian', themesCss, "[data-theme='obsidian']"),
-  plate('carbon', themesCss, "[data-theme='carbon']"),
-  plate('aurora', themesCss, "[data-theme='aurora']"),
   // Stüdyo paletleri (nötr ürün yüzeyi).
   plate('paper', themesCss, "[data-theme='paper']"),
-  plate('graphite', themesCss, "[data-theme='graphite']"),
   plate('phosphor', themesCss, "[data-theme='phosphor']"),
 ];
 

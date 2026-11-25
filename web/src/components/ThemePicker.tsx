@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
-import { THEMES, getTheme, setTheme } from '../themes';
-import { APP_STYLES, STYLE_DEFAULT_THEME, STYLE_GROUPS, setAppStyle, useAppStyle, type AppStyle } from '../appStyle';
+import { APP_STYLES, STYLE_DEFAULT_THEME, setAppStyle, useAppStyle, type AppStyle } from '../appStyle';
 import { CLI_MARKS, CLI_SKINS, getCliSkin, setCliSkin } from '../cliSkins';
 import type { CliSkin } from '../cliSkins';
 import { L } from '../i18n';
@@ -18,19 +17,12 @@ interface Props {
  * anda çerçeve, düğmeler ve tipografi gözünün önünde değişir.
  */
 export function ThemePicker({ onClose }: Props) {
-  const [current, setCurrent] = useState(getTheme);
   const [cli, setCli] = useState<CliSkin>(getCliSkin);
   const style = useAppStyle();
 
+  // Palet stilden türer (themes.ts); ayrıca seçilmez.
   function pickStyle(id: AppStyle) {
     setAppStyle(id);
-    // Stil değişince palet stilin varsayılanına çekilmiş olabilir.
-    setCurrent(getTheme());
-  }
-
-  function pick(id: string) {
-    setTheme(id);
-    setCurrent(id);
   }
 
   function pickCli(id: CliSkin) {
@@ -46,7 +38,7 @@ export function ThemePicker({ onClose }: Props) {
       </div>
 
       <div className="modal-pane">
-        {/* Stil: tasarım dili. Aşağıdaki paletler YALNIZ bu stile uyanlar. */}
+        {/* Stil: tasarım dili + kendi tek paleti (2026-11-25'ten beri palet seçimi yok). */}
         <div>
           <div className="theme-group-label">{L.themePicker.style}</div>
           <div className="theme-grid" role="radiogroup" aria-label={L.themePicker.style}>
@@ -90,38 +82,6 @@ export function ThemePicker({ onClose }: Props) {
             ))}
           </div>
         </div>
-
-        {STYLE_GROUPS[style].map((group) => (
-          <div key={group}>
-            <div className="theme-group-label">{L.themePicker.groups[group] ?? group}</div>
-            <div className="theme-grid">
-              {THEMES.filter((t) => t.group === group).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`theme-card${current === t.id ? ' sel' : ''}`}
-                  onClick={() => pick(t.id)}
-                  aria-pressed={current === t.id}
-                >
-                  {/*
-                    Minyatür önizleme: kendi data-theme'ini taşır, dolayısıyla
-                    içindeki var(--...) çağrıları o temanın token'larını okur.
-                    Renkleri burada tekrar yazmak gerekmiyor.
-                  */}
-                  <span className="theme-swatch" data-theme={t.id}>
-                    <span className="theme-swatch-panel">
-                      <span className="theme-swatch-bar w2 t-fg" />
-                      <span className="theme-swatch-bar w1 t-muted" />
-                      <span className="theme-swatch-btn" />
-                    </span>
-                  </span>
-                  <span className="theme-card-name">{t.name}</span>
-                  <span className="theme-card-desc">{t.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
 
         {/* Terminal tipi: temadan AYRI eksen; tüm terminalleri birden etkiler. */}
         <div>
