@@ -113,16 +113,16 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
             <button
               onClick={() => void run(() => api.browserAct({ action: 'back' }))}
               disabled={busy || !state?.running}
-              title="Geri"
-              aria-label="Geri"
+              title={L.extra.back}
+              aria-label={L.extra.back}
             >
               ←
             </button>
             <button
               onClick={() => void run(() => api.browserAct({ action: 'reload' }))}
               disabled={busy || !state?.running}
-              title="Yenile"
-              aria-label="Yenile"
+              title={L.extra.reload}
+              aria-label={L.extra.reload}
             >
               ⟳
             </button>
@@ -134,7 +134,7 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
                 if (e.key === 'Enter') void run(() => api.browserNavigate(addr));
               }}
               placeholder={L.browser.address}
-              aria-label="Adres"
+              aria-label={L.extra.address}
             />
             <button className="primary" onClick={() => void run(() => api.browserNavigate(addr))} disabled={busy}>
               Git
@@ -175,7 +175,7 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
               />
             ) : (
               <div className="muted center">
-                Tarayıcı kapalı. Yukarıya bir adres yazıp <strong>Git</strong>’e bas.
+                {L.extra.browserOff}<strong>{L.extra.browserGo}</strong>{L.extra.browserOffEnd}
               </div>
             )}
           </div>

@@ -170,14 +170,14 @@ export function Reports({ agents }: Props) {
                     <h4 className="rp-sub">{L.reports.givenWork}</h4>
                     <pre className="rp-prompt">{t.prompt}</pre>
 
-                    <h4 className="rp-sub">Rapor</h4>
+                    <h4 className="rp-sub">{L.extra.report}</h4>
                     <pre className="rp-result">{t.result || L.reports.noResult}</pre>
 
                     {/* Delegasyon: iş kimlere bölündü. Üst görevin raporu çoğu
                         zaman "delege ettim" der; asıl işi bunlar yapmıştır. */}
                     {r.subtasks.length > 0 && (
                       <>
-                        <h4 className="rp-sub">Bölündüğü işler — {r.subtasks.length}</h4>
+                        <h4 className="rp-sub">{L.extra.subtasks(r.subtasks.length)}</h4>
                         <ul className="rp-subtasks">
                           {r.subtasks.map((s) => (
                             <li key={s.id}>

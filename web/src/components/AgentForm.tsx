@@ -178,7 +178,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
             {section === 'yetenek' && (
               <>
                 <div className="tb-field">
-                  <span className="tb-field-label">Rol</span>
+                  <span className="tb-field-label">{L.extra.role}</span>
                   <div className="choice-grid">
                     {ROLES.map((r) => (
                       <Choice

@@ -126,7 +126,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
               {budget && (
                 <div className="set-meter">
                   <div className="set-meter-head">
-                    <span className="label">Bugün · {budget.date}</span>
+                    <span className="label">{L.extra.today(budget.date)}</span>
                     <span className="set-meter-val">
                       {fmtCost(budget.spentUSD)}
                       {budget.limitUSD ? <span className="dim"> / {fmtCost(budget.limitUSD)}</span> : null}

@@ -102,7 +102,7 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
           <article key={p.id} className="pl-card">
             <header className="pl-card-head">
               <h3 className="pl-card-title">{p.title}</h3>
-              <span className="pl-card-lines">{p.template.split('\n').length} satır</span>
+              <span className="pl-card-lines">{L.extra.lines(p.template.split('\n').length)}</span>
             </header>
             {p.description && <p className="pl-card-desc">{p.description}</p>}
             <pre className="pl-card-body">{p.template}</pre>

@@ -305,7 +305,7 @@ export function UsageBoard({ agents, usage, budget, tasks }: Props) {
     <div className="ub">
       {/* ---------------------------------------------------------- başlık */}
       <div className="ub-head">
-        <h2 className="ub-title">Harcama</h2>
+        <h2 className="ub-title">{L.extra.spending}</h2>
         <div className="ub-range" role="group" aria-label={L.usage.rangeAria}>
           {(Object.keys(RANGE_LABEL) as Range[]).map((r) => (
             <button key={r} className={r === range ? 'on' : ''} onClick={() => setRange(r)}>
@@ -550,7 +550,7 @@ export function UsageBoard({ agents, usage, budget, tasks }: Props) {
             </tbody>
             <tfoot>
               <tr>
-                <td>Toplam</td>
+                <td>{L.extra.total}</td>
                 <td className="num">{fmtNum(total.inputTokens)}</td>
                 <td className="num">{fmtNum(total.outputTokens)}</td>
                 <td className="num">{fmtNum(total.cacheReadTokens + total.cacheCreationTokens)}</td>

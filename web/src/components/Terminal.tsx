@@ -71,7 +71,7 @@ function Readout({ agent, budget }: { agent: AgentSnapshot; budget: BudgetState 
     <>
       {turn && (
         <span className="hint-turn" title={L.terminal.turnTitle(turn.inputTokens, turn.outputTokens)}>
-          son tur +{fmtNum(totalTokens(turn))} · {fmtCost(turn.costUSD)}
+          {L.extra.lastTurn} +{fmtNum(totalTokens(turn))} · {fmtCost(turn.costUSD)}
         </span>
       )}
       <span className="hint-sep">·</span>
@@ -321,11 +321,11 @@ export function Terminal({
         <span>{STATUS_LABEL[agent.status]}</span>
         <span className="hint-sep">·</span>
         <span>
-          <kbd>/</kbd> komutlar{cmdCount > 0 ? ` (${cmdCount})` : ''}
+          <kbd>/</kbd> {L.extra.commands}{cmdCount > 0 ? ` (${cmdCount})` : ''}
         </span>
         <span className="hint-sep">·</span>
         <span>
-          <kbd>Enter</kbd> gönder
+          <kbd>Enter</kbd> {L.extra.send}
         </span>
         <div className="spacer" />
         <label className="cli-toggle" title={L.terminal.detailsTitle}>

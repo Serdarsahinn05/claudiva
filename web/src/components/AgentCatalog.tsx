@@ -67,9 +67,9 @@ export function AgentCatalog({
         {showTeam && <span>{L.catalog.team}</span>}
         <span>{L.catalog.role}</span>
         <span>{L.catalog.model}</span>
-        <span>Durum</span>
-        <span className="num">Token</span>
-        <span className="num">Maliyet</span>
+        <span>{L.extra.status}</span>
+        <span className="num">{L.extra.tokens}</span>
+        <span className="num">{L.extra.cost}</span>
         <span />
       </div>
 

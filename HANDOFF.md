@@ -17,6 +17,18 @@
   planı tablo olarak yazdı, `delegate_tasks` ÇAĞIRMADI, görev/dosya yok; "Onaylıyorum"
   sonrası tek `delegate_tasks` → docs iki dosyayı yazdı, lider özetledi. Not: oto-onay
   kapalı ajanda alt ajan izin bekler, lider o sürede `delegate_tasks` içinde bloklu kalır.
+- [x] **README iki dilli:** `README.md` İngilizce (varsayılan; GitHub ve npm bunu
+  gösterir), `README.tr.md` Türkçe, ikisinin başında dil bağlantısı. Pakete yalnız
+  `README.md` girer. Ekran görüntüleri `docs/screenshots/` (panels, chat, board,
+  studio, phosphor): scratch demo (`my-app`, haiku, ~$0.27), İngilizce arayüz. README
+  değişince İKİ dosyayı birlikte güncelle.
+- [x] Arayüzde sabit kalmış ~35 Türkçe metin `L.extra`ya taşındı (tarama betiği:
+  JSX metin düğümleri + title/aria-label/placeholder).
+- [ ] **Sunucu tarafı i18n YOK (npm öncesi önemli):** `server/src` ~208 Türkçe dizge.
+  Ajana gidenler (görev kuyruğu çerçevesi `# Görev (id:` …, `complete_task` talimatı)
+  İngilizce kullanıcıda alt ajanları TÜRKÇE cevaba itiyor (demo çekiminde ölçüldü);
+  dökümdeki sistem notları ("Oturum sürdürülüyor") da Türkçe. Önek sabitleri eski
+  dökümleri tanımak için korunmalı (`TASK_PREFIX`).
 - [ ] **Kullanıcı yapacak:** `npm login` → `npm whoami` → `npm publish`
   (etkileşimli, ajan kabuğunda asılı kalır; bu oturumda `npm whoami` E401 verdi).
 - [ ] Sonra repo klasörünü `claudiva` yap (aşağıdaki liste).

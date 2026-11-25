@@ -148,7 +148,7 @@ export function Skills({ agents }: Props) {
     <div className="skills">
       <section className="pl-head">
         <div>
-          <h2 className="plate-title">Skill’ler</h2>
+          <h2 className="plate-title">{L.extra.skills}</h2>
           <p className="pl-head-desc">
             {mode === 'installed' ? (
               <>
@@ -409,7 +409,7 @@ function Discover({
         <button onClick={() => void refresh()} disabled={refreshing}>
           {refreshing ? L.skills.refreshing : L.actions.refresh}
         </button>
-        <button onClick={() => setSrcOpen(true)}>Kaynaklar</button>
+        <button onClick={() => setSrcOpen(true)}>{L.extra.sources}</button>
       </div>
 
       <div className="sk-cat-bar">
@@ -720,7 +720,7 @@ function SourceDialog({
 
         <label>
           {L.skills.addRepo}
-          <input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="sahip/depo" />
+          <input value={repo} onChange={(e) => setRepo(e.target.value)} placeholder={L.extra.ownerRepo} />
         </label>
         <label>
           {L.skills.nameOptional}
@@ -800,7 +800,7 @@ function InstallDialog({
           <input
             value={repo}
             onChange={(e) => setRepo(e.target.value)}
-            placeholder="sahip/depo"
+            placeholder={L.extra.ownerRepo}
             autoFocus
           />
         </label>

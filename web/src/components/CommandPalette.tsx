@@ -95,7 +95,7 @@ export function CommandPalette({ commands, onClose }: Props) {
           {shown.length === 0 && <div className="muted small pal-empty">{L.cmdPalette.empty}</div>}
         </div>
         <div className="pal-foot">
-          <span>↑↓ gez</span>
+          <span>{L.extra.navigate}</span>
           <span>⏎ {L.cmdPalette.run}</span>
           <span>esc {L.cmdPalette.close}</span>
         </div>

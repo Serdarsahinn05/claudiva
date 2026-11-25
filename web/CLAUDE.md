@@ -57,6 +57,9 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
 - Tarih/saat biçimi `dateLocale` ile (`'tr-TR'` yazma). Belge dili ve açılış
   perdesi metni `index.html`deki satır içi betikte, `detect()` ile AYNI kuralla.
 - Yeni metin eklerken: önce `tr.ts`e, sonra `en.ts`e; derleme eksik olanı söyler.
+  **JSX'e düz metin YAZMA** (`<h2>Harcama</h2>`, `title="Kapat"`): Türkçe karakter
+  taşımayan kaçaklar ("Kadir", "Toplam") ancak JSX metin düğümü taramasıyla
+  bulundu (2026-11-25, ~35 kaçak `L.extra`ya taşındı).
 - **Ajan adı/açıklaması dile göre** (`agentI18n.ts`): paket ajanları
   `config.json`da `i18n: { tr, en }` taşır. `useStore.refreshAgents` store'a
   girerken BİR KEZ `localizeAgent` uygular (75 gösterim yeri `config.name`

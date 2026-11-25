@@ -269,7 +269,7 @@ export function ChatShell(props: Props) {
   return (
     <main className="chat-wrap">
     <div className={`chat${infoOpen ? ' info-open' : ''}`}>
-      <aside className="chat-list" aria-label="Sohbetler">
+      <aside className="chat-list" aria-label={L.extra.conversations}>
         <div className="chat-list-head">{L.chat.chats}</div>
 
         <div className="chat-list-sec">{L.chat.teams}</div>

@@ -109,7 +109,7 @@ export function Memory() {
         <div>
           <h2 className="mem-title">{L.memory.title}</h2>
           <span className="mem-sub">
-            {nodes.length} hafıza · {edges.length} bağlantı · ajana göre kümeli, <code>[[link]]</code> kenarları
+            {L.extra.memorySub(nodes.length, edges.length)}<code>[[link]]</code>{L.extra.memoryEdges}
           </span>
         </div>
         <div className="spacer" />
@@ -119,7 +119,7 @@ export function Memory() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button className="mem-refresh" onClick={() => void load()} disabled={loading} title="Yenile">
+        <button className="mem-refresh" onClick={() => void load()} disabled={loading} title={L.extra.reload}>
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" />
           </svg>
@@ -127,7 +127,7 @@ export function Memory() {
         </button>
       </div>
 
-      {err && <div className="mem-note err">Hafıza okunamadı: {err}</div>}
+      {err && <div className="mem-note err">{L.extra.memoryErr(err)}</div>}
 
       {!loading && nodes.length === 0 && !err && (
         <div className="mem-empty">
@@ -193,7 +193,7 @@ export function Memory() {
                   <span className="mem-dot" style={{ background: selNode.color }} />
                   <strong>{selNode.name}</strong>
                   {/* Çizilmiş ikon — unicode "×" glifi değil; ikon dili her yerde aynı. */}
-                  <button className="mem-detail-x" onClick={() => setSelected(null)} title="Kapat" aria-label="Kapat">
+                  <button className="mem-detail-x" onClick={() => setSelected(null)} title={L.extra.close} aria-label={L.extra.close}>
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
                          strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
                       <path d="M6 6l12 12M18 6L6 18" />

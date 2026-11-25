@@ -181,7 +181,7 @@ export function PanelFrame({
             </button>
           )}
           {onClose && (
-            <button className="pf-act danger" onClick={onClose} title="Kapat" aria-label="Kapat">
+            <button className="pf-act danger" onClick={onClose} title={L.extra.close} aria-label={L.extra.close}>
               {I.close}
             </button>
           )}

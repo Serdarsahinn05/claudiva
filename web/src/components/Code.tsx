@@ -230,7 +230,7 @@ export function Code({ agents }: Props) {
           {!sel ? (
             <div className="muted center">{L.code.pick}</div>
           ) : loading ? (
-            <div className="muted center">Okunuyor…</div>
+            <div className="muted center">{L.extra.reading}</div>
           ) : !file ? (
             <div className="muted center">{error || L.code.openFailed}</div>
           ) : (
@@ -253,7 +253,7 @@ export function Code({ agents }: Props) {
                     </span>
                   ))}
                   {file.touches.length > 4 && (
-                    <span className="code-touch dim">+{file.touches.length - 4} dokunuş</span>
+                    <span className="code-touch dim">{L.extra.moreTouches(file.touches.length - 4)}</span>
                   )}
                 </div>
               )}
@@ -263,7 +263,7 @@ export function Code({ agents }: Props) {
                   {L.code.tooLarge(fmtSize(file.size))}
                 </div>
               ) : file.binary ? (
-                <div className="muted center">İkili dosya ({fmtSize(file.size)}) — metin olarak okunamaz.</div>
+                <div className="muted center">{L.extra.binary(fmtSize(file.size))}</div>
               ) : (
                 <div className="code-body">
                   <pre className="code-gutter" aria-hidden="true">

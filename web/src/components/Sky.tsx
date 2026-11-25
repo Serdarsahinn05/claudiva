@@ -281,7 +281,7 @@ export function Sky({ agents, tasks, selectedId, onOpen }: Props) {
       {/* kadir cetveli: nokta çapının ne söylediğini açıklar */}
       {visible.length > 0 && (
         <div className="mag-legend">
-          <span className="mag-legend-title">Kadir</span>
+          <span className="mag-legend-title">{L.extra.magnitude}</span>
           <div className="mag-legend-scale">
             {[10, 7.5, 5.5, 4].map((r, i) => (
               <span className="mag-legend-step" key={r}>

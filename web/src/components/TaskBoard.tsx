@@ -274,7 +274,7 @@ export function TaskBoard({ tasks, agents }: Props) {
 
           {/* Açılır liste yerine görsel seçici: durum, rol ve model bir bakışta */}
           <div className="tb-picker">
-            <div className="tb-field-label">Kime</div>
+            <div className="tb-field-label">{L.extra.assignee}</div>
             <div className="tb-picker-list">
               {agents.map((a) => (
                 <button
@@ -355,7 +355,7 @@ export function TaskBoard({ tasks, agents }: Props) {
             ) : (
               <div key={row.chainId} className="chain">
                 <div className="chain-head">
-                  <span className="chain-label">Zincir · {row.steps.length} adım</span>
+                  <span className="chain-label">{L.extra.chain(row.steps.length)}</span>
                   <span className="chain-progress">
                     {row.steps.filter((s) => s.status === 'done').length}/{row.steps.length} bitti
                   </span>

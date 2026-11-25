@@ -313,7 +313,7 @@ export function Survey({
               </div>
             </>
           ) : (
-            <div className="bgauge-sub">Okunuyor…</div>
+            <div className="bgauge-sub">{L.extra.reading}</div>
           )}
         </Mod>
 
@@ -328,7 +328,7 @@ export function Survey({
               </div>
             </>
           ) : (
-            <div className="bgauge-sub">Okunuyor…</div>
+            <div className="bgauge-sub">{L.extra.reading}</div>
           )}
         </Mod>
       </div>

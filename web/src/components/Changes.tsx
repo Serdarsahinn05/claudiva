@@ -117,7 +117,7 @@ export function Changes({ agents }: Props) {
 
       {data.files.length === 0 ? (
         <div className="empty">
-          <h2>Temiz</h2>
+          <h2>{L.extra.clean}</h2>
           <p>
             {data.isRepo
               ? L.changes.clean(data.head ?? null)
