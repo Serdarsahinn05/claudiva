@@ -1929,9 +1929,13 @@ label.check.small { font-size: 12px; color: var(--muted); }
 }
 
 .modal-body {
-  display: grid; grid-template-columns: 176px 1fr; gap: var(--s5);
-  min-height: 340px; min-width: 0; flex: 1; overflow: hidden;
+  display: grid; grid-template-columns: 176px 1fr; grid-template-rows: minmax(0, 1fr);
+  gap: var(--s5); min-height: 340px; min-width: 0; flex: 1; overflow: hidden;
 }
+/* Sol menülü pencere (Ayarlar, ajan formu) SABİT boyda: bölüm değişince
+   pencere büyüyüp küçülmesin (kullanıcı şikâyeti, 2026-11-25). İçerik uzunsa
+   yalnız sağ bölme (.modal-pane) kayar. */
+.modal:has(> .modal-body) { height: min(720px, 88vh); }
 .modal-nav { display: flex; flex-direction: column; gap: 0; border-right: var(--border-w) solid var(--edge); padding-right: var(--s3); }
 .modal-nav-btn {
   display: flex; flex-direction: column; gap: 1px; text-align: left;

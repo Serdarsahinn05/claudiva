@@ -276,7 +276,7 @@ hiçbir komutu reddetmez.
 
 ## 🎨 Görünüm ve dil
 
-Üç stil vardır, **Görünüm** menüsünden seçilir. Her stil kendi renkleriyle birlikte tam bir görünümdür; ayrıca seçilecek bir palet yoktur.
+Üç stil vardır, **Ayarlar → Arayüz**'den seçilir. Her stil kendi renkleriyle birlikte tam bir görünümdür; ayrıca seçilecek bir palet yoktur.
 
 | Stil | His | Renkler |
 |---|---|---|

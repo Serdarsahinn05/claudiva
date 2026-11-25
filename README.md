@@ -274,7 +274,7 @@ agent as it is. The panel never rejects a command.
 
 ## 🎨 Appearance and language
 
-There are three styles, picked from the **Appearance** menu. Each style is a complete look with its own colours; there is no separate palette to pick.
+There are three styles, picked under **Settings → Interface**. Each style is a complete look with its own colours; there is no separate palette to pick.
 
 | Style | Feel | Colours |
 |---|---|---|

@@ -316,7 +316,7 @@ export const en: Dict = {
     budget: 'Budget',
     budgetHint: 'daily limit',
     ui: 'Interface',
-    uiHint: 'language, panels, chat or board',
+    uiHint: 'language, mode, style, terminal',
     workspace: 'Workspace',
     workspaceHint: 'layout, this browser',
     system: 'System',
@@ -328,7 +328,6 @@ export const en: Dict = {
     modeNoteStrong: 'in this browser',
     modeNote2: ' and applies instantly. Your panel layout stays as it was when you come back from chat.',
     modeAria: 'Interface mode',
-    styleMoved: 'Style (Observatory / Studio / Phosphor) and color palette live in one place: the Appearance menu in the top bar.',
   },
 
   rail: {

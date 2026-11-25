@@ -373,7 +373,11 @@ Bu bir EKİP İŞİDİR.`) de tanınır. İşareti
   (`styles.css`: yazı tipi, başlık biçimi, köşe, doku, gök süsü, etiket tonu).
   Varsayılan stil `observatory` (Gözlemevi) index.css'in kendisidir, blok almaz.
   Şu an ikinci stil `studio` (Stüdyo).
-- **Stil ve palet TEK yerden seçilir: Görünüm menüsü** (`ThemePicker`: Stil →
+- **Stil seçimi Ayarlar → Arayüz'de** (`AppearanceChoices`, `ThemePicker.tsx`;
+  2026-11-25'te başlıktaki Görünüm düğmesi/modalı kalktı, komut paletindeki
+  "Görünüm" Ayarlar'ı Arayüz bölümünde açar). Sol menülü pencere SABİT boy
+  (`.modal:has(> .modal-body)`, 720px), yalnız sağ bölme kayar.
+- **(tarihçe) Stil ve palet TEK yerden seçilirdi: Görünüm menüsü** (`ThemePicker`: Stil →
   paletler → Terminal tipi). Önce stil Ayarlar'daydı ve iki menü birbirinin
   üstüne yazıyordu (Stüdyo + Obsidyen gibi yarım karışımlar; kullanıcı fark etti).
   Her stilin palet grupları `appStyle.ts` `STYLE_GROUPS`; Görünüm yalnız onları

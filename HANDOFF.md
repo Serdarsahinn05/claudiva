@@ -24,12 +24,12 @@ Aurora birbirinin aynı; bunlar yalnız renk değiştiren tema, gereksiz."
 - **Kural (kalıcı):** kullanıcı "yeni tema ekle" derse yeni STİL eklenir
   (`styles.css` bloğu + kendi paleti), palet değil.
 
-**2. Tema/stil seçimi Ayarlar'a taşınır.** Başlıktaki Görünüm düğmesi ve
+**2. ✅ YAPILDI: Tema/stil seçimi Ayarlar'a taşındı.** Başlıktaki Görünüm düğmesi ve
 `ThemePicker` modalı kalkar; seçim Ayarlar → Arayüz bölümüne (mod ve dil
 seçiminin yanına) stil kartları olarak girer. Terminal tipi (CLI skin)
 seçimi de oraya. Komut paletindeki "Görünüm" komutu Ayarlar'ı o bölümde açsın.
 
-**3. Ayarlar modalının boyu sabit kalsın.** Şu an soldaki menüden bölüm
+**3. ✅ YAPILDI (ölçüldü: dört bölümde 720px): Ayarlar modalının boyu sabit.** Şu an soldaki menüden bölüm
 seçince modalın yüksekliği içeriğe göre büyüyüp küçülüyor. İstenen: modal
 sabit yükseklik (ör. `height: min(720px, 86vh)`), sağ içerik alanı kendi
 içinde kaydırılır (`overflow-y: auto`, `min-height: 0`). `Settings.tsx` ve

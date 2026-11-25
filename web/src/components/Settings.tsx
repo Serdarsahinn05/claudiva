@@ -21,6 +21,7 @@ import { api } from '../api';
 import { fmtCost } from '../format';
 import type { AgentSnapshot, BudgetState, SystemInfo } from '../types';
 import { UI_MODES, setUiMode, useUiMode, type UiMode } from '../uiMode';
+import { AppearanceChoices } from './ThemePicker';
 import { L, LOCALES, locale, setLocale, dateLocale } from '../i18n';
 
 interface Props {
@@ -30,9 +31,11 @@ interface Props {
   onResetLayout: () => void;
   onClose: () => void;
   onSaved: () => void;
+  /** Açılışta seçili bölüm (komut paletindeki "Görünüm" → arayuz). */
+  initialSection?: Section;
 }
 
-type Section = 'butce' | 'arayuz' | 'alan' | 'sistem';
+export type Section = 'butce' | 'arayuz' | 'alan' | 'sistem';
 
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
   { id: 'butce', label: L.settings.budget, hint: L.settings.budgetHint },
@@ -48,8 +51,8 @@ function fmtBytes(n: number): string {
 }
 
 /** Boş bırakılırsa sınır kaldırılır; kutuya 0 yazmak da aynı anlama gelir. */
-export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Props) {
-  const [section, setSection] = useState<Section>('butce');
+export function Settings({ budget, agents, onResetLayout, onClose, onSaved, initialSection }: Props) {
+  const [section, setSection] = useState<Section>(initialSection ?? 'butce');
   const [limit, setLimit] = useState(
     budget?.limitUSD && budget.limitUSD > 0 ? String(budget.limitUSD) : '',
   );
@@ -138,7 +141,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                         <span style={{ width: `${Math.min(100, pct)}%` }} />
                       </div>
                       <div className="set-meter-sub">
-                        %{pct.toFixed(0)} ·{' '}
+                        {L.extra.pct(Math.round(pct))} ·{' '}
                         {budget.exceeded
                           ? L.budget.exceeded
                           : budget.warn
@@ -260,7 +263,7 @@ export function Settings({ budget, agents, onResetLayout, onClose, onSaved }: Pr
                   </button>
                 ))}
               </div>
-              <div className="set-note dim">{L.settings.styleMoved}</div>
+              <AppearanceChoices />
             </>
           )}
 

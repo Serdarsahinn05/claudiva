@@ -36,7 +36,6 @@ const Browser = lazy(() => import('./components/Browser').then((m) => ({ default
 const Changes = lazy(() => import('./components/Changes').then((m) => ({ default: m.Changes })));
 const Memory = lazy(() => import('./components/Memory').then((m) => ({ default: m.Memory })));
 const PromptLibrary = lazy(() => import('./components/PromptLibrary').then((m) => ({ default: m.PromptLibrary })));
-const ThemePicker = lazy(() => import('./components/ThemePicker').then((m) => ({ default: m.ThemePicker })));
 const Settings = lazy(() => import('./components/Settings').then((m) => ({ default: m.Settings })));
 const ChatShell = lazy(() => import('./components/chat/ChatShell').then((m) => ({ default: m.ChatShell })));
 const BoardShell = lazy(() => import('./components/board/BoardShell').then((m) => ({ default: m.BoardShell })));
@@ -51,7 +50,8 @@ export default function App() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [formAgent, setFormAgent] = useState<AgentSnapshot | null | 'new'>(null);
-  const [themeOpen, setThemeOpen] = useState(false);
+  // Ayarlar'ın açılış bölümü: komut paletindeki "Görünüm" Arayüz'ü açar.
+  const [settingsAt, setSettingsAt] = useState<'arayuz' | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -381,7 +381,7 @@ export default function App() {
         keywords: 'dil language lang tr en',
         run: () => setLocale(l.id),
       })),
-      { id: 'theme-picker', label: T.palette.look, hint: T.palette.lookHint, keywords: 'tema renk plaka premium', run: () => setThemeOpen(true) },
+      { id: 'theme-picker', label: T.palette.look, hint: T.palette.lookHint, keywords: 'tema renk plaka premium', run: () => { setSettingsAt('arayuz'); setSettingsOpen(true); } },
       { id: 'layout-reset', label: T.header.resetLayout, hint: T.palette.layoutHint, keywords: 'duzen yerlesim reset panel', run: () => L.reset() },
       {
         id: 'toggle-all-agents',
@@ -452,9 +452,6 @@ export default function App() {
           aria-label={T.header.settings}
         >
           {ICONS.settings}
-        </button>
-        <button className="icon-btn" onClick={() => setThemeOpen(true)} title={T.header.look} aria-label={T.header.look}>
-          {ICONS.plate}
         </button>
         {uiMode === 'panels' && (
           <button className="icon-btn" onClick={L.reset} title={T.header.resetLayout} aria-label={T.header.resetLayout}>
@@ -568,14 +565,16 @@ export default function App() {
       {paletteOpen && <CommandPalette commands={commands} onClose={() => setPaletteOpen(false)} />}
 
       <Suspense fallback={null}>
-      {themeOpen && <ThemePicker onClose={() => setThemeOpen(false)} />}
-
       {settingsOpen && (
         <Settings
           budget={store.budget}
           agents={store.agents}
           onResetLayout={L.reset}
-          onClose={() => setSettingsOpen(false)}
+          initialSection={settingsAt}
+          onClose={() => {
+            setSettingsOpen(false);
+            setSettingsAt(undefined);
+          }}
           onSaved={() => void store.refreshBudget()}
         />
       )}

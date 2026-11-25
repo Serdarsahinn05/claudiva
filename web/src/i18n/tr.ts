@@ -327,7 +327,7 @@ export const tr = {
     budget: 'Bütçe',
     budgetHint: 'günlük sınır',
     ui: 'Arayüz',
-    uiHint: 'dil, panel, sohbet ya da pano',
+    uiHint: 'dil, mod, stil, terminal',
     workspace: 'Çalışma alanı',
     workspaceHint: 'yerleşim, bu tarayıcı',
     system: 'Sistem',
@@ -339,7 +339,6 @@ export const tr = {
     modeNoteStrong: 'bu tarayıcıda',
     modeNote2: ' saklanır ve anında uygulanır. Panel yerleşimin sohbete geçip dönünce olduğu gibi durur.',
     modeAria: 'Arayüz modu',
-    styleMoved: 'Stil (Gözlemevi / Stüdyo / Fosfor) ve renk paleti tek yerde: üst çubuktaki Görünüm menüsü.',
   },
 
   rail: {
