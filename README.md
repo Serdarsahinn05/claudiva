@@ -284,14 +284,18 @@ There are three styles, picked under **Settings → Interface**. Each style is a
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Studio style, Paper palette, in Chat mode"></td>
+<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Studio style: the Overview shows a team list and recent handoffs"></td>
 <td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Phosphor style in Panels mode"></td>
 </tr>
 <tr>
-<td align="center"><sub>Studio · Paper</sub></td>
+<td align="center"><sub>Studio</sub></td>
 <td align="center"><sub>Phosphor</sub></td>
 </tr>
 </table>
+
+Each style also has its own Overview: Observatory draws the team as a star map, Studio as a
+plain team list with recent handoffs, Phosphor as a product-page hero. On Studio's light
+surface the terminal stays dark and sits on the panel as an inset card.
 
 Contrast isn't approved by eye, it is measured: `node web/scripts/contrast.mjs`
 checks every style's colours against the thresholds and exits non-zero if one fails.

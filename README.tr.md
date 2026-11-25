@@ -286,14 +286,18 @@ hiçbir komutu reddetmez.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Sohbet modunda Stüdyo stili, Kâğıt paleti"></td>
+<td width="50%"><img src="docs/screenshots/studio.jpg" alt="Stüdyo stili: Genel Durum ekip listesi ve son devirlerle"></td>
 <td width="50%"><img src="docs/screenshots/phosphor.jpg" alt="Paneller modunda Fosfor stili"></td>
 </tr>
 <tr>
-<td align="center"><sub>Stüdyo · Kâğıt</sub></td>
+<td align="center"><sub>Stüdyo</sub></td>
 <td align="center"><sub>Fosfor</sub></td>
 </tr>
 </table>
+
+Her stilin Genel Durum ekranı da kendine ait: Gözlemevi ekibi gök haritası olarak, Stüdyo
+sade bir ekip listesi ve son devirlerle, Fosfor bir ürün sayfası açılışıyla çizer. Stüdyo'nun
+açık yüzeyinde terminal koyu kalır ve panelin üstünde kenar boşluklu bir kart olarak durur.
 
 Kontrast göz kararıyla onaylanmaz, ölçülür: `node web/scripts/contrast.mjs`
 her stilin renklerini eşiklere karşı sınar ve tutmuyorsa sıfırdan farklı çıkar.
