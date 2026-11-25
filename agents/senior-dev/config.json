@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "Kod yazar, refactor eder, hata ayıklar; mimari kararlarda görüş verir. Değişikliği derleyip doğrulamadan teslim etmez. Dağıtmaz, işi kendisi yapar.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Kıdemli Geliştirici",
+      "description": "Kod yazar, refactor eder, hata ayıklar; mimari kararlarda görüş verir. Değişikliği derleyip doğrulamadan teslim etmez. Dağıtmaz, işi kendisi yapar."
+    },
+    "en": {
+      "name": "Senior Developer",
+      "description": "Writes code, refactors, debugs; weighs in on architecture decisions. Never delivers a change without building and verifying it. Does the work itself, does not delegate."
+    }
+  }
 }

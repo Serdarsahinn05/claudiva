@@ -57,6 +57,15 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
 - Tarih/saat biçimi `dateLocale` ile (`'tr-TR'` yazma). Belge dili ve açılış
   perdesi metni `index.html`deki satır içi betikte, `detect()` ile AYNI kuralla.
 - Yeni metin eklerken: önce `tr.ts`e, sonra `en.ts`e; derleme eksik olanı söyler.
+- **Ajan adı/açıklaması dile göre** (`agentI18n.ts`): paket ajanları
+  `config.json`da `i18n: { tr, en }` taşır. `useStore.refreshAgents` store'a
+  girerken BİR KEZ `localizeAgent` uygular (75 gösterim yeri `config.name`
+  okumaya devam eder). Çeviri yalnız alan hâlâ `i18n.tr` değerine eşitse
+  kullanılır; kullanıcının verdiği ad her dilde aynı kalır. **Disk hep `tr`
+  taşır:** `AgentForm` kaydederken `delocalize` uygular, yoksa EN arayüzde formu
+  kaydetmek adı diske İngilizce yazar ve TR'ye dönünce çeviri bir daha tutmazdı.
+  Ölçüldü: sıfır kurulum, eski kurulum ("Boss" → paket adı → çeviri) ve elle
+  değiştirilmiş ad üçü de doğru. Yeni paket ajanı = `config.json`a `i18n` ekle.
 - **Yerel komut çıktısı (`/status`, `/doctor`…) `L.cmdOut`ta.** Bu metni model
   değil panel yazar, kullanıcının yazdığı dile UYMAZ; yalnız SDK'ya giden komutlar
   (`/compact`, skill'ler) modelin dilinde döner. `/resume` iki dilde de

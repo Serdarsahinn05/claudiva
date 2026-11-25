@@ -12,7 +12,11 @@
 - [x] Küçük işler: sohbet teslim kartında kanıt rozeti (`/api/tasks/evidence`),
   paket bölme (579 → 340 KB, uyarı yok), sohbet modu `impeccable audit` + P1
   erişilebilirlik düzeltmeleri, Kırmızı Fener paleti kaldırıldı.
-- [ ] "Plan: onaylı" kipinin canlı ekip işiyle sınanması (token harcar, kullanıcıya soruldu).
+- [x] Ajan adları/açıklamaları dile göre (`config.json` `i18n`, `web/src/agentI18n.ts`).
+- [x] **"Plan: onaylı" canlı sınandı** (scratch proje, 4620, $1.33): 1. tur lider
+  planı tablo olarak yazdı, `delegate_tasks` ÇAĞIRMADI, görev/dosya yok; "Onaylıyorum"
+  sonrası tek `delegate_tasks` → docs iki dosyayı yazdı, lider özetledi. Not: oto-onay
+  kapalı ajanda alt ajan izin bekler, lider o sürede `delegate_tasks` içinde bloklu kalır.
 - [ ] **Kullanıcı yapacak:** `npm login` → `npm whoami` → `npm publish`
   (etkileşimli, ajan kabuğunda asılı kalır; bu oturumda `npm whoami` E401 verdi).
 - [ ] Sonra repo klasörünü `claudiva` yap (aşağıdaki liste).

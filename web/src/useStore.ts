@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from './api';
+import { localizeAgent } from './agentI18n';
 import type {
   AgentSnapshot,
   BrowserState,
@@ -55,7 +56,7 @@ export function useStore(): Store {
   const wsRef = useRef<WebSocket | null>(null);
 
   const refreshAgents = useCallback(async () => {
-    const list = await api.listAgents();
+    const list = (await api.listAgents()).map(localizeAgent);
     setAgents(list);
     setPermissions(list.flatMap((a) => a.pendingPermissions));
   }, []);

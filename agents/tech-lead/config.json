@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "Teknik işi dosya düzeyinde alt görevlere çevirir, uzmanlara dağıtır, Kod İnceleyici ve Test Uzmanı'ndan geçirip birleştirir. Küçük düzeltmeleri kendisi yapar.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Teknik Lider",
+      "description": "Teknik işi dosya düzeyinde alt görevlere çevirir, uzmanlara dağıtır, Kod İnceleyici ve Test Uzmanı'ndan geçirip birleştirir. Küçük düzeltmeleri kendisi yapar."
+    },
+    "en": {
+      "name": "Tech Lead",
+      "description": "Turns technical work into file-level subtasks, hands them to specialists, runs them past the Code Reviewer and Tester, and merges the result. Makes small fixes itself."
+    }
+  }
 }

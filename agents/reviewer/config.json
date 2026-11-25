@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "Diff ya da dosyaları doğruluk, güvenlik ve bakım açısından inceler; bulguları önem sırasıyla ve kanıtıyla raporlar. Kod yazmaz, düzeltmeyi geliştiriciye bırakır.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Kod İnceleyici",
+      "description": "Diff ya da dosyaları doğruluk, güvenlik ve bakım açısından inceler; bulguları önem sırasıyla ve kanıtıyla raporlar. Kod yazmaz, düzeltmeyi geliştiriciye bırakır."
+    },
+    "en": {
+      "name": "Code Reviewer",
+      "description": "Reviews diffs or files for correctness, security and maintainability; reports findings by severity with evidence. Does not write code; leaves the fix to the developer."
+    }
+  }
 }

@@ -45,6 +45,13 @@ export interface AgentConfig {
   order?: number;
   /** Bu ajanın günlük harcama tavanı (USD). 0/tanımsız = yalnızca genel sınır. */
   dailyLimitUSD?: number;
+  /**
+   * Paket ajanlarının dile göre adı/açıklaması (`agents/<id>/config.json`).
+   * `tr` paketin kendi değeri; panel `name`/`description` hâlâ `tr` değerine
+   * EŞİTSE (kullanıcı değiştirmediyse) arayüz dilindeki değeri gösterir. Disk
+   * hep `tr` değerini taşır. Kullanıcının oluşturduğu ajanda yoktur.
+   */
+  i18n?: Record<string, { name?: string; description?: string }>;
   createdAt: string;
 }
 

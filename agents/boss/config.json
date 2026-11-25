@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "Senin muhatabın. İsteği anlar, bağımsız parçalara böler, Teknik Lider'e ya da doğrudan uzmanlara paralel dağıtır ve sonuçları tek raporda birleştirir. Kod yazmaz.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Proje Yöneticisi",
+      "description": "Senin muhatabın. İsteği anlar, bağımsız parçalara böler, Teknik Lider'e ya da doğrudan uzmanlara paralel dağıtır ve sonuçları tek raporda birleştirir. Kod yazmaz."
+    },
+    "en": {
+      "name": "Project Manager",
+      "description": "Your point of contact. Understands the request, splits it into independent parts, hands them out in parallel to the Tech Lead or straight to specialists, and merges the results into one report. Does not write code."
+    }
+  }
 }

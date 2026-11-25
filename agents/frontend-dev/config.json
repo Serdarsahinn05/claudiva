@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "React/TypeScript bileşenleri, CSS, erişilebilirlik ve etkileşim. Projenin mevcut tasarım diline uyar; yeni görsel dil icat etmez. Dağıtmaz, işi kendisi yapar.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Arayüz Geliştiricisi",
+      "description": "React/TypeScript bileşenleri, CSS, erişilebilirlik ve etkileşim. Projenin mevcut tasarım diline uyar; yeni görsel dil icat etmez. Dağıtmaz, işi kendisi yapar."
+    },
+    "en": {
+      "name": "Frontend Developer",
+      "description": "React/TypeScript components, CSS, accessibility and interaction. Follows the project's existing design language; does not invent a new visual language. Does the work itself, does not delegate."
+    }
+  }
 }

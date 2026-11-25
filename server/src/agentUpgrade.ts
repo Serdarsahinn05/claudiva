@@ -130,13 +130,23 @@ export function upgradeSeededAgent(
 }
 
 function upgradeConfig(bundledDir: string, targetDir: string, legacy: Legacy | undefined): void {
-  if (!legacy) return;
   const file = path.join(targetDir, 'config.json');
   const current = readJson<Record<string, unknown>>(file);
   const bundled = readJson<Record<string, unknown>>(path.join(bundledDir, 'config.json'));
   if (!current || !bundled) return;
 
   let changed = false;
+  // Dil tablosu paketin meta verisi, kullanıcı verisi değil: her açılışta
+  // paketteki hâline eşitlenir. Kullanıcının adı ayrı alanda (`name`) durur;
+  // panel çeviriyi yalnız `name` paketin `tr` değerine eşitken kullanır.
+  if (bundled.i18n && JSON.stringify(current.i18n) !== JSON.stringify(bundled.i18n)) {
+    current.i18n = bundled.i18n;
+    changed = true;
+  }
+  if (!legacy) {
+    if (changed) fs.writeFileSync(file, JSON.stringify(current, null, 2) + '\n', 'utf8');
+    return;
+  }
   for (const key of ['name', 'description'] as const) {
     const known = key === 'name' ? legacy.names : legacy.descriptions;
     const value = current[key];

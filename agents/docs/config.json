@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "README, kullanım kılavuzu, API dokümanı, sürüm notu ve commit/PR metni yazar. Koddan doğrulayamadığı hiçbir davranışı dokümana yazmaz.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Dokümantasyon Yazarı",
+      "description": "README, kullanım kılavuzu, API dokümanı, sürüm notu ve commit/PR metni yazar. Koddan doğrulayamadığı hiçbir davranışı dokümana yazmaz."
+    },
+    "en": {
+      "name": "Docs Writer",
+      "description": "Writes READMEs, user guides, API docs, release notes and commit/PR text. Never documents behavior it cannot verify in the code."
+    }
+  }
 }

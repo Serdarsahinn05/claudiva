@@ -7,5 +7,15 @@
   "autoApprove": false,
   "autoModel": true,
   "description": "Birim ve entegrasyon testleri yazar ve çalıştırır, hatayı yeniden üretip net raporlar. Davranışı test eder, uygulama ayrıntısını değil; kırılgan test yazmaz.",
-  "createdAt": "2026-07-17T15:00:00.000Z"
+  "createdAt": "2026-07-17T15:00:00.000Z",
+  "i18n": {
+    "tr": {
+      "name": "Test Uzmanı",
+      "description": "Birim ve entegrasyon testleri yazar ve çalıştırır, hatayı yeniden üretip net raporlar. Davranışı test eder, uygulama ayrıntısını değil; kırılgan test yazmaz."
+    },
+    "en": {
+      "name": "Test Engineer",
+      "description": "Writes and runs unit and integration tests, reproduces bugs and reports them clearly. Tests behavior, not implementation details; does not write brittle tests."
+    }
+  }
 }

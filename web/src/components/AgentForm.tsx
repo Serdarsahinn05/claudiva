@@ -3,6 +3,7 @@ import type { AgentSnapshot } from '../types';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { L } from '../i18n';
+import { delocalize } from '../agentI18n';
 
 interface Props {
   existing?: AgentSnapshot;
@@ -89,8 +90,11 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
       let mcpServers: unknown;
       if (mcpJson.trim()) mcpServers = JSON.parse(mcpJson);
       if (existing) {
+        // Gösterilen çeviri değişmeden kaydedilirse paket adı (tr) diske gider.
+        const cfg = existing.config;
         const patch: Record<string, unknown> = {
-          name, team, role, model, memoryMode, autoApprove, autoModel, description, mcpServers,
+          name: delocalize(cfg, 'name', name), team, role, model, memoryMode, autoApprove, autoModel,
+          description: delocalize(cfg, 'description', description), mcpServers,
         };
         if (personality.trim() || personalityLoaded) patch.personality = personality;
         await api.updateAgent(existing.config.id, patch);
