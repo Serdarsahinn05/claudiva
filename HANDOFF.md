@@ -1,5 +1,13 @@
 # Devir — Claudiva
 
+# ▶ SIRADAKİ FİKİR (2026-11-25 sonu): aitmpl.com entegrasyonu
+
+İnceleme bitti, uygulama BAŞLAMADI. Bulgular, adımlar ve öneriler:
+**`docs/AITMPL-ENTEGRASYON.md`**. Kullanıcı tokeni azaldığı için sonra bakacak.
+Başlamadan önce sorulacak: User-Agent'a depo adresi yazılsın mı, ve 1. adımla
+(skill'ler → Keşfet) başlansın mı.
+
+
 # ▶ 2026-11-25 akşamı: açık/koyu mod + Cam stili EKLENDİ (commit BEKLİYOR)
 
 Kullanıcı kararları (yeniden sorma): ana stil **Cam** (açık = Vireon/Optivue,
