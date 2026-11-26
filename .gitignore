@@ -40,3 +40,6 @@ desktop/build/
 
 # Referans videolar (büyük ikili dosya; git geçmişine girerse depo kalıcı olarak şişer)
 docs/*.mp4
+
+# Tanıtım sitesinin derleme çıktısı (site/build.mjs; Pages iş akışı üretir)
+_site/

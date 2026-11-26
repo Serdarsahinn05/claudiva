@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claudiva · Run a team of Claude agents from one panel</title>
+<meta name="description" content="Claudiva puts several Claude Code agents on one screen: a lead splits the work, agents run in parallel, and you see who did what, which files they touched and what it cost." />
+<meta name="theme-color" content="#0D1B17" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#EBF1EF" media="(prefers-color-scheme: light)" />
+<link rel="icon" type="image/svg+xml" href="assets/brand/claudiva-favicon.svg" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Claudiva" />
+<meta property="og:description" content="Run, watch and coordinate several Claude agents from one panel." />
+<meta property="og:image" content="https://serdarsahinn05.github.io/claudiva/assets/screenshots/panels.jpg" />
+<meta property="og:url" content="https://serdarsahinn05.github.io/claudiva/" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preload" href="assets/fonts/sora-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="style.css" />
+<!-- Dil, ilk boyamadan ÖNCE seçilir; yoksa İngilizce görünüp Türkçeye sıçrardı. -->
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('claudiva.site.lang'); } catch (e) {}
+    var lang = saved || ((navigator.language || '').toLowerCase().indexOf('tr') === 0 ? 'tr' : 'en');
+    document.documentElement.lang = lang;
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#top" aria-label="Claudiva">
+      <svg width="28" height="28" viewBox="0 0 256 256" aria-hidden="true">
+        <path class="mk-ring" fill-rule="evenodd" d="M136.50 17.28 L219.64 65.28 A17.0 17.0 0 0 1 228.14 80.00 L228.14 176.00 A17.0 17.0 0 0 1 219.64 190.72 L136.50 238.72 A17.0 17.0 0 0 1 119.50 238.72 L36.36 190.72 A17.0 17.0 0 0 1 27.86 176.00 L27.86 80.00 A17.0 17.0 0 0 1 36.36 65.28 L119.50 17.28 A17.0 17.0 0 0 1 136.50 17.28 Z M61.86 89.81 L61.86 166.19 L128.00 204.37 L194.14 166.19 L194.14 89.81 L128.00 51.63 Z" />
+        <path class="mk-core" d="M156.20 85.16 L179.20 125.00 A6 6 0 0 1 179.20 131.00 L156.20 170.84 A6 6 0 0 1 151.00 173.84 L105.00 173.84 A6 6 0 0 1 99.80 170.84 L76.80 131.00 A6 6 0 0 1 76.80 125.00 L99.80 85.16 A6 6 0 0 1 105.00 82.16 L151.00 82.16 A6 6 0 0 1 156.20 85.16 Z" />
+      </svg>
+      <span>claudiva</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#modes" data-i18n="nav.modes">Modes</a>
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#install" data-i18n="nav.install">Install</a>
+    </nav>
+    <div class="top-act">
+      <button class="lang" type="button" id="lang" aria-label="Türkçe">TR</button>
+      <a class="gh" href="https://github.com/Serdarsahinn05/claudiva" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- GİRİŞ -->
+  <section class="hero" id="top">
+    <div class="wrap hero-in">
+      <p class="eyebrow" data-i18n="hero.eyebrow">For Claude Code · open source · MIT</p>
+      <h1 data-i18n="hero.title">A whole team of Claude agents, in one panel.</h1>
+      <p class="lead" data-i18n="hero.lead">Two <code>claude</code> sessions in two terminals can't see each other, can't hand each other work, and you can't tell what they spent. Claudiva puts them on one screen: a lead splits the job, agents work in parallel in your project, and you see who did what, which files they touched and what it cost.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Serdarsahinn05/claudiva/releases/latest" data-i18n="hero.download">Download for Windows</a>
+        <div class="cmd" role="group" aria-label="npx claudiva">
+          <code>npx claudiva</code>
+          <button class="copy" type="button" data-copy="npx claudiva" data-i18n-label="copy" aria-label="Copy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="req" data-i18n="hero.req">Needs Node.js 20+ and Claude Code signed in. Uses your subscription, no API key.</p>
+    </div>
+    <figure class="shot hero-shot wrap">
+      <img src="assets/screenshots/panels.jpg" width="1568" height="750" data-i18n-alt="alt.panels" alt="Claudiva in Panels mode: overview, the lead's terminal and the task board" />
+    </figure>
+  </section>
+
+  <!-- NASIL ÇALIŞIR -->
+  <section class="sec" id="how">
+    <div class="wrap">
+      <h2 data-i18n="how.title">How it works</h2>
+      <ol class="steps">
+        <li>
+          <span class="num">01</span>
+          <h3 data-i18n="how.s1.t">Ask the team</h3>
+          <p data-i18n="how.s1.p">Write what you want once. The first run sets up an eight-agent team; add your own any time.</p>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <h3 data-i18n="how.s2.t">The lead splits it</h3>
+          <p data-i18n="how.s2.p">Independent parts go out at the same time, so the job takes as long as its longest part, not the sum.</p>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <h3 data-i18n="how.s3.t">You stay in charge</h3>
+          <p data-i18n="how.s3.p">Approve tool use from a band in the panel, or let trusted agents auto-approve. Ask for the plan first if you want to see it.</p>
+        </li>
+        <li>
+          <span class="num">04</span>
+          <h3 data-i18n="how.s4.t">Check, don't trust</h3>
+          <p data-i18n="how.s4.p">Every delivery shows the files the agent really wrote, measured rather than claimed, and what the work cost.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- MODLAR -->
+  <section class="sec" id="modes">
+    <div class="wrap">
+      <h2 data-i18n="modes.title">Three ways to work</h2>
+      <p class="sub" data-i18n="modes.sub">Same team, same data, three views. Switch any time with Ctrl+K.</p>
+      <div class="tabs" role="tablist" aria-label="Modes">
+        <button role="tab" id="t-panels" aria-controls="p-panels" aria-selected="true" data-i18n="modes.panels">Panels</button>
+        <button role="tab" id="t-chat" aria-controls="p-chat" aria-selected="false" tabindex="-1" data-i18n="modes.chat">Chat</button>
+        <button role="tab" id="t-board" aria-controls="p-board" aria-selected="false" tabindex="-1" data-i18n="modes.board">Board</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="p-panels" aria-labelledby="t-panels">
+        <p data-i18n="modes.panels.p">Terminals, task board, code and spending side by side. Drag panels between three slots; every open agent gets its own terminal tile.</p>
+        <figure class="shot"><img loading="lazy" src="assets/screenshots/glass-dark.jpg" width="1568" height="750" data-i18n-alt="alt.panelsDark" alt="Panels mode in the Glass style, dark" /></figure>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="p-chat" aria-labelledby="t-chat" hidden>
+        <p data-i18n="modes.chat.p">The team as a group chat. Agents hand work to each other, you step in with @agent, and each delivery card shows how many files were really written.</p>
+        <figure class="shot"><img loading="lazy" src="assets/screenshots/chat.jpg" width="1568" height="750" data-i18n-alt="alt.chat" alt="Chat mode: delivery cards with measured file counts and the lead in the side panel" /></figure>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="p-board" aria-labelledby="t-board" hidden>
+        <p data-i18n="modes.board.p">A board of widgets you arrange yourself: brief the team, watch the delegation network, the budget dial and a heatmap of who worked when.</p>
+        <figure class="shot"><img loading="lazy" src="assets/screenshots/board.jpg" width="1568" height="750" data-i18n-alt="alt.board" alt="Board mode: delegation network, live flow and the activity heatmap" /></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÖZELLİKLER -->
+  <section class="sec" id="features">
+    <div class="wrap">
+      <h2 data-i18n="feat.title">What's in the panel</h2>
+      <div class="grid">
+        <article class="card">
+          <h3 data-i18n="feat.deleg.t">Parallel delegation</h3>
+          <p data-i18n="feat.deleg.p">Four roles; only leads can hand out work. Tasks start together, can be chained, and a failed step stops the chain instead of running on missing input.</p>
+        </article>
+        <article class="card">
+          <h3 data-i18n="feat.reports.t">Claim next to measurement</h3>
+          <p data-i18n="feat.reports.p">Reports put what an agent said next to the files it actually touched, including the work of the agents it delegated to.</p>
+        </article>
+        <article class="card">
+          <h3 data-i18n="feat.spend.t">Spending and budget</h3>
+          <p data-i18n="feat.spend.p">Tokens and cost per agent, per model and over time. Set a daily limit and agents stop when it is reached.</p>
+        </article>
+        <article class="card">
+          <h3 data-i18n="feat.skills.t">Skills, agents, MCP</h3>
+          <p data-i18n="feat.skills.p">Turn skills on and off, install from catalogs, skills.sh or a GitHub link, and start agents or MCP servers from ready-made templates.</p>
+        </article>
+        <article class="card">
+          <h3 data-i18n="feat.browser.t">A browser you share</h3>
+          <p data-i18n="feat.browser.p">Agents drive a real Chromium and you watch the same page. Every browser action goes through the permission gate.</p>
+        </article>
+        <article class="card">
+          <h3 data-i18n="feat.local.t">Local and yours</h3>
+          <p data-i18n="feat.local.p">Runs on your machine, in your project folder, on your Claude subscription. Agent data stays in the project's .claudiva folder.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- STİLLER -->
+  <section class="sec" id="styles">
+    <div class="wrap">
+      <h2 data-i18n="styles.title">Four styles, light and dark</h2>
+      <p class="sub" data-i18n="styles.sub">Not just colours: each style has its own type, shapes and overview screen. Turkish and English interface.</p>
+      <div class="styles">
+        <figure><img loading="lazy" src="assets/screenshots/glass-dark.jpg" width="1568" height="750" alt="" /><figcaption data-i18n="styles.glass">Glass</figcaption></figure>
+        <figure><img loading="lazy" src="assets/screenshots/observatory-light.jpg" width="1568" height="750" alt="" /><figcaption data-i18n="styles.obs">Observatory</figcaption></figure>
+        <figure><img loading="lazy" src="assets/screenshots/studio.jpg" width="1535" height="784" alt="" /><figcaption data-i18n="styles.studio">Studio</figcaption></figure>
+        <figure><img loading="lazy" src="assets/screenshots/phosphor.jpg" width="1535" height="784" alt="" /><figcaption data-i18n="styles.phos">Phosphor</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- KURULUM -->
+  <section class="sec" id="install">
+    <div class="wrap install">
+      <div>
+        <h2 data-i18n="inst.title">Get started</h2>
+        <p class="sub" data-i18n="inst.sub">You need Node.js 20+ and Claude Code, signed in with claude login.</p>
+      </div>
+      <div class="ways">
+        <div class="way">
+          <h3 data-i18n="inst.try">Try it</h3>
+          <p data-i18n="inst.try.p">Run it in your project folder. The panel opens in your browser.</p>
+          <div class="cmd"><code>npx claudiva</code><button class="copy" type="button" data-copy="npx claudiva" data-i18n-label="copy" aria-label="Copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></div>
+        </div>
+        <div class="way">
+          <h3 data-i18n="inst.global">Every day</h3>
+          <p data-i18n="inst.global.p">Install once, then type claudiva in any project.</p>
+          <div class="cmd"><code>npm install -g claudiva</code><button class="copy" type="button" data-copy="npm install -g claudiva" data-i18n-label="copy" aria-label="Copy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button></div>
+        </div>
+        <div class="way">
+          <h3 data-i18n="inst.desktop">Desktop app</h3>
+          <p data-i18n="inst.desktop.p">Windows installer, no admin rights. Pick a project folder and the panel opens in its own window. Not code-signed yet, so SmartScreen may ask: More info → Run anyway.</p>
+          <a class="btn" href="https://github.com/Serdarsahinn05/claudiva/releases/latest" data-i18n="inst.desktop.btn">Download from Releases</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p data-i18n="foot.license">MIT licence · made by Serdarsahinn05</p>
+    <nav aria-label="Links">
+      <a href="https://github.com/Serdarsahinn05/claudiva">GitHub</a>
+      <a href="https://www.npmjs.com/package/claudiva">npm</a>
+      <a href="https://github.com/Serdarsahinn05/claudiva/releases" data-i18n="foot.releases">Releases</a>
+      <a href="https://github.com/Serdarsahinn05/claudiva/issues" data-i18n="foot.issues">Issues</a>
+    </nav>
+    <p class="disclaimer" data-i18n="foot.disclaimer">Claudiva is an independent project and is not affiliated with or endorsed by Anthropic. Claude and Claude Code are trademarks of Anthropic.</p>
+  </div>
+</footer>
+
+<script src="main.js" defer></script>
+</body>
+</html>
