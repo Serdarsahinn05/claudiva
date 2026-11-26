@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from './paths.js';
 import { AITMPL_KEY, fetchAitmplSkills, type ScanSeverity } from './aitmpl.js';
+import { repoTree, type RepoTree } from './githubTree.js';
 import { installFromGitHub, listSkills, parseFrontmatter, type SkillInfo, type SkillScope } from './skills.js';
 
 const CATALOG_FILE = path.join(DATA_DIR, 'skill-catalog.json');
@@ -164,22 +165,6 @@ export function removeSource(repo: string): CatalogSource[] {
 
 // ------------------------------------------------------------------ tarama
 
-interface TreeResponse {
-  tree?: { path: string; type: string }[];
-  truncated?: boolean;
-}
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'claudiva' },
-  });
-  if (res.status === 403 || res.status === 429) {
-    // Kota mesajı özel: kullanıcı "bozuk" ile "biraz bekle"yi ayırabilmeli.
-    throw new Error(S.githubRateLimit);
-  }
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
-  return (await res.json()) as T;
-}
 
 /**
  * Bir SKILL.md'nin BAŞINI çeker ve frontmatter'ı okur.
@@ -261,17 +246,17 @@ export function dedupeCopies(skillFiles: string[]): string[] {
 }
 
 async function scanRepo(src: CatalogSource): Promise<{ skills: CatalogSkill[]; error?: string }> {
-  let tree: TreeResponse;
+  let tree: RepoTree;
   try {
-    tree = await fetchJson<TreeResponse>(
-      `https://api.github.com/repos/${src.repo}/git/trees/HEAD?recursive=1`,
-    );
+    // ETag'li: aynı depo yeniden taranınca (Yenile, link → kurulum) 304 döner
+    // ve kotadan düşmez (bkz. githubTree.ts).
+    tree = await repoTree(src.repo);
   } catch (e) {
     return { skills: [], error: (e as Error).message };
   }
 
   const paths = dedupeCopies(
-    (tree.tree ?? []).filter((n) => n.type === 'blob' && /(^|\/)SKILL\.md$/i.test(n.path)).map((n) => n.path),
+    tree.entries.filter((n) => n.type === 'blob' && /(^|\/)SKILL\.md$/i.test(n.path)).map((n) => n.path),
   ).slice(0, MAX_PER_REPO);
 
   const skills = await mapLimit(paths, CONCURRENCY, async (p) => {

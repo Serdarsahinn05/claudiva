@@ -270,6 +270,16 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   skill'i araç başına klasörlerde tutabiliyor (impeccable 27 yol). Gruplama
   dizin adıyla, çünkü kurulum hedefi de dizin adı; test/örnek klasöründeki
   fikstür atılır. Yerleşik depoların sayısı değişmedi (ölçüldü).
+- **GitHub kotası (`githubTree.ts`):** kimlik doğrulamasız sınır saatte 60,
+  IP BAŞINA (ortak havuz yok; risk ortak IP/CGNAT). Depo ağacı tek istekte
+  okunur ve 10 dk taze sayılıp HİÇ sorulmaz; sabit commit'li ağaç süresiz.
+  Kurulum dosyaları ağaçtan listeler, raw'dan indirir (kotasız). Ölçüldü:
+  link tarama 1, aynı link tekrar 0, docx kurulumu 0 (eski yöntem klasör
+  başına 1 = 12), ikinci "Yenile" 0. **ETag tek başına kota KURTARMAZ:**
+  token'sız istekte 304 de kotadan düşüyor (ölçüldü 22 → 21 → 20); GitHub'ın
+  "304 sayılmaz" kuralı yalnız token'lı istek için. Kota doluysa eldeki eski
+  ağaç kullanılır. Ağaç kesilmişse (çok büyük depo) kurulum eski Contents
+  API yoluna düşer.
 - **GitHub linkiyle bulma** (`POST /api/skills/scan-link`, `scanLink` +
   `parseRepoLink`): depo KAYNAK OLARAK KAYDEDİLMEZ (kullanıcı kararı: her
   depoya ayrı filtre çipi yok, yerleşik liste yok). `github.com/…` (şemasız

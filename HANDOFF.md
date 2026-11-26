@@ -8,7 +8,12 @@
 `claudiva/<sürüm> (+…/claudiva/issues)`, sıra 1 → 2 → 3 → 4. aitmpl.com
 Türkiye'den engelli; GitHub kopyasına düşülüyor. Push edilmedi.
 
-Aynı gün ek (commit EDİLMEDİ): depo taramasında kopya ayıklama, Skill
+Kota iyileştirmesi (`githubTree.ts`, ayrıntı `server/CLAUDE.md`): kurulum
+ve tekrar taramalar artık GitHub kotası harcamıyor. Açık soru: kurulumdaki
+40 dosya sınırı (`MAX_ASSETS`) docx gibi 61 dosyalı skill'i eksik kuruyor
+(eski davranış); raw kotasız olduğu için yükseltilebilir, kullanıcıya sorulacak.
+
+Aynı gün ek (`3. adım` commit'inde): depo taramasında kopya ayıklama, Skill
 paneli dar yuva düzeni (panel kayar, yapışkan arama, katlanır filtreler,
 Kurulu sekmesinde yatay taşma düzeltildi), Keşfet'te "GitHub linkiyle bul"
 (kaynak olarak kaydetmez; graphify bu yoldan bulunup kuruldu).

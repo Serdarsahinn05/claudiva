@@ -23,6 +23,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { AGENTS_DIR, CLAUDE_USER_DIR, PROJECT_DIR } from './paths.js';
+import { rawUrl, repoTree, type TreeEntry } from './githubTree.js';
 
 const DISABLED_SUFFIX = '.disabled';
 
@@ -315,12 +316,29 @@ export async function installFromGitHub(opts: {
   const dirInRepo = opts.skillPath.replace(/\/SKILL\.md$/i, '').replace(/^\/+|\/+$/g, '');
   if (!dirInRepo || dirInRepo.includes('..')) throw new Error(S.badSkillPath);
 
-  const listing = await gh<GhEntry[] | GhEntry>(
-    `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(dirInRepo)}${refQ}`,
-  );
-  const entries = Array.isArray(listing) ? listing : [listing];
-  if (!entries.some((e) => e.type === 'file' && e.name.toLowerCase() === 'skill.md')) {
-    throw new Error(S.noSkillMd(dirInRepo));
+  // Dosya listesi depo AĞACINDAN (tek API isteği, ETag'li: tarama az önce
+  // okuduysa 304 = kotasız), dosyalar raw'dan (kotasız). Eski yol dizin
+  // başına bir Contents API isteğiydi; klasörlü bir skill 5-10 istek
+  // yiyordu. Ağaç kesilmişse (çok büyük depo) eski yola düşülür.
+  const ref = opts.ref ?? 'HEAD';
+  const tree = await repoTree(opts.repo, ref);
+  const prefix = `${dirInRepo}/`;
+  const treeFiles = tree.truncated
+    ? null
+    : tree.entries.filter((e) => e.type === 'blob' && e.path.startsWith(prefix));
+  let entries: GhEntry[] | null = null;
+  if (treeFiles) {
+    if (!treeFiles.some((e) => e.path.slice(prefix.length).toLowerCase() === 'skill.md')) {
+      throw new Error(S.noSkillMd(dirInRepo));
+    }
+  } else {
+    const listing = await gh<GhEntry[] | GhEntry>(
+      `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(dirInRepo)}${refQ}`,
+    );
+    entries = Array.isArray(listing) ? listing : [listing];
+    if (!entries.some((e) => e.type === 'file' && e.name.toLowerCase() === 'skill.md')) {
+      throw new Error(S.noSkillMd(dirInRepo));
+    }
   }
 
   const folder = path.basename(dirInRepo);
@@ -369,8 +387,37 @@ export async function installFromGitHub(opts: {
     }
   };
 
+  /** Ağaçtaki dosyaları raw'dan indirir. Her yol parça parça doğrulanır. */
+  const pullFromTree = async (files: TreeEntry[]) => {
+    const root = path.resolve(target);
+    // SKILL.md ilk, sonra sığdan derine: sınır dolarsa kaybolan derin ekler olsun.
+    const ordered = [...files].sort((a, b) => {
+      const ra = a.path.slice(prefix.length);
+      const rb = b.path.slice(prefix.length);
+      const ma = Number(ra.toLowerCase() === 'skill.md');
+      const mb = Number(rb.toLowerCase() === 'skill.md');
+      return mb - ma || ra.split('/').length - rb.split('/').length || ra.localeCompare(rb);
+    });
+    for (const f of ordered) {
+      if (written >= MAX_ASSETS) break;
+      const segs = f.path.slice(prefix.length).split('/');
+      if (segs.some((s) => !s || s === '.' || s === '..' || s.includes('\\'))) continue;
+      const dest = path.resolve(root, ...segs);
+      if (!dest.startsWith(root + path.sep)) continue;
+      if ((f.size ?? 0) > MAX_ASSET_BYTES) continue;
+      const res = await fetch(rawUrl(opts.repo, ref, f.path), { headers: { 'User-Agent': 'claudiva' } });
+      if (!res.ok) throw new Error(S.downloadFailed(f.path, res.status));
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.byteLength > MAX_ASSET_BYTES) continue;
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, buf);
+      written += 1;
+    }
+  };
+
   try {
-    await pull(dirInRepo, target, entries);
+    if (treeFiles) await pullFromTree(treeFiles);
+    else await pull(dirInRepo, target, entries ?? undefined);
   } catch (err) {
     // Yarım kurulum bırakma: hata olursa hedefi temizle.
     fs.rmSync(target, { recursive: true, force: true });
