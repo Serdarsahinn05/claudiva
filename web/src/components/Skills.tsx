@@ -53,6 +53,28 @@ const TAB_LABEL: Record<Tab, string> = { all: 'Hepsi', global: 'Genel', project:
 
 type Mode = 'installed' | 'catalog';
 
+/**
+ * aitmpl taramasında yüksek/kritik risk alan skill. Bunlar varsayılan GİZLİ
+ * ve kurulumda ayrı onay ister (bkz. docs/AITMPL-ENTEGRASYON.md). Tarama
+ * kesin hüküm değil; gizlemek "yok" demek değil, anahtarla açılır.
+ */
+function isRisky(s: CatalogSkill): boolean {
+  return s.scan?.severity === 'HIGH' || s.scan?.severity === 'CRITICAL';
+}
+function isProprietary(s: CatalogSkill): boolean {
+  return /proprietary/i.test(s.license ?? '');
+}
+/** Riskli ya da özel lisanslı: kurulum onayında ayrıca listelenir. */
+function needsAck(s: CatalogSkill): boolean {
+  return isRisky(s) || isProprietary(s);
+}
+const SCAN_CHIP: Record<string, string> = {
+  LOW: 'chip-pending',
+  MEDIUM: 'chip-warn',
+  HIGH: 'chip-failed',
+  CRITICAL: 'chip-failed',
+};
+
 interface Props {
   agents: AgentSnapshot[];
 }
@@ -306,6 +328,8 @@ function Discover({
   const [scopeOpen, setScopeOpen] = useState(false);
   const [results, setResults] = useState<BulkResult[] | null>(null);
   const [srcOpen, setSrcOpen] = useState(false);
+  const [showRisky, setShowRisky] = useState(false);
+  const [category, setCategory] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -332,18 +356,30 @@ function Discover({
     }
   }, []);
 
-  const shown = useMemo(() => {
+  /** Kategori yalnız katalog API'si olan kaynakta var (aitmpl). */
+  const categories = useMemo(() => {
+    if (!repo) return [];
+    const set = new Set<string>();
+    for (const s of view?.skills ?? []) if ((s.source ?? s.repo) === repo && s.category) set.add(s.category);
+    return [...set].sort();
+  }, [view, repo]);
+
+  const { shown, riskyHidden } = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr');
-    return (view?.skills ?? [])
-      .filter((s) => !repo || s.repo === repo)
+    const matched = (view?.skills ?? [])
+      .filter((s) => !repo || (s.source ?? s.repo) === repo)
+      .filter((s) => !category || s.category === category)
       .filter(
         (s) =>
           !needle ||
           s.name.toLocaleLowerCase('tr').includes(needle) ||
           s.description.toLocaleLowerCase('tr').includes(needle) ||
-          s.repo.toLocaleLowerCase('tr').includes(needle),
+          s.repo.toLocaleLowerCase('tr').includes(needle) ||
+          (s.category ?? '').toLocaleLowerCase('tr').includes(needle),
       );
-  }, [view, q, repo]);
+    const visible = showRisky ? matched : matched.filter((s) => !isRisky(s));
+    return { shown: visible, riskyHidden: matched.length - visible.length };
+  }, [view, q, repo, category, showRisky]);
 
   /** Seçilebilir = henüz kurulu olmayan. Kurulu olanı işaretletmek kesin hata üretirdi. */
   const selectable = useMemo(() => shown.filter((s) => s.installedScopes.length === 0), [shown]);
@@ -378,7 +414,7 @@ function Discover({
     setRefreshing(true);
     try {
       const res = await api.installSkills({
-        items: chosen.map((s) => ({ id: s.id, repo: s.repo, skillPath: s.skillPath, name: s.name })),
+        items: chosen.map((s) => ({ id: s.id, repo: s.repo, skillPath: s.skillPath, ref: s.ref, name: s.name })),
         scope,
         agentId,
       });
@@ -400,6 +436,7 @@ function Discover({
   if (!view) return <div className="muted center">{error || L.skills.catalogLoading}</div>;
 
   const never = view.fetchedAt === null;
+  const anyScan = view.skills.some((s) => s.scan);
 
   return (
     <>
@@ -424,14 +461,23 @@ function Discover({
             : L.skills.scanned(view.skills.length, rel(view.fetchedAt!))}
         </span>
         <div className="tb-filters">
-          <button className={`tb-filter${repo === '' ? ' sel' : ''}`} onClick={() => setRepo('')}>
+          <button
+            className={`tb-filter${repo === '' ? ' sel' : ''}`}
+            onClick={() => {
+              setRepo('');
+              setCategory('');
+            }}
+          >
             {L.skills.all}
           </button>
           {view.sources.map((s) => (
             <button
               key={s.repo}
               className={`tb-filter${repo === s.repo ? ' sel' : ''}`}
-              onClick={() => setRepo(s.repo)}
+              onClick={() => {
+                setRepo(s.repo);
+                setCategory('');
+              }}
               title={s.error ? s.error : s.repo}
             >
               {s.label} <span className="tb-filter-count">{s.count ?? 0}</span>
@@ -439,6 +485,28 @@ function Discover({
           ))}
         </div>
       </div>
+
+      {(categories.length > 0 || anyScan) && (
+        <div className="sk-cat-bar">
+          {categories.length > 0 && (
+            <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label={L.skills.categoryAria}>
+              <option value="">{L.skills.allCategories}</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
+          {anyScan && (
+            <label className="check small">
+              <input type="checkbox" checked={showRisky} onChange={(e) => setShowRisky(e.target.checked)} />
+              <span>{L.skills.showRisky}</span>
+            </label>
+          )}
+          {riskyHidden > 0 && <span className="sk-cat-when">{L.skills.riskyHidden(riskyHidden)}</span>}
+        </div>
+      )}
 
       {/* Kaynak hataları gizlenmez: eksik bir katalog "hiç yok" gibi görünürdü. */}
       {view.sources
@@ -494,7 +562,13 @@ function Discover({
                   <div className="sk-main">
                     <div className="sk-top">
                       <span className="sk-name">{s.name}</span>
-                      <span className="badge sk-repo">{s.repo}</span>
+                      <span className="badge sk-repo">{s.category ? `${s.source} · ${s.category}` : s.repo}</span>
+                      {s.scan && (
+                        <span className={`chip ${SCAN_CHIP[s.scan.severity]}`} title={L.skills.scanTitle(s.scan.score)}>
+                          {L.skills.scanLabel[s.scan.severity]}
+                        </span>
+                      )}
+                      {isProprietary(s) && <span className="chip chip-warn">{L.skills.proprietary}</span>}
                       {installed && (
                         <span className="chip chip-done">
                           kurulu · {s.installedScopes.map((x) => SCOPE_LABEL[x]).join(', ')}
@@ -503,8 +577,16 @@ function Discover({
                     </div>
                     {s.description && <p className="sk-desc">{s.description}</p>}
                     <div className="sk-meta">
-                      <span className="sk-dir" title={s.skillPath}>
-                        {s.skillPath}
+                      {s.downloads !== undefined && <span>{L.skills.downloads(s.downloads)}</span>}
+                      {s.license && !isProprietary(s) && <span>{s.license}</span>}
+                      {s.ref && <span title={s.ref}>{L.skills.pinned} {s.ref.slice(0, 7)}</span>}
+                      {s.page && (
+                        <a href={s.page} target="_blank" rel="noreferrer noopener">
+                          {L.skills.openPage}
+                        </a>
+                      )}
+                      <span className="sk-dir" title={`${s.repo}/${s.skillPath}`}>
+                        {s.source ? `${s.repo}/${s.skillPath}` : s.skillPath}
                       </span>
                     </div>
                   </div>
@@ -570,6 +652,8 @@ function ScopeDialog({
 }) {
   const [scope, setScope] = useState<SkillScope>('project');
   const [agentId, setAgentId] = useState(agents[0]?.config.id ?? '');
+  const flagged = skills.filter(needsAck);
+  const [ack, setAck] = useState(false);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -587,6 +671,27 @@ function ScopeDialog({
           ))}
           {skills.length > 8 && <li className="muted">{L.skills.more(skills.length - 8)}</li>}
         </ul>
+
+        {flagged.length > 0 && (
+          <div className="sk-risk">
+            <strong>{L.skills.riskTitle}</strong>
+            <p className="sk-dialog-note">{L.skills.riskNote}</p>
+            <ul className="sk-chosen">
+              {flagged.map((s) => (
+                <li key={s.id}>
+                  {s.name}{' '}
+                  <span className="muted">
+                    · {s.scan && isRisky(s) ? L.skills.scanLabel[s.scan.severity] : L.skills.proprietary}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <label className="check small">
+              <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+              <span>{L.skills.riskAck}</span>
+            </label>
+          </div>
+        )}
 
         <label>
           {L.skills.scopeAll}
@@ -616,9 +721,9 @@ function ScopeDialog({
           <button
             className="primary"
             onClick={() => onConfirm(scope, scope === 'agent' ? agentId : undefined)}
-            disabled={scope === 'agent' && !agentId}
+            disabled={(scope === 'agent' && !agentId) || (flagged.length > 0 && !ack)}
           >
-            {skills.length} skill’i kur
+            {L.skills.install(skills.length)}
           </button>
         </div>
       </div>

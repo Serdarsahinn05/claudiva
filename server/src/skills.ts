@@ -260,7 +260,7 @@ interface LockFile {
   version: number;
   skills: Record<
     string,
-    { source: string; sourceType: string; skillPath: string; computedHash: string }
+    { source: string; sourceType: string; skillPath: string; computedHash: string; ref?: string }
   >;
 }
 
@@ -298,12 +298,17 @@ export async function installFromGitHub(opts: {
   repo: string;
   /** Depo içindeki yol: "skills/futuristic/SKILL.md" ya da "skills/futuristic" */
   skillPath: string;
+  /** Commit/dal; yoksa HEAD. Katalog taranan commit'i verir ki kurulan
+   *  içerik taranan içerikle aynı olsun. */
+  ref?: string;
   scope: SkillScope;
   agentId?: string;
 }): Promise<SkillInfo> {
   if (!/^[\w.-]+\/[\w.-]+$/.test(opts.repo)) {
     throw new Error(S.repoFormat);
   }
+  if (opts.ref !== undefined && !/^[\w.-]{1,100}$/.test(opts.ref)) throw new Error(S.badSkillPath);
+  const refQ = opts.ref ? `?ref=${encodeURIComponent(opts.ref)}` : '';
   if (opts.scope === 'agent' && !opts.agentId) throw new Error(S.agentScopeNeeded);
 
   // Yol SKILL.md'yi gösteriyorsa dizinine çık; kullanıcı ikisini de yazabilir.
@@ -311,7 +316,7 @@ export async function installFromGitHub(opts: {
   if (!dirInRepo || dirInRepo.includes('..')) throw new Error(S.badSkillPath);
 
   const listing = await gh<GhEntry[] | GhEntry>(
-    `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(dirInRepo)}`,
+    `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(dirInRepo)}${refQ}`,
   );
   const entries = Array.isArray(listing) ? listing : [listing];
   if (!entries.some((e) => e.type === 'file' && e.name.toLowerCase() === 'skill.md')) {
@@ -330,7 +335,7 @@ export async function installFromGitHub(opts: {
   let written = 0;
   const pull = async (repoDir: string, destDir: string, list?: GhEntry[]) => {
     const items = list ?? (await gh<GhEntry[]>(
-      `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(repoDir)}`,
+      `https://api.github.com/repos/${opts.repo}/contents/${encodeURI(repoDir)}${refQ}`,
     ));
     fs.mkdirSync(destDir, { recursive: true });
 
@@ -376,6 +381,7 @@ export async function installFromGitHub(opts: {
     source: opts.repo,
     sourceType: 'github',
     skillPath: `${dirInRepo}/SKILL.md`,
+    ...(opts.ref ? { ref: opts.ref } : {}),
     computedHash: crypto
       .createHash('sha256')
       .update(fs.readFileSync(path.join(target, 'SKILL.md')))

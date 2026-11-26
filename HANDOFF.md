@@ -1,11 +1,12 @@
 # Devir — Claudiva
 
-# ▶ SIRADAKİ FİKİR (2026-11-25 sonu): aitmpl.com entegrasyonu
+# ▶ aitmpl.com entegrasyonu (2026-11-26)
 
-İnceleme bitti, uygulama BAŞLAMADI. Bulgular, adımlar ve öneriler:
-**`docs/AITMPL-ENTEGRASYON.md`**. Kullanıcı tokeni azaldığı için sonra bakacak.
-Başlamadan önce sorulacak: User-Agent'a depo adresi yazılsın mı, ve 1. adımla
-(skill'ler → Keşfet) başlansın mı.
+**1. adım (skill'ler → Keşfet) YAPILDI, commit EDİLMEDİ.** Ayrıntı ve
+ölçümler: **`docs/AITMPL-ENTEGRASYON.md`**. Kararlar (yeniden sorma):
+User-Agent `claudiva/<sürüm> (+…/claudiva/issues)`, sıra 1 → 2 → 3 → 4.
+aitmpl.com Türkiye'den engelli; GitHub kopyasına düşülüyor. Sıradaki: 2. adım
+(şablondan ajan oluştur).
 
 
 # ▶ 2026-11-25 akşamı: açık/koyu mod + Cam stili EKLENDİ (commit BEKLİYOR)

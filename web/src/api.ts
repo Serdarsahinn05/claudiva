@@ -103,7 +103,7 @@ export const api = {
   removeSkillSource: (repo: string) =>
     req<CatalogSource[]>('DELETE', `/api/skills/sources?repo=${encodeURIComponent(repo)}`),
   installSkills: (input: {
-    items: { id: string; repo: string; skillPath: string; name?: string }[];
+    items: { id: string; repo: string; skillPath: string; ref?: string; name?: string }[];
     scope: SkillScope;
     agentId?: string;
   }) => req<BulkResult[]>('POST', '/api/skills/install-many', input),

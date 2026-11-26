@@ -411,7 +411,10 @@ export interface CatalogSource {
   builtin: boolean;
   count?: number;
   error?: string;
+  kind?: 'github' | 'aitmpl';
 }
+
+export type ScanSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 export interface CatalogSkill {
   id: string;
@@ -421,6 +424,16 @@ export interface CatalogSkill {
   skillPath: string;
   /** Kurulunca oluşacak dizin adı. */
   folder: string;
+  /** Kaynak anahtarı (filtre); yoksa `repo`. */
+  source?: string;
+  /** Kurulum commit'i; yoksa HEAD. */
+  ref?: string;
+  // yalnız aitmpl'de dolu
+  category?: string;
+  license?: string | null;
+  downloads?: number;
+  scan?: { severity: ScanSeverity; score: number } | null;
+  page?: string | null;
   /** Bu ad hangi kapsamlarda zaten kurulu (boş = kurulu değil). */
   installedScopes: SkillScope[];
 }

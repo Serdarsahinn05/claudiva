@@ -488,6 +488,7 @@ export function createRoutes(
         id: String(it.id ?? `${String(it.repo)}:${String(it.skillPath)}`),
         repo: String(it.repo),
         skillPath: String(it.skillPath),
+        ref: it.ref ? String(it.ref) : undefined,
         name: it.name ? String(it.name) : undefined,
       };
     });

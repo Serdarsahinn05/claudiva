@@ -1,6 +1,14 @@
 # aitmpl.com (Claude Code Templates) entegrasyonu
 
-**Kayıt tarihi:** 2026-11-25. Durum: inceleme bitti, uygulama başlamadı.
+**Kayıt tarihi:** 2026-11-25. Durum: **1. adım (skill'ler) YAPILDI 2026-11-26**
+(`server/src/aitmpl.ts`, Skills → Keşfet), 2-4 bekliyor.
+
+> **Ölçüldü 2026-11-26: aitmpl.com Türkiye'den AÇILMIYOR.** Yerel DNS
+> `www.aitmpl.com` için 213.14.227.50 (Türk Telekom) veriyor, bağlantı zaman
+> aşımı; dış DNS ve DoH da engelli. Aynı dosyalar GitHub deposunda
+> (`dashboard/public/api/v1/`) duruyor ve `raw.githubusercontent.com` açık.
+> Kod önce aitmpl.com'u (6 sn zaman aşımı), olmazsa GitHub kopyasını dener;
+> çalışan adres süreç boyunca önce denenir (yenileme 6.3 sn → 0.96 sn).
 Kaynaklar: https://www.aitmpl.com/ · https://github.com/davila7/claude-code-templates
 (MIT, ~34k yıldız, aktif). Aşağıdaki sayılar ve alanlar uçlar doğrudan okunarak
 doğrulandı.
@@ -137,10 +145,22 @@ source      dış skill'lerde { repo, path, sabitlenmiş commit, lisans }; diğe
 - Sunucu hataları `ApiError` koduyla, panel metinleri `L.*` ile (kurallar
   `web/CLAUDE.md`, `server/CLAUDE.md`).
 
-## Açık karar (kullanıcıya sorulacak)
+## Kararlar (2026-11-26, kullanıcı)
 
-- **User-Agent:** site iletişim adresi istiyor. Öneri:
-  `claudiva/<sürüm> (+https://github.com/Serdarsahinn05/claudiva)`. Bu, depo
-  adresinin her kullanıcının isteğinde siteye gitmesi demek. Onaylanmadan
-  ekleme.
-- Başlangıç sırası önerisi: 1 (skill'ler) → 2 (ajanlar) → 3 → 4.
+- **User-Agent:** `claudiva/<sürüm> (+https://github.com/Serdarsahinn05/claudiva/issues)`;
+  sürüm kök `package.json`dan okunur. Yalnız aitmpl/katalog isteklerinde.
+- Sıra: 1 (skill'ler) → 2 (ajanlar) → 3 → 4.
+
+## 1. adımda yapılan (ölçüldü, test sunucusu 4631, scratch proje)
+
+- Yerleşik kaynak `aitmpl.com` (`kind: 'aitmpl'`), gizlenebilir. 948 skill,
+  38'i dış depoda sabit commit'le; 142 yüksek/kritik, 10 Proprietary.
+- `version.json` sha256 önbellekte (`aitmplSha`); aynıysa katalog indirilmez.
+  Ağ yoksa önbellekteki satırlar korunur, hata kaynağın yanında yazılır.
+- Kurulum `installFromGitHub` + yeni `ref` (contents API `?ref=`); kilit
+  girdisine `ref` yazılır. Depo içi (`agent-management`) ve dış
+  (`illos-library` @699eaa3) kuruldu, "kurulu" rozeti döndü.
+- Panel: kategori seçici, "Riskli olanları da göster" (varsayılan kapalı,
+  948 → 806), tarama/lisans/indirme/sabit commit rozetleri, aitmpl sayfası
+  bağlantısı. Riskli ya da özel lisanslı seçimde kurulum penceresi listeler ve
+  "Okudum, yine de kur" işaretlenmeden Kur kapalı (tarayıcıda denendi).

@@ -27,6 +27,7 @@ import { S } from './i18n.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR } from './paths.js';
+import { AITMPL_KEY, fetchAitmplSkills, type ScanSeverity } from './aitmpl.js';
 import { installFromGitHub, listSkills, parseFrontmatter, type SkillInfo, type SkillScope } from './skills.js';
 
 const CATALOG_FILE = path.join(DATA_DIR, 'skill-catalog.json');
@@ -49,6 +50,8 @@ export interface CatalogSource {
   count?: number;
   /** Son taramada hata olduysa metni; yoksa tanımsız. */
   error?: string;
+  /** Okuma yolu: GitHub ağacı (varsayılan) ya da aitmpl katalog API'si. */
+  kind?: 'github' | 'aitmpl';
 }
 
 export interface CatalogSkill {
@@ -61,11 +64,24 @@ export interface CatalogSkill {
   skillPath: string;
   /** Kurulunca oluşacak dizin adı; "kurulu mu" bunun üzerinden bulunuyor. */
   folder: string;
+  /** Hangi kaynaktan geldi (filtre anahtarı). Yoksa `repo`. aitmpl'de
+   *  kurulum deposu kaynaktan farklı olduğu için ayrı alan. */
+  source?: string;
+  /** Kurulumun yapılacağı commit; yoksa HEAD. */
+  ref?: string;
+  // ── yalnız aitmpl'de dolu ──
+  category?: string;
+  license?: string | null;
+  downloads?: number;
+  scan?: { severity: ScanSeverity; score: number } | null;
+  page?: string | null;
 }
 
 interface CatalogFile {
   version: number;
   fetchedAt: number;
+  /** aitmpl `version.json` sha256'sı; aynıysa katalog yeniden indirilmez. */
+  aitmplSha?: string;
   sources: CatalogSource[];
   skills: CatalogSkill[];
 }
@@ -81,6 +97,8 @@ const BUILTIN_SOURCES: CatalogSource[] = [
   { repo: 'anthropics/skills', label: 'Anthropic — resmî skill’ler', builtin: true },
   { repo: 'obra/superpowers', label: 'Superpowers', builtin: true },
   { repo: 'wshobson/agents', label: 'wshobson — large collection', builtin: true },
+  // Tarama (skillspector) ve lisans bilgisi taşıyan büyük katalog; bkz. aitmpl.ts.
+  { repo: AITMPL_KEY, label: 'aitmpl.com', builtin: true, kind: 'aitmpl' },
 ];
 
 // ------------------------------------------------------------------ kaynaklar
@@ -111,7 +129,7 @@ function writeSourcesFile(f: SourcesFile): void {
 export function listSources(): CatalogSource[] {
   const f = readSourcesFile();
   return [
-    ...BUILTIN_SOURCES.filter((s) => !f.hidden.includes(s.repo)),
+    ...BUILTIN_SOURCES.filter((s) => !f.hidden.includes(s.repo)).map((s) => ({ ...s })),
     ...f.custom.map((c) => ({ repo: c.repo, label: c.label, builtin: false })),
   ];
 }
@@ -235,16 +253,61 @@ async function scanRepo(src: CatalogSource): Promise<{ skills: CatalogSkill[]; e
   };
 }
 
+/**
+ * aitmpl kaynağı. Katalog değişmediyse (sha aynı) önbellekteki satırlar
+ * kullanılır; ağ yoksa da önbellek korunur ve hata kaynağın yanında yazılır —
+ * "katalog boşaldı" görünmesin.
+ */
+async function scanAitmpl(
+  prev: CatalogFile | null,
+): Promise<{ skills: CatalogSkill[]; error?: string; sha?: string }> {
+  const cached = (prev?.skills ?? []).filter((s) => s.source === AITMPL_KEY);
+  try {
+    const r = await fetchAitmplSkills(cached.length ? prev?.aitmplSha : undefined);
+    if (!r.skills) return { skills: cached, sha: r.sha };
+    return {
+      sha: r.sha,
+      skills: r.skills.map((a) => ({
+        id: `${AITMPL_KEY}:${a.id}`,
+        name: a.name,
+        description: a.description,
+        repo: a.repo,
+        skillPath: a.skillPath,
+        folder: a.skillPath.split('/').filter(Boolean).pop() ?? a.name,
+        source: AITMPL_KEY,
+        ref: a.ref,
+        category: a.category,
+        license: a.license,
+        downloads: a.downloads,
+        scan: a.scan,
+        page: a.page,
+      })),
+    };
+  } catch (e) {
+    return { skills: cached, sha: prev?.aitmplSha, error: S.aitmplUnreachable((e as Error).message) };
+  }
+}
+
 /** Bütün kaynakları tarar ve sonucu diske yazar. */
 export async function refreshCatalog(): Promise<CatalogFile> {
   const sources = listSources();
+  const prev = readCache();
+  let aitmplSha: string | undefined;
   const results = await Promise.all(
-    sources.map(async (s) => ({ src: s, ...(await scanRepo(s)) })),
+    sources.map(async (s) => {
+      if (s.kind === 'aitmpl') {
+        const r = await scanAitmpl(prev);
+        aitmplSha = r.sha;
+        return { src: s, skills: r.skills, error: r.error };
+      }
+      return { src: s, ...(await scanRepo(s)) };
+    }),
   );
 
   const file: CatalogFile = {
     version: 1,
     fetchedAt: Date.now(),
+    aitmplSha,
     sources: results.map((r) => ({ ...r.src, count: r.skills.length, error: r.error })),
     skills: results.flatMap((r) => r.skills).sort((a, b) => a.name.localeCompare(b.name, 'tr')),
   };
@@ -293,8 +356,12 @@ export function catalogView(installed: SkillInfo[] = listSkills()): CatalogView 
 
   return {
     fetchedAt: cache?.fetchedAt ?? null,
-    // Önbellek yoksa da kaynak listesi gösterilebilsin (panel boş açılmasın).
-    sources: cache?.sources ?? listSources(),
+    // Kaynak listesi GÜNCEL ayardan (yeni yerleşik kaynak ya da gizleme
+    // tazelemeden önce de görünsün), sayı/hata son taramadan.
+    sources: listSources().map((s) => {
+      const c = cache?.sources.find((x) => x.repo === s.repo);
+      return c ? { ...s, count: c.count, error: c.error } : s;
+    }),
     skills: (cache?.skills ?? []).map((s) => ({
       ...s,
       installedScopes: byFolder.get(s.folder) ?? [],
@@ -326,7 +393,7 @@ export interface BulkResult {
  * `skills-lock.json` tek dosya — paralel yazım kilidi bozardı.
  */
 export async function installMany(
-  items: { id: string; repo: string; skillPath: string; name?: string }[],
+  items: { id: string; repo: string; skillPath: string; ref?: string; name?: string }[],
   scope: SkillScope,
   agentId?: string,
 ): Promise<BulkResult[]> {
@@ -334,7 +401,7 @@ export async function installMany(
   for (const it of items) {
     const name = it.name || it.skillPath.split('/').pop() || it.skillPath;
     try {
-      const info = await installFromGitHub({ repo: it.repo, skillPath: it.skillPath, scope, agentId });
+      const info = await installFromGitHub({ repo: it.repo, skillPath: it.skillPath, ref: it.ref, scope, agentId });
       out.push({ id: it.id, name: info.name, ok: true });
     } catch (e) {
       out.push({ id: it.id, name, ok: false, error: (e as Error).message });

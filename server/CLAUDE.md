@@ -266,6 +266,12 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   bunun sessiz varsayılanı olamaz.
 - Yerleşik kaynaklar **silinmez, gizlenir** (`hidden` listesi) — kod
   değişmeden geri gelebilsinler.
+- **aitmpl kaynağı (`aitmpl.ts`) GitHub ağacı taramaz, katalog JSON'u okur.**
+  aitmpl.com Türkiye'den DNS düzeyinde engelli (ölçüldü 2026-11-26); aynı
+  dosya GitHub'da, kod ikisini sırayla dener. aitmpl satırında `repo` KURULUM
+  deposudur (şablon deposu ya da dış depo), filtre anahtarı `source`.
+  Dış skill taranan commit'ten (`ref`) kurulur, `main`den DEĞİL. Riskli
+  (HIGH/CRITICAL) gizleme ve kurulum onayı yalnız panelde.
 - Bilinen artık: `removeSkill` `skills-lock.json`daki girdiyi TEMİZLEMİYOR
   (mevcut davranış, bu işte değiştirilmedi). Toplu kurulum bunu daha görünür
   yapıyor: 10 kur / 10 kaldır → kilitte 10 bayat girdi kalır.
