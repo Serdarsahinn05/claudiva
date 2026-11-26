@@ -36,6 +36,9 @@ export interface McpServerDef {
   args?: string[];
   env?: Record<string, string>;
   url?: string;
+  /** Uzak (http/sse) sunucuda kimlik başlıkları (ör. Authorization). aitmpl'deki
+   *  uzak MCP'lerin 11'i bunu kullanıyor; taşınmazsa sunucu yetki alamaz. */
+  headers?: Record<string, string>;
 }
 
 export interface AgentConfig {

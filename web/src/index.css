@@ -2646,6 +2646,25 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .tpl-row:focus-visible { outline: 2px solid var(--hud); outline-offset: -2px; }
 .tpl-row .sk-cat-when { margin-left: auto; }
 
+/* Ajan formu → Gelişmiş → aitmpl'den MCP. Uyarılar kehribar ayraçlı liste:
+   onaydan önce okunması gereken üç bedel (kod, düz metin anahtar, token). */
+.mcp-add {
+  display: flex; flex-direction: column; gap: var(--s2);
+  padding: var(--s3); border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+}
+.mcp-cmd {
+  display: block; font-family: var(--font-mono); font-size: 11px; color: var(--fg);
+  background: rgb(var(--edge-rgb) / 0.25); padding: var(--s2); border-radius: var(--radius);
+  overflow-wrap: anywhere;
+}
+.mcp-fields { display: flex; flex-direction: column; gap: var(--s2); }
+.mcp-warn {
+  margin: 0; padding: var(--s2) var(--s3) var(--s2) var(--s5);
+  border-left: 2px solid var(--caution); background: rgb(var(--warn-rgb) / 0.08);
+  font-family: var(--font-ui); font-size: 12px; color: var(--fg); line-height: 1.55;
+}
+.mcp-warn li + li { margin-top: var(--s1); }
+
 /* Toplu eylem çubuğu listenin ÜSTÜNDE yüzer: seçim aşağıda yapılırken
    eylemin nerede olduğunu aramak gerekmesin. */
 .sk-bulkbar {

@@ -18,6 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DATA_DIR, INSTALL_ROOT } from './paths.js';
 import { S } from './i18n.js';
+import type { McpServerDef } from './types.js';
 
 export const AITMPL_KEY = 'aitmpl.com';
 /** Depo içi skill'lerin yaşadığı depo ve kök. */
@@ -123,7 +124,7 @@ export interface AitmplResult {
  * indirilmez. Adreslerden hiçbiri çalışmazsa son hata fırlatılır.
  */
 async function fetchCatalog(
-  type: 'skills' | 'agents' | 'commands',
+  type: 'skills' | AitmplKind,
   prevSha?: string,
 ): Promise<{ sha: string; components: RawComponent[] | null; via: string }> {
   let lastErr: Error = new Error('aitmpl');
@@ -162,8 +163,8 @@ export async function fetchAitmplSkills(prevSha?: string): Promise<AitmplResult>
 // diske yazılmaz: panel formu doldurur, kullanıcı gözden geçirip oluşturur.
 
 /** Tek dosyalık, listeden seçilip taslağa çevrilen türler. */
-export type AitmplKind = 'agents' | 'commands';
-export const AITMPL_KINDS: AitmplKind[] = ['agents', 'commands'];
+export type AitmplKind = 'agents' | 'commands' | 'mcps';
+export const AITMPL_KINDS: AitmplKind[] = ['agents', 'commands', 'mcps'];
 
 const cacheFile = (kind: AitmplKind) => path.join(DATA_DIR, `aitmpl-${kind}.json`);
 
@@ -313,6 +314,105 @@ export interface CommandDraft {
   argumentHint: string;
   usesArguments: boolean;
   scan: AitmplItem['scan'];
+}
+
+/** Kullanıcının doldurması gereken bir alan (ortam değişkeni ya da başlık). */
+export interface McpField {
+  where: 'env' | 'header';
+  key: string;
+  /** Katalogdaki değer: yer tutucu ya da makul varsayılan (~/Desktop gibi). */
+  value: string;
+  /** Değer yer tutucu (`<YOUR_TOKEN>`, `your-api-key`): doldurulmadan eklenmez. */
+  placeholder: boolean;
+}
+
+/** Ajan formunun MCP kutusuna eklenecek taslak; diske YAZILMAZ. */
+export interface McpDraft {
+  source: string;
+  /** `mcpServers` içindeki anahtar. */
+  name: string;
+  description: string;
+  /** Yerelde komut mu çalıştırıyor, uzak adrese mi bağlanıyor. */
+  kind: 'local' | 'remote';
+  def: McpServerDef;
+  fields: McpField[];
+  /** Komut argümanlarında da yer tutucu var (ör. `/path/to/allowed`). */
+  argsPlaceholder: boolean;
+  scan: AitmplItem['scan'];
+}
+
+/**
+ * Ölçülen katalog değerleri (148 dosyanın hepsi tarandı): `<your-api-key>`,
+ * `<YOUR_TOKEN>`, `your-circleci-token`, `${SCRAPINGBEE_API_KEY}`,
+ * `${input:postman-api-key}`, `ntn_****`, `mysql://user:password@…`.
+ * `${…}` Claude Code'un .mcp.json'da açtığı bir sözdizimi; Claudiva tanımı
+ * SDK'ya doğrudan verdiği için AÇILMAZ, olduğu gibi giderdi.
+ */
+const PLACEHOLDER = /<[^>]+>|\$\{[^}]+\}|\*{3,}|\byour[-_ ]|YOUR_|xxx|\/path\/to\/|user:password/i;
+/** Boş değer de doldurulacak alan (ölçüldü: browserbase/dynatrace anahtarları boş geliyor). */
+const isPlaceholder = (v: string) => !v.trim() || PLACEHOLDER.test(v);
+
+/**
+ * MCP yapılandırmasını taslağa çevirir. Katalogdaki 148 dosyanın biçimi
+ * ölçüldü (2026-11-26): hepsi tek sunuculu `{ mcpServers: { ad: {...} } }`;
+ * yerel `command/args[/env]` 84+, uzak `type/url` 46, uzak + `headers` 11,
+ * `type` yazmayan 3. `description`, `autoApprove`, `timeout`,
+ * `transportType` alınmaz (Claudiva'da karşılığı yok; oto-onay ajanın kendi
+ * ayarı, MCP dosyasından gelmemeli).
+ */
+export async function mcpDraft(id: string): Promise<McpDraft> {
+  const { entry, body } = await readItemFile('mcps', id);
+  let parsed: { mcpServers?: Record<string, Record<string, unknown>> };
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new Error(S.mcpUnreadable);
+  }
+  const [name, raw] = Object.entries(parsed.mcpServers ?? {})[0] ?? [];
+  if (!name || !raw) throw new Error(S.mcpUnreadable);
+
+  const strMap = (v: unknown): Record<string, string> | undefined => {
+    if (!v || typeof v !== 'object') return undefined;
+    const out: Record<string, string> = {};
+    for (const [k, x] of Object.entries(v as Record<string, unknown>)) out[k] = String(x ?? '');
+    return Object.keys(out).length ? out : undefined;
+  };
+  const command = typeof raw.command === 'string' ? raw.command : undefined;
+  const url = typeof raw.url === 'string' ? raw.url : undefined;
+  const args = Array.isArray(raw.args) ? raw.args.map(String) : undefined;
+  const env = strMap(raw.env);
+  const headers = strMap(raw.headers);
+  const t = String(raw.type ?? '');
+
+  let def: McpServerDef;
+  if (command) {
+    def = { type: 'stdio', command, ...(args ? { args } : {}), ...(env ? { env } : {}) };
+  } else if (url) {
+    def = { type: t === 'sse' ? 'sse' : 'http', url, ...(headers ? { headers } : {}) };
+  } else {
+    throw new Error(S.mcpUnreadable);
+  }
+
+  const fields: McpField[] = [
+    ...Object.entries(env ?? {}).map(([key, value]) => ({ where: 'env' as const, key, value, placeholder: isPlaceholder(value) })),
+    ...Object.entries(def.type !== 'stdio' ? (headers ?? {}) : {}).map(([key, value]) => ({
+      where: 'header' as const,
+      key,
+      value,
+      placeholder: isPlaceholder(value),
+    })),
+  ];
+
+  return {
+    source: entry.id,
+    name: name.replace(/[^\w.-]+/g, '-'),
+    description: typeof raw.description === 'string' ? raw.description : entry.summary,
+    kind: command ? 'local' : 'remote',
+    def,
+    fields,
+    argsPlaceholder: (args ?? []).some((a) => PLACEHOLDER.test(a)) || PLACEHOLDER.test(url ?? ''),
+    scan: entry.scan,
+  };
 }
 
 /** Paket ajanlarındaki kural; aitmpl istemleri İngilizce. */

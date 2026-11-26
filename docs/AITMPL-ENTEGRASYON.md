@@ -205,6 +205,30 @@ source      dış skill'lerde { repo, path, sabitlenmiş commit, lisans }; diğe
   ÇALIŞMAZ, düz metin olarak gider (bilerek: izinsiz kabuk komutu olurdu).
 - 288 komut, 1'i yüksek risk (rozet + düzenleyicide uyarı).
 
+## 4. adımda yapılan: MCP (2026-11-26, commit EDİLMEDİ)
+
+- Ajan formu → Gelişmiş → "aitmpl’den MCP ekle" (`McpFromAitmpl.tsx`, aynı
+  `AitmplPicker`, tür `mcps`; sunucu `mcpDraft`). Seçim KAYDETMEZ: taslak
+  gösterilir (ad, yerel/uzak rozeti, komut satırı ya da adres), alanlar
+  doldurulur, üç uyarı okunur (yerel kod çalıştırır · anahtar config.json'a
+  ŞİFRESİZ · araç tanımları her oturuma token ekler), "Okudum" + dolu alanlarla
+  formun JSON kutusuna eklenir; ajan ancak form kaydedilince değişir. Ad
+  çakışırsa sonek. Yalnız o ajan etkilenir (terminaldeki `claude mcp add`
+  bütün ajanlara ekler; menünün asıl farkı bu).
+- 148 dosyanın HEPSİ taslağa çevrildi (hata 0): yerel 90, uzak 58; 51'i alan
+  istiyor (55 yer tutucu, 13 makul varsayılan), 11'i başlık, 11'inde
+  argümanda yer tutucu. Yer tutucu deseni katalogdan ölçüldü (`<…>`, `${…}`,
+  `****`, `your-…`, `user:password`, boş değer). `${…}` Claude Code'un
+  .mcp.json'da açtığı sözdizimi; Claudiva tanımı SDK'ya doğrudan verdiği için
+  açılmazdı. Başlıkta "Bearer " ön eki korunur, kullanıcı yalnız anahtarı yazar.
+- **Bulunan eksik:** `McpServerDef` uzak sunucu için `headers` taşımıyordu;
+  `Authorization` isteyen 11 MCP yetki alamazdı. Alan eklendi (iki types.ts)
+  ve `claudeBackend` SDK'ya geçiriyor.
+- Tarayıcıda denendi: liste 148, github-official taslağı, boş alan ve onaysız
+  Ekle kapalı, kutuya doğru JSON. **Canlı bağlantı DENENMEDİ** (test ajanının
+  MCP'sini değiştirip oturum açan adım izin sınıflandırıcısına takıldı);
+  `headers`ın SDK'da gerçekten yetki verdiği de ölçülmedi.
+
 ## Ek (2026-11-26): kopya ayıklama, panel düzeni, skills.sh incelemesi
 
 - **Kopya ayıklama** (`skillCatalog.ts` `dedupeCopies`): araç başına

@@ -20,6 +20,8 @@ export interface McpServerDef {
   args?: string[];
   env?: Record<string, string>;
   url?: string;
+  /** Uzak (http/sse) sunucuda kimlik başlıkları (ör. Authorization). */
+  headers?: Record<string, string>;
 }
 
 /** Sunucudaki ProviderId'nin aynısı (server/src/types.ts) — proje kuralı gereği
@@ -452,7 +454,28 @@ export interface CatalogView {
 }
 
 /** aitmpl'den listeyle seçilen türler (sunucu: `server/src/aitmpl.ts`). */
-export type AitmplKind = 'agents' | 'commands';
+export type AitmplKind = 'agents' | 'commands' | 'mcps';
+
+/** MCP taslağında kullanıcının dolduracağı alan (ortam değişkeni / başlık). */
+export interface McpField {
+  where: 'env' | 'header';
+  key: string;
+  value: string;
+  /** Yer tutucu (`<YOUR_TOKEN>`): doldurulmadan eklenmez. */
+  placeholder: boolean;
+}
+
+/** aitmpl MCP'sinden dönüştürülmüş taslak; ajan formunun MCP kutusuna eklenir. */
+export interface McpDraft {
+  source: string;
+  name: string;
+  description: string;
+  kind: 'local' | 'remote';
+  def: McpServerDef;
+  fields: McpField[];
+  argsPlaceholder: boolean;
+  scan: { severity: ScanSeverity; score: number } | null;
+}
 
 /** aitmpl ajan ya da komut şablonu. */
 export interface AitmplItem {

@@ -27,6 +27,7 @@ import {
   aitmplList,
   AITMPL_KINDS,
   commandDraft,
+  mcpDraft,
   refreshAitmplList,
   type AitmplKind,
 } from '../aitmpl.js';
@@ -540,7 +541,7 @@ export function createRoutes(
     const kind = kindOf(req);
     const id = String(req.query.id ?? '');
     if (!id) throw new ApiError('template_required', 'Şablon gerekli.');
-    return kind === 'agents' ? agentDraft(id) : commandDraft(id);
+    return kind === 'agents' ? agentDraft(id) : kind === 'mcps' ? mcpDraft(id) : commandDraft(id);
   }));
 
   // ------------------------------------------------------------ prompts

@@ -301,6 +301,11 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   deposudur (şablon deposu ya da dış depo), filtre anahtarı `source`.
   Dış skill taranan commit'ten (`ref`) kurulur, `main`den DEĞİL. Riskli
   (HIGH/CRITICAL) gizleme ve kurulum onayı yalnız panelde.
+- **MCP tanımı uzak sunucuda `headers` taşır** (`McpServerDef`, iki
+  types.ts; `claudeBackend` SDK'ya geçirir). Yoktu: `Authorization` isteyen
+  uzak MCP bağlanır ama yetki alamazdı. aitmpl MCP taslağı (`mcpDraft`) yer
+  tutucuları işaretler; `description/autoApprove/timeout/transportType`
+  alınmaz (oto-onay ajanın kendi ayarı, MCP dosyasından gelmez).
 - **aitmpl ajan/komut şablonları tek düzen** (`aitmpl.ts`: `aitmplList`,
   `refreshAitmplList`, `readItemFile`; uçlar `/api/aitmpl/:kind`). Yeni tek
   dosyalık tür = `AITMPL_KINDS`a ekle + taslak fonksiyonu.

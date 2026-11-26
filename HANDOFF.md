@@ -12,7 +12,9 @@ Kota iyileştirmesi (`githubTree.ts`, ayrıntı `server/CLAUDE.md`): kurulum
 ve tekrar taramalar artık GitHub kotası harcamıyor. Kurulum dosya sınırı
 40 → 150 (kullanıcı onayı). **skills.sh bağlandı** (Keşfet'te adla arama,
 "taranmadı" rozeti + kurulum onayı; ayrıntı `docs/AITMPL-ENTEGRASYON.md`).
-Sırada: 4. adım (MCP), kullanıcı onayı bekliyor.
+**4. adım (MCP) YAPILDI, commit EDİLMEDİ** (Ajan formu → Gelişmiş →
+"aitmpl’den MCP ekle"; `headers` desteği eklendi). Canlı MCP bağlantısı
+denenmedi (izin sınıflandırıcısı); ayrıntı `docs/AITMPL-ENTEGRASYON.md`.
 
 Aynı gün ek (`3. adım` commit'inde): depo taramasında kopya ayıklama, Skill
 paneli dar yuva düzeni (panel kayar, yapışkan arama, katlanır filtreler,

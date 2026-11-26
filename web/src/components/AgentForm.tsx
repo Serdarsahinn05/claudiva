@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { AgentDraft, AgentSnapshot } from '../types';
+import type { AgentDraft, AgentSnapshot, McpServerDef } from '../types';
+import { McpFromAitmpl } from './McpFromAitmpl';
 import { AitmplPicker } from './AitmplPicker';
 import { api } from '../api';
 import { Modal } from './Modal';
@@ -90,6 +91,28 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
   const [tplRisky, setTplRisky] = useState(false);
   const [notice, setNotice] = useState('');
   const sections = existing ? SECTIONS : [TEMPLATE_SECTION, ...SECTIONS];
+  const [mcpPicker, setMcpPicker] = useState(false);
+
+  /** aitmpl MCP'sini formun JSON kutusuna ekler; ad çakışırsa sonek. Ajan
+   *  ancak form kaydedilince değişir. */
+  function addMcp(name: string, def: McpServerDef) {
+    let cur: Record<string, unknown> = {};
+    if (mcpJson.trim()) {
+      try {
+        cur = JSON.parse(mcpJson) as Record<string, unknown>;
+      } catch {
+        setError(L.agentForm.mcpJsonBroken);
+        return;
+      }
+    }
+    let key = name;
+    for (let n = 2; key in cur; n++) key = `${name}-${n}`;
+    cur[key] = def;
+    setMcpJson(JSON.stringify(cur, null, 2));
+    setMcpPicker(false);
+    setError('');
+    setNotice(L.agentForm.mcpAdded(key));
+  }
 
   function applyDraft(d: AgentDraft) {
     setName(d.name);
@@ -279,6 +302,15 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
 
             {section === 'gelismis' && (
               <>
+                {mcpPicker ? (
+                  <McpFromAitmpl onAdd={addMcp} onClose={() => setMcpPicker(false)} />
+                ) : (
+                  <div className="sk-tools">
+                    <button type="button" onClick={() => setMcpPicker(true)}>
+                      {L.agentForm.mcpFromAitmpl}
+                    </button>
+                  </div>
+                )}
                 <label className="tb-field">
                   <span className="tb-field-label">
                     {L.agentForm.mcp}<span className="tb-hint">{L.agentForm.mcpHint}</span>

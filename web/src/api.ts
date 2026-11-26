@@ -4,6 +4,7 @@ import type {
   AitmplListView,
   CatalogSkill,
   CommandDraft,
+  McpDraft,
   AgentSnapshot,
   BrowserAction,
   BrowserState,
@@ -55,6 +56,8 @@ export const api = {
   refreshAitmplList: (kind: AitmplKind) => req<AitmplListView>('POST', `/api/aitmpl/${kind}/refresh`),
   aitmplAgentDraft: (id: string) =>
     req<AgentDraft>('GET', `/api/aitmpl/agents/draft?id=${encodeURIComponent(id)}`),
+  aitmplMcpDraft: (id: string) =>
+    req<McpDraft>('GET', `/api/aitmpl/mcps/draft?id=${encodeURIComponent(id)}`),
   aitmplCommandDraft: (id: string) =>
     req<CommandDraft>('GET', `/api/aitmpl/commands/draft?id=${encodeURIComponent(id)}`),
   updateAgent: (id: string, patch: unknown) => req<AgentSnapshot>('PUT', `/api/agents/${id}`, patch),

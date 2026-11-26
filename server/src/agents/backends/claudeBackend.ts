@@ -317,7 +317,13 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
       if (def.type === 'stdio' && def.command) {
         mcpServers[name] = { type: 'stdio', command: def.command, args: def.args, env: def.env };
       } else if ((def.type === 'http' || def.type === 'sse') && def.url) {
-        mcpServers[name] = { type: def.type, url: def.url } as McpServerConfig;
+        // Başlıklar (Authorization vb.) taşınmazsa yetki isteyen uzak sunucu
+        // bağlanır ama her çağrıda 401 döner.
+        mcpServers[name] = {
+          type: def.type,
+          url: def.url,
+          ...(def.headers ? { headers: def.headers } : {}),
+        } as McpServerConfig;
       }
     }
     // İşlem-içi sunucular (team/self/task delegasyon araçları) — AgentSession
