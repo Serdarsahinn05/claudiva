@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import type { McpDraft, McpServerDef } from '../types';
 import { L } from '../i18n';
@@ -25,6 +25,13 @@ export function McpFromAitmpl({
   const [draft, setDraft] = useState<McpDraft | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [ack, setAck] = useState(false);
+  /** Seçilen satır ekrandan kalkınca odak incelemenin ilk alanına (yoksa
+   *  başlığa) taşınır; yoksa body'ye düşüp pencereden kaçıyordu. */
+  const firstRef = useRef<HTMLInputElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (draft) (firstRef.current ?? headRef.current)?.focus();
+  }, [draft]);
 
   const fieldKey = (where: string, key: string) => `${where}:${key}`;
   /** Yer tutucu alanın başlangıç değeri: boş, ama başlıkta "Bearer " ön eki
@@ -81,7 +88,7 @@ export function McpFromAitmpl({
 
   return (
     <div className="mcp-add">
-      <div className="sk-top">
+      <div className="sk-top" ref={headRef} tabIndex={-1}>
         <span className="sk-name">{draft.name}</span>
         <span className={`chip ${draft.kind === 'local' ? 'chip-warn' : 'chip-pending'}`}>
           {draft.kind === 'local' ? L.agentForm.mcpLocal : L.agentForm.mcpRemote}
@@ -92,13 +99,14 @@ export function McpFromAitmpl({
 
       {draft.fields.length > 0 && (
         <div className="mcp-fields">
-          {draft.fields.map((f) => (
+          {draft.fields.map((f, i) => (
             <label key={fieldKey(f.where, f.key)} className="tb-field">
               <span className="tb-field-label">
                 {f.key}
                 <span className="tb-hint">{f.where === 'env' ? L.agentForm.mcpEnv : L.agentForm.mcpHeader}</span>
               </span>
               <input
+                ref={i === 0 ? firstRef : undefined}
                 type={f.placeholder ? 'password' : 'text'}
                 autoComplete="off"
                 value={values[fieldKey(f.where, f.key)] ?? ''}

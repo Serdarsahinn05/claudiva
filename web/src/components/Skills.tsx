@@ -49,11 +49,17 @@ function rel(ts: number): string {
 }
 
 type Tab = 'all' | SkillScope;
-const TAB_LABEL: Record<Tab, string> = { all: 'Hepsi', global: 'Genel', project: 'Proje', agent: 'Ajan' };
+const TAB_LABEL: Record<Tab, string> = { all: L.skills.all, ...L.skills.scopeTab };
 
 type Mode = 'installed' | 'catalog';
 
 const FILTERS_KEY = 'claudiva.skills.filters';
+/**
+ * Keşfet bir seferde bu kadar satır çizer. ~1030 satırın hepsi birden
+ * çizilirken aramayı temizlemek bir kareyi 245 ms donduruyordu (ölçüldü,
+ * denetim 2026-11-26); arama ve filtre değişince sayfa başa döner.
+ */
+const PAGE = 150;
 
 /**
  * aitmpl taramasında yüksek/kritik risk alan skill. Bunlar varsayılan GİZLİ
@@ -211,7 +217,7 @@ export function Skills({ agents }: Props) {
       </section>
 
       {error && <div className="error">{error}</div>}
-      {notice && <div className="sk-notice">{notice}</div>}
+      {notice && <div className="sk-notice" role="status">{notice}</div>}
 
       {mode === 'catalog' ? (
         <Discover
@@ -346,6 +352,7 @@ function Discover({
   const [remoteBusy, setRemoteBusy] = useState(false);
   const [remoteErr, setRemoteErr] = useState('');
   const [category, setCategory] = useState('');
+  const [limit, setLimit] = useState(PAGE);
   /** Filtre bölümü açık mı; tercih hatırlanır (yoksa kapalı başlar). */
   const [filtersOpen, setFiltersOpenState] = useState(() => localStorage.getItem(FILTERS_KEY) === '1');
   const setFiltersOpen = (v: boolean) => {
@@ -402,6 +409,9 @@ function Discover({
     const visible = showRisky ? matched : matched.filter((s) => !isRisky(s));
     return { shown: visible, riskyHidden: matched.length - visible.length };
   }, [view, q, repo, category, showRisky]);
+
+  // Arama ya da filtre değişince yeniden ilk sayfa.
+  useEffect(() => setLimit(PAGE), [q, repo, category, showRisky]);
 
   /** Seçilebilir = henüz kurulu olmayan. Kurulu olanı işaretletmek kesin hata üretirdi. */
   const selectable = useMemo(() => shown.filter((s) => s.installedScopes.length === 0), [shown]);
@@ -664,13 +674,13 @@ function Discover({
             </button>
           </div>
         )}
-        {remoteErr && <div className="error">{remoteErr}</div>}
+        {remoteErr && <div className="error" role="alert">{remoteErr}</div>}
         {remote &&
           (remote.skills.length === 0 ? (
-            <span className="sk-cat-when">{L.skills.remoteNone(remote.q)}</span>
+            <span className="sk-cat-when" role="status">{L.skills.remoteNone(remote.q)}</span>
           ) : (
             <>
-              <span className="sk-cat-when">{L.skills.remoteFound(remote.skills.length, remote.q)}</span>
+              <span className="sk-cat-when" role="status">{L.skills.remoteFound(remote.skills.length, remote.q)}</span>
               <div className="sk-list">{remote.skills.map(renderRow)}</div>
             </>
           ))}
@@ -692,16 +702,16 @@ function Discover({
             value={link}
             onChange={(e) => setLink(e.target.value)}
             placeholder={L.skills.linkPh}
-            aria-label={L.skills.linkPh}
+            aria-label={L.skills.linkAria}
           />
           <button type="submit" disabled={linkBusy || !link.trim()}>
             {linkBusy ? L.skills.refreshing : L.skills.linkScan}
           </button>
         </form>
-        {linkErr && <div className="error">{linkErr}</div>}
+        {linkErr && <div className="error" role="alert">{linkErr}</div>}
         {linkSkills.length > 0 && (
           <>
-            <span className="sk-cat-when">{L.skills.linkFound(linkSkills.length, linkSkills[0].repo)}</span>
+            <span className="sk-cat-when" role="status">{L.skills.linkFound(linkSkills.length, linkSkills[0].repo)}</span>
             <div className="sk-list">{linkSkills.map(renderRow)}</div>
           </>
         )}
@@ -745,9 +755,15 @@ function Discover({
           </div>
 
           <div className="sk-list">
-            {shown.map(renderRow)}
+            {shown.slice(0, limit).map(renderRow)}
           </div>
         </>
+      )}
+
+      {shown.length > limit && (
+        <div className="sk-more">
+          <button onClick={() => setLimit((n) => n + PAGE)}>{L.skills.showMore(shown.length - limit)}</button>
+        </div>
       )}
 
       {/* Toplu eylem çubuğu yalnızca seçim varken var: boşken yer kaplaması

@@ -1010,6 +1010,7 @@ export const en: Dict = {
 
   skills: {
     scope: { global: 'global', project: 'project', agent: 'agent' },
+    scopeTab: { global: 'Global', project: 'Project', agent: 'Agent' },
     scopeNote: {
       global: 'Applies to all your projects (~/.claude/skills).',
       project: 'Applies to this repository only (.claude/skills).',
@@ -1093,6 +1094,8 @@ export const en: Dict = {
     installedChip: (scopes) => `installed · ${scopes}`,
     linkNote: 'Can’t find the skill here? Paste its GitHub link (or owner/repo): the repository is scanned and its skills are listed below. It is not added to your sources.',
     linkPh: 'github.com/owner/repo',
+    linkAria: 'GitHub link of the skill repository to scan',
+    showMore: (n) => `Show more (${n} left)`,
     linkScan: 'Scan repository',
     remoteBtn: (q) => `Search skills.sh for “${q}”`,
     remoteHint: 'If a skill you know by name is not here, type it above and search skills.sh (Enter works too). The search term is sent to skills.sh.',

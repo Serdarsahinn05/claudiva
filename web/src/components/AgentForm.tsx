@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AgentDraft, AgentSnapshot, McpServerDef } from '../types';
 import { McpFromAitmpl } from './McpFromAitmpl';
 import { AitmplPicker } from './AitmplPicker';
@@ -92,6 +92,15 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
   const [notice, setNotice] = useState('');
   const sections = existing ? SECTIONS : [TEMPLATE_SECTION, ...SECTIONS];
   const [mcpPicker, setMcpPicker] = useState(false);
+  /** Seçimden sonra odak nereye: kalkan satırın yerine görünür bir alana. */
+  const [focusTo, setFocusTo] = useState<'name' | 'mcp' | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const mcpRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!focusTo) return;
+    (focusTo === 'name' ? nameRef : mcpRef).current?.focus({ preventScroll: false });
+    setFocusTo(null);
+  }, [focusTo, section, mcpPicker]);
 
   /** aitmpl MCP'sini formun JSON kutusuna ekler; ad çakışırsa sonek. Ajan
    *  ancak form kaydedilince değişir. */
@@ -112,6 +121,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
     setMcpPicker(false);
     setError('');
     setNotice(L.agentForm.mcpAdded(key));
+    setFocusTo('mcp');
   }
 
   function applyDraft(d: AgentDraft) {
@@ -124,6 +134,9 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
     setTplRisky(d.scan?.severity === 'HIGH' || d.scan?.severity === 'CRITICAL');
     setNotice(L.agentForm.tplFilled(d.name));
     setSection('kimlik');
+    // Tıklanan şablon satırı ekrandan kalkıyor; odak body'ye düşüp pencerenin
+    // dışına kaçıyordu (denetim 2026-11-26). Doldurulan ilk alana taşınır.
+    setFocusTo('name');
   }
 
   // Düzenlemede kişilik metni snapshot'ta gelmez; boş bırakmak "değiştirme" demek.
@@ -192,7 +205,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
               <>
                 <label className="tb-field">
                   <span className="tb-field-label">{L.agentForm.name}</span>
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder={L.agentForm.namePh} />
+                  <input ref={nameRef} value={name} onChange={(e) => setName(e.target.value)} placeholder={L.agentForm.namePh} />
                 </label>
                 {/* Takım serbest metindir ve datalist bir KISITLAMA DEĞİL öneri:
                     yeni bir ad yazmak yeni takımı var eder (bkz. teams.ts). */}
@@ -318,6 +331,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
                   <textarea
                     rows={8}
                     value={mcpJson}
+                    ref={mcpRef}
                     onChange={(e) => setMcpJson(e.target.value)}
                     placeholder={'{\n  "ornekServer": { "type": "stdio", "command": "npx", "args": ["-y", "paket-adi"] }\n}'}
                   />
@@ -335,7 +349,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
         </div>
 
         {notice && (
-          <div className="sk-notice">
+          <div className="sk-notice" role="status">
             {notice}
             {template && <span className="muted"> · {L.agentForm.tplFrom(template)}</span>}
           </div>

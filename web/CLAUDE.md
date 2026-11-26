@@ -101,6 +101,13 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   **Sütuna dönen satırda `align-items: stretch` ŞART:** `flex-start` iken
   gövde metnin tek satır boyuna (900px) uzayıp paneli yatay taşırıyordu
   (kullanıcı ekran görüntüsü; eski iç kaydırma bunu gizliyordu).
+- **Keşfet ilk 150 satırı çizer** (`PAGE`, "Daha fazla göster"; arama/filtre
+  değişince başa döner). Hepsi (~1030) çizilirken aramayı temizlemek bir kareyi
+  245 ms donduruyordu, şimdi ~45 ms (ölçüldü, denetim 2026-11-26).
+- **Seçimden sonra odak taşınır** (denetim P1): tıklanan şablon/MCP satırı
+  ekrandan kalkınca odak `body`'ye düşüp pencereden kaçıyordu. Şablon → Ad
+  alanı, MCP → ilk alan (yoksa başlık), MCP eklenince → JSON kutusu. Sonuç
+  sayıları/bildirimler `role="status"`, hatalar `role="alert"`.
 - Keşfet'te "GitHub linkiyle bul" kutusu (`.sk-link`): bulunanlar katalogla
   AYNI satır (`renderRow`) ve aynı seçim/toplu kurulum; kaynaklara eklenmez.
   Kurulu sekmesinde de buna yönlendiren not var. "Elle kur" depo kutusu tam

@@ -1021,6 +1021,8 @@ export const tr = {
 
   skills: {
     scope: { global: 'genel', project: 'proje', agent: 'ajan' } as Record<string, string>,
+    /** Kurulu sekmesinin süzgeçleri (cümle içi `scope`tan ayrı: büyük harfle). */
+    scopeTab: { global: 'Genel', project: 'Proje', agent: 'Ajan' },
     scopeNote: {
       global: 'Bütün projelerinde geçerli (~/.claude/skills).',
       project: 'Yalnız bu depoda geçerli (.claude/skills).',
@@ -1106,6 +1108,8 @@ export const tr = {
     installedChip: (scopes: string) => `kurulu · ${scopes}`,
     linkNote: 'Aradığın skill burada yok mu? GitHub linkini (ya da sahip/depo) yapıştır: depo taranır, içindeki skill’ler aşağıda listelenir. Kaynaklara eklenmez.',
     linkPh: 'github.com/sahip/depo',
+    linkAria: 'Taranacak skill deposunun GitHub linki',
+    showMore: (n: number) => `Daha fazla göster (${n} tane daha)`,
     linkScan: 'Depoyu tara',
     remoteBtn: (q: string) => `“${q}” için skills.sh’te ara`,
     remoteHint: 'Adını bildiğin bir skill burada yoksa yukarıya yaz ve skills.sh’te ara (Enter da olur). Arama kelimesi skills.sh’e gider.',
