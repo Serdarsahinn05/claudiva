@@ -55,6 +55,13 @@ npm install -g claudiva
 To update: `npm install -g claudiva@latest`. With npx use
 `npx claudiva@latest`, otherwise npx may run an older cached version.
 
+**As a desktop app (Windows)**: download `Claudiva_<version>_x64-setup.exe`
+from [Releases](https://github.com/Serdarsahinn05/claudiva/releases) and run
+it. It installs for your user only, no admin rights. The app opens with a
+project picker; the panel is the same one as above, in its own window. It
+still needs Node.js 20+ and a signed-in Claude Code. The installer is not
+code-signed yet, so Windows SmartScreen may warn: *More info → Run anyway*.
+
 <details>
 <summary><b>Install from source</b> (for development)</summary>
 

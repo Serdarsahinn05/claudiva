@@ -58,6 +58,13 @@ npm install -g claudiva
 Güncelleme: `npm install -g claudiva@latest`. npx kullanıyorsanız
 `npx claudiva@latest` yazın, yoksa npx önbellekteki eski sürümü çalıştırabilir.
 
+**Masaüstü uygulaması olarak (Windows)**: [Releases](https://github.com/Serdarsahinn05/claudiva/releases)
+sayfasından `Claudiva_<sürüm>_x64-setup.exe` dosyasını indirip çalıştırın.
+Yalnız sizin kullanıcınıza kurulur, yönetici izni istemez. Uygulama bir proje
+seçme ekranıyla açılır; panel yukarıdakinin aynısıdır, kendi penceresinde.
+Node.js 20+ ve oturum açılmış Claude Code yine gerekir. Kurulum dosyası henüz
+kod imzalı değil, Windows SmartScreen uyarı verebilir: *Ek bilgi → Yine de çalıştır*.
+
 <details>
 <summary><b>Kaynaktan kurulum</b> (geliştirme için)</summary>
 
