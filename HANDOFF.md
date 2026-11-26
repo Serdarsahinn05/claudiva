@@ -1,6 +1,15 @@
 # Devir — Claudiva
 
-# ▶ Masaüstü (Tauri) BAŞLADI, dal `feat/desktop` (2026-11-26), COMMIT YOK
+# ▶ 0.6.0 YAYINDA (2026-11-26): masaüstü uygulaması + logo
+
+`main`e birleştirildi ve push edildi, `v0.6.0` etiketi (notlar etiket
+mesajında) ve GitHub Release: https://github.com/Serdarsahinn05/claudiva/releases/tag/v0.6.0
+(`Claudiva_0.6.0_x64-setup.exe`). `gh` kurulu ve oturum açık
+(`C:\Program Files\GitHub CLI\gh.exe`; eski oturumlarda PATH'te olmayabilir).
+`npm publish` 0.6.0 kullanıcıda. **Sıradaki: GitHub Pages** (kullanıcı
+"sonra" dedi; başlamadan sor).
+
+# Masaüstü (Tauri), dal `feat/desktop` (2026-11-26)
 
 Kullanıcı kararları (yeniden sorma): aynı depo, `desktop/` klasörü; sunucu
 **sistemdeki Node** ile; **açılış ekranı** (klasör seç + son projeler).
