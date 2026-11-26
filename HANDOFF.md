@@ -2,12 +2,20 @@
 
 # ▶ aitmpl.com entegrasyonu (2026-11-26)
 
-**1. adım (skill'ler → Keşfet) commit `8040ab9`. 2. adım (Yeni ajan →
-Şablon) YAPILDI, commit EDİLMEDİ.** Ayrıntı ve ölçümler:
+**1. adım (skill'ler → Keşfet) `8040ab9`, 2. adım (Yeni ajan → Şablon)
+`5b69d80`, 3. adım (Promptlar → aitmpl’den ekle) YAPILDI, commit EDİLMEDİ.** Ayrıntı ve ölçümler:
 **`docs/AITMPL-ENTEGRASYON.md`**. Kararlar (yeniden sorma): User-Agent
 `claudiva/<sürüm> (+…/claudiva/issues)`, sıra 1 → 2 → 3 → 4. aitmpl.com
-Türkiye'den engelli; GitHub kopyasına düşülüyor. Sıradaki: 3. adım
-(komutlar → Promptlar). Push edilmedi.
+Türkiye'den engelli; GitHub kopyasına düşülüyor. Push edilmedi.
+
+Aynı gün ek (commit EDİLMEDİ): depo taramasında kopya ayıklama, Skill
+paneli dar yuva düzeni (panel kayar, yapışkan arama, katlanır filtreler,
+Kurulu sekmesinde yatay taşma düzeltildi), Keşfet'te "GitHub linkiyle bul"
+(kaynak olarak kaydetmez; graphify bu yoldan bulunup kuruldu).
+**Kullanıcı kararı:** ünlü depolar yerleşik kaynak YAPILMAYACAK (bakım +
+ileride Rust uygulaması). **skills.sh incelendi, çalışıyor** (bulgular ve
+önerilen bağlama `docs/AITMPL-ENTEGRASYON.md` sonu); bağlamak için kullanıcı
+onayı bekleniyor. 4. adım (MCP) da bekliyor.
 
 
 # ▶ 2026-11-25 akşamı: açık/koyu mod + Cam stili EKLENDİ (commit BEKLİYOR)

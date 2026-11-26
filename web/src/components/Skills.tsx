@@ -53,6 +53,8 @@ const TAB_LABEL: Record<Tab, string> = { all: 'Hepsi', global: 'Genel', project:
 
 type Mode = 'installed' | 'catalog';
 
+const FILTERS_KEY = 'claudiva.skills.filters';
+
 /**
  * aitmpl taramasında yüksek/kritik risk alan skill. Bunlar varsayılan GİZLİ
  * ve kurulumda ayrı onay ister (bkz. docs/AITMPL-ENTEGRASYON.md). Tarama
@@ -218,7 +220,7 @@ export function Skills({ agents }: Props) {
         />
       ) : (
         <>
-          <div className="sk-tools">
+          <div className="sk-tools sk-sticky">
             <div className="tb-filters">
               {(Object.keys(TAB_LABEL) as Tab[]).map((t) => (
                 <button key={t} className={`tb-filter${tab === t ? ' sel' : ''}`} onClick={() => setTab(t)}>
@@ -237,6 +239,7 @@ export function Skills({ agents }: Props) {
           </div>
 
           {tab !== 'all' && <p className="sk-scope-note">{SCOPE_NOTE[tab]}</p>}
+          <p className="sk-scope-note">{L.skills.manualHint}</p>
 
           {shown.length === 0 ? (
             <div className="empty">
@@ -329,7 +332,18 @@ function Discover({
   const [results, setResults] = useState<BulkResult[] | null>(null);
   const [srcOpen, setSrcOpen] = useState(false);
   const [showRisky, setShowRisky] = useState(false);
+  /** GitHub linkiyle bulunanlar: kaynak olarak KAYDEDİLMEZ, tek seferlik. */
+  const [link, setLink] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkErr, setLinkErr] = useState('');
+  const [linkSkills, setLinkSkills] = useState<CatalogSkill[]>([]);
   const [category, setCategory] = useState('');
+  /** Filtre bölümü açık mı; tercih hatırlanır (yoksa kapalı başlar). */
+  const [filtersOpen, setFiltersOpenState] = useState(() => localStorage.getItem(FILTERS_KEY) === '1');
+  const setFiltersOpen = (v: boolean) => {
+    setFiltersOpenState(v);
+    localStorage.setItem(FILTERS_KEY, v ? '1' : '0');
+  };
 
   const load = useCallback(async () => {
     try {
@@ -404,10 +418,28 @@ function Discover({
     });
   }
 
-  const chosen: CatalogSkill[] = useMemo(
-    () => (view?.skills ?? []).filter((s) => sel.has(s.id)),
-    [view, sel],
-  );
+  const chosen: CatalogSkill[] = useMemo(() => {
+    const seen = new Set<string>();
+    return [...linkSkills, ...(view?.skills ?? [])].filter((s) => {
+      if (!sel.has(s.id) || seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
+  }, [view, sel, linkSkills]);
+
+  async function scanLink() {
+    if (!link.trim()) return;
+    setLinkBusy(true);
+    setLinkErr('');
+    try {
+      setLinkSkills((await api.scanSkillLink(link.trim())).skills);
+    } catch (e) {
+      setLinkSkills([]);
+      setLinkErr((e as Error).message);
+    } finally {
+      setLinkBusy(false);
+    }
+  }
 
   async function install(scope: SkillScope, agentId?: string) {
     setScopeOpen(false);
@@ -426,12 +458,66 @@ function Discover({
       setSel(new Set());
       onInstalled();
       await load();
+      // Linkten kurulanların "kurulu" rozeti de tazelensin.
+      if (linkSkills.length) setLinkSkills((await api.scanSkillLink(link.trim())).skills);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setRefreshing(false);
     }
   }
+
+  const renderRow = (s: CatalogSkill) => {
+    const installed = s.installedScopes.length > 0;
+    return (
+      <article key={s.id} className={`sk-item${installed ? ' off' : ''}`}>
+        <label className="check sk-check-row">
+          <input
+            type="checkbox"
+            checked={sel.has(s.id)}
+            onChange={() => toggleOne(s.id)}
+            disabled={installed}
+            aria-label={L.skills.pick(s.name)}
+          />
+        </label>
+        <div className="sk-main">
+          <div className="sk-top">
+            <span className="sk-name">{s.name}</span>
+            <span className="badge sk-repo">{s.category ? `${s.source} · ${s.category}` : s.repo}</span>
+            {s.scan && (
+              <span className={`chip ${SCAN_CHIP[s.scan.severity]}`} title={L.skills.scanTitle(s.scan.score)}>
+                {L.skills.scanLabel[s.scan.severity]}
+              </span>
+            )}
+            {isProprietary(s) && <span className="chip chip-warn">{L.skills.proprietary}</span>}
+            {installed && (
+              <span className="chip chip-done">
+                {L.skills.installedChip(s.installedScopes.map((x) => SCOPE_LABEL[x]).join(', '))}
+              </span>
+            )}
+          </div>
+          {s.description && (
+            <p className="sk-desc" title={s.description}>
+              {s.description}
+            </p>
+          )}
+          <div className="sk-meta">
+            {s.downloads !== undefined && <span>{L.skills.downloads(s.downloads)}</span>}
+            {s.license && !isProprietary(s) && <span>{s.license}</span>}
+            {s.ref && <span title={s.ref}>{L.skills.pinned} {s.ref.slice(0, 7)}</span>}
+            {s.page && (
+              <a href={s.page} target="_blank" rel="noreferrer noopener">
+                {L.skills.openPage}
+              </a>
+            )}
+            <span className="sk-dir" title={`${s.repo}/${s.skillPath}`}>
+              {s.source ? `${s.repo}/${s.skillPath}` : s.skillPath}
+            </span>
+          </div>
+        </div>
+      </article>
+    );
+  };
 
   if (!view) return <div className="muted center">{error || L.skills.catalogLoading}</div>;
 
@@ -440,7 +526,9 @@ function Discover({
 
   return (
     <>
-      <div className="sk-tools">
+      {/* Arama çubuğu panel kayarken üstte kalır: liste uzun, aramak için
+          başa dönmek gerekmesin. */}
+      <div className="sk-tools sk-sticky">
         <input
           className="mem-search"
           placeholder={L.skills.catalogSearch}
@@ -454,6 +542,27 @@ function Discover({
         <button onClick={() => setSrcOpen(true)}>{L.extra.sources}</button>
       </div>
 
+      {/* Filtreler katlanır: dar yan yuvada kaynak çipleri, kategori ve risk
+          anahtarı listenin yerini yiyordu (kullanıcı ekran görüntüsü,
+          2026-11-26). Kapalıyken özet satırı seçili durumu söyler. */}
+      <details
+        className="sk-filters"
+        open={filtersOpen}
+        onToggle={(e) => setFiltersOpen((e.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary>
+          <span className="sk-filters-label">{L.skills.filters}</span>
+          <span className="sk-cat-when">
+            {[
+              repo ? (view.sources.find((s) => s.repo === repo)?.label ?? repo) : L.skills.all,
+              category || null,
+              L.skills.shownN(shown.length),
+              riskyHidden > 0 ? L.skills.riskyHidden(riskyHidden) : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </summary>
       <div className="sk-cat-bar">
         <span className="sk-cat-when">
           {never
@@ -504,9 +613,40 @@ function Discover({
               <span>{L.skills.showRisky}</span>
             </label>
           )}
-          {riskyHidden > 0 && <span className="sk-cat-when">{L.skills.riskyHidden(riskyHidden)}</span>}
         </div>
       )}
+      </details>
+
+      {/* Katalogda olmayan skill: GitHub linkiyle tek seferlik tarama.
+          Kaynak listesine eklenmez (ayrı filtre çipi istenmedi). */}
+      <div className="sk-link">
+        <p className="sk-dialog-note">{L.skills.linkNote}</p>
+        <form
+          className="sk-tools"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void scanLink();
+          }}
+        >
+          <input
+            className="mem-search"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder={L.skills.linkPh}
+            aria-label={L.skills.linkPh}
+          />
+          <button type="submit" disabled={linkBusy || !link.trim()}>
+            {linkBusy ? L.skills.refreshing : L.skills.linkScan}
+          </button>
+        </form>
+        {linkErr && <div className="error">{linkErr}</div>}
+        {linkSkills.length > 0 && (
+          <>
+            <span className="sk-cat-when">{L.skills.linkFound(linkSkills.length, linkSkills[0].repo)}</span>
+            <div className="sk-list">{linkSkills.map(renderRow)}</div>
+          </>
+        )}
+      </div>
 
       {/* Kaynak hataları gizlenmez: eksik bir katalog "hiç yok" gibi görünürdü. */}
       {view.sources
@@ -546,53 +686,7 @@ function Discover({
           </div>
 
           <div className="sk-list">
-            {shown.map((s) => {
-              const installed = s.installedScopes.length > 0;
-              return (
-                <article key={s.id} className={`sk-item${installed ? ' off' : ''}`}>
-                  <label className="check sk-check-row">
-                    <input
-                      type="checkbox"
-                      checked={sel.has(s.id)}
-                      onChange={() => toggleOne(s.id)}
-                      disabled={installed}
-                      aria-label={L.skills.pick(s.name)}
-                    />
-                  </label>
-                  <div className="sk-main">
-                    <div className="sk-top">
-                      <span className="sk-name">{s.name}</span>
-                      <span className="badge sk-repo">{s.category ? `${s.source} · ${s.category}` : s.repo}</span>
-                      {s.scan && (
-                        <span className={`chip ${SCAN_CHIP[s.scan.severity]}`} title={L.skills.scanTitle(s.scan.score)}>
-                          {L.skills.scanLabel[s.scan.severity]}
-                        </span>
-                      )}
-                      {isProprietary(s) && <span className="chip chip-warn">{L.skills.proprietary}</span>}
-                      {installed && (
-                        <span className="chip chip-done">
-                          kurulu · {s.installedScopes.map((x) => SCOPE_LABEL[x]).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                    {s.description && <p className="sk-desc">{s.description}</p>}
-                    <div className="sk-meta">
-                      {s.downloads !== undefined && <span>{L.skills.downloads(s.downloads)}</span>}
-                      {s.license && !isProprietary(s) && <span>{s.license}</span>}
-                      {s.ref && <span title={s.ref}>{L.skills.pinned} {s.ref.slice(0, 7)}</span>}
-                      {s.page && (
-                        <a href={s.page} target="_blank" rel="noreferrer noopener">
-                          {L.skills.openPage}
-                        </a>
-                      )}
-                      <span className="sk-dir" title={`${s.repo}/${s.skillPath}`}>
-                        {s.source ? `${s.repo}/${s.skillPath}` : s.skillPath}
-                      </span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
+            {shown.map(renderRow)}
           </div>
         </>
       )}
@@ -876,7 +970,17 @@ function InstallDialog({
   const [error, setError] = useState('');
 
   async function submit() {
-    if (!repo.trim() || !skillPath.trim()) {
+    // Depo kutusuna tam GitHub linki yapıştırılabilir:
+    // github.com/sahip/depo/tree/<dal>/<yol> → depo + yol.
+    let r = repo.trim().replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '').replace(/[?#].*$/, '');
+    let p = skillPath.trim();
+    const parts = r.split('/').filter(Boolean);
+    if (parts.length > 2) {
+      r = `${parts[0]}/${parts[1]}`;
+      if (!p) p = (['tree', 'blob'].includes(parts[2]) ? parts.slice(4) : parts.slice(2)).join('/');
+    }
+    r = r.replace(/\.git$/i, '');
+    if (!r || !p) {
       setError(L.skills.needRepo);
       return;
     }
@@ -884,8 +988,8 @@ function InstallDialog({
     setError('');
     try {
       const s = await api.installSkill({
-        repo: repo.trim(),
-        skillPath: skillPath.trim(),
+        repo: r,
+        skillPath: p,
         scope,
         agentId: scope === 'agent' ? agentId : undefined,
       });

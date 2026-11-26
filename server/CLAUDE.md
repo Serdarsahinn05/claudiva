@@ -266,12 +266,28 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   bunun sessiz varsayılanı olamaz.
 - Yerleşik kaynaklar **silinmez, gizlenir** (`hidden` listesi) — kod
   değişmeden geri gelebilsinler.
+- **Depo taramasında kopyalar ayıklanır** (`dedupeCopies`): bir depo aynı
+  skill'i araç başına klasörlerde tutabiliyor (impeccable 27 yol). Gruplama
+  dizin adıyla, çünkü kurulum hedefi de dizin adı; test/örnek klasöründeki
+  fikstür atılır. Yerleşik depoların sayısı değişmedi (ölçüldü).
+- **GitHub linkiyle bulma** (`POST /api/skills/scan-link`, `scanLink` +
+  `parseRepoLink`): depo KAYNAK OLARAK KAYDEDİLMEZ (kullanıcı kararı: her
+  depoya ayrı filtre çipi yok, yerleşik liste yok). `github.com/…` (şemasız
+  da), `/tree/<dal>/<yol>` ve `sahip/depo` kabul edilir; dal yok sayılır.
+- **Kurulumda `SKILL.md` İLK iner** ve `skill.md` → `SKILL.md` yeniden
+  adlandırılır. graphify'nin `skill.md`si 84 girdilik Python paketinin
+  içinde; `MAX_ASSETS` (40) alfabetik sırayla dolup asıl dosya hiç inmiyordu
+  ("Kurulum sonrası SKILL.md okunamadı", ölçüldü). Küçük harf Windows'ta
+  sorun değil, Linux/macOS'ta skill yüklenmez.
 - **aitmpl kaynağı (`aitmpl.ts`) GitHub ağacı taramaz, katalog JSON'u okur.**
   aitmpl.com Türkiye'den DNS düzeyinde engelli (ölçüldü 2026-11-26); aynı
   dosya GitHub'da, kod ikisini sırayla dener. aitmpl satırında `repo` KURULUM
   deposudur (şablon deposu ya da dış depo), filtre anahtarı `source`.
   Dış skill taranan commit'ten (`ref`) kurulur, `main`den DEĞİL. Riskli
   (HIGH/CRITICAL) gizleme ve kurulum onayı yalnız panelde.
+- **aitmpl ajan/komut şablonları tek düzen** (`aitmpl.ts`: `aitmplList`,
+  `refreshAitmplList`, `readItemFile`; uçlar `/api/aitmpl/:kind`). Yeni tek
+  dosyalık tür = `AITMPL_KINDS`a ekle + taslak fonksiyonu.
 - **aitmpl ajan şablonu diske YAZILMAZ, taslak döner** (`agentDraft`): panel
   formu doldurur, oluşturma normal `POST /agents` yolundan geçer (`template`
   alanıyla). Taslak ucu yalnız ÖNBELLEKTEKİ kimliği kabul eder; dosya yolu

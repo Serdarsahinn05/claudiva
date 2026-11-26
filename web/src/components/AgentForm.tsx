@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { AgentDraft, AgentSnapshot } from '../types';
-import { AgentTemplates } from './AgentTemplates';
+import { AitmplPicker } from './AitmplPicker';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { L } from '../i18n';
@@ -157,7 +157,13 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
           </nav>
 
           <div className="modal-pane">
-            {section === 'sablon' && !existing && <AgentTemplates onPick={applyDraft} />}
+            {section === 'sablon' && !existing && (
+              <AitmplPicker
+                kind="agents"
+                note={L.agentForm.tplNote}
+                onPick={async (id) => applyDraft(await api.aitmplAgentDraft(id))}
+              />
+            )}
 
             {section === 'kimlik' && (
               <>

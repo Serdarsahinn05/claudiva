@@ -217,6 +217,49 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R
   return out;
 }
 
+/** Yol parçası başka bir araca ya da teste/örneğe ait mi (kopya seçiminde ceza). */
+const NOISE_SEG = /^(tests?|examples?|fixtures?|workspaces?|demo|samples?)$/i;
+const OTHER_TOOL = /cursor|gemini|codex|opencode|kiro|trae|windsurf|copilot|openclaw|devin|qoder|grok/i;
+
+/**
+ * Aynı skill'in araç başına kopyalarını tek satıra indirir.
+ *
+ * Ölçüldü (2026-11-26): `pbakaus/impeccable` tek skill'i 27 yolda tutuyor
+ * (`.claude/skills/…`, `.cursor/skills/…`, `tests/oracle/…`),
+ * `DietrichGebert/ponytail` 6 skill'i 12 yolda (`.openclaw/skills` + `skills`).
+ * Hepsi panelde ayrı satır oluyordu.
+ *
+ * Gruplama DİZİN ADIYLA: kurulum hedefi zaten yalnız dizin adı
+ * (`installFromGitHub`), yani aynı adlı iki satır birlikte kurulamaz; ikisini
+ * göstermek seçimi yanıltmaktan başka işe yaramaz. Ölçülen üç yerleşik depoda
+ * (wshobson 185, anthropics 20, superpowers 15) aynı adlı iki ayrı skill yok.
+ * Gruptan "asıl" yol seçilir: nokta klasörü, test/örnek ve başka araç adı
+ * taşıyan parça cezalı; eşitlikte kısa yol, sonra alfabetik.
+ */
+export function dedupeCopies(skillFiles: string[]): string[] {
+  const score = (p: string) => {
+    const segs = p.split('/').slice(0, -1);
+    let s = segs.length;
+    for (const seg of segs) {
+      if (NOISE_SEG.test(seg)) s += 100;
+      else if (seg.startsWith('.')) s += seg === '.claude' ? 5 : 20;
+      else if (OTHER_TOOL.test(seg)) s += 10;
+    }
+    return s;
+  };
+  const best = new Map<string, string>();
+  for (const p of skillFiles) {
+    const folder = p.replace(/(^|\/)SKILL\.md$/i, '').split('/').filter(Boolean).pop() ?? p;
+    const cur = best.get(folder);
+    if (!cur || score(p) < score(cur) || (score(p) === score(cur) && p < cur)) best.set(folder, p);
+  }
+  // Yalnız test/örnek klasöründe duran "skill" bir fikstürdür (impeccable'da
+  // `tests/oracle/…/audit` ölçüldü). Depo yalnız bunlardan oluşuyorsa kalsın.
+  const all = [...best.values()];
+  const real = all.filter((p) => !p.split('/').some((seg) => NOISE_SEG.test(seg)));
+  return real.length ? real : all;
+}
+
 async function scanRepo(src: CatalogSource): Promise<{ skills: CatalogSkill[]; error?: string }> {
   let tree: TreeResponse;
   try {
@@ -227,10 +270,9 @@ async function scanRepo(src: CatalogSource): Promise<{ skills: CatalogSkill[]; e
     return { skills: [], error: (e as Error).message };
   }
 
-  const paths = (tree.tree ?? [])
-    .filter((n) => n.type === 'blob' && /(^|\/)SKILL\.md$/i.test(n.path))
-    .map((n) => n.path)
-    .slice(0, MAX_PER_REPO);
+  const paths = dedupeCopies(
+    (tree.tree ?? []).filter((n) => n.type === 'blob' && /(^|\/)SKILL\.md$/i.test(n.path)).map((n) => n.path),
+  ).slice(0, MAX_PER_REPO);
 
   const skills = await mapLimit(paths, CONCURRENCY, async (p) => {
     const dir = p.replace(/(^|\/)SKILL\.md$/i, '');
@@ -346,13 +388,52 @@ export interface CatalogView {
  * yanıltırdı: iki ayrı skill aynı `name`i taşıyabilir, dizin adı ise kurulum
  * kökünde zaten tekil.
  */
-export function catalogView(installed: SkillInfo[] = listSkills()): CatalogView {
-  const cache = readCache();
+function installedIndex(installed: SkillInfo[]): Map<string, SkillScope[]> {
   const byFolder = new Map<string, SkillScope[]>();
   for (const s of installed) {
     const folder = path.basename(s.dir);
     byFolder.set(folder, [...(byFolder.get(folder) ?? []), s.scope]);
   }
+  return byFolder;
+}
+
+/**
+ * "https://github.com/sahip/depo[/tree/<dal>/<yol>]" ya da "sahip/depo[/yol]".
+ * Dal yok sayılır (tarama HEAD üzerinden); yol varsa sonuçlar ona süzülür.
+ */
+export function parseRepoLink(input: string): { repo: string; sub: string } {
+  const raw = input
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')
+    .replace(/[?#].*$/, '')
+    .replace(/\/+$/, '');
+  const parts = raw.split('/').filter(Boolean);
+  if (parts.length < 2) throw new Error(S.badRepoLink);
+  const repo = `${parts[0]}/${parts[1].replace(/\.git$/i, '')}`;
+  assertRepo(repo);
+  const rest = ['tree', 'blob'].includes(parts[2] ?? '') ? parts.slice(4) : parts.slice(2);
+  const sub = rest.join('/').replace(/(^|\/)SKILL\.md$/i, '');
+  if (sub.includes('..')) throw new Error(S.badRepoLink);
+  return { repo, sub };
+}
+
+/**
+ * Kaynak olarak KAYDETMEDEN bir depoyu tarar (Keşfet → "GitHub linkiyle
+ * bul"). Kullanıcı kararı (2026-11-26): ünlü depolar yerleşik kaynak
+ * yapılmıyor ve her depo için ayrı filtre çipi istenmiyor; link tek seferlik.
+ */
+export async function scanLink(input: string): Promise<CatalogView['skills']> {
+  const { repo, sub } = parseRepoLink(input);
+  const r = await scanRepo({ repo, label: repo, builtin: false });
+  if (r.skills.length === 0) throw new Error(r.error ?? S.noSkillsInRepo(repo));
+  const under = sub ? r.skills.filter((s) => s.skillPath === sub || s.skillPath.startsWith(`${sub}/`)) : [];
+  const idx = installedIndex(listSkills());
+  return (under.length ? under : r.skills).map((s) => ({ ...s, installedScopes: idx.get(s.folder) ?? [] }));
+}
+
+export function catalogView(installed: SkillInfo[] = listSkills()): CatalogView {
+  const cache = readCache();
+  const byFolder = installedIndex(installed);
 
   return {
     fetchedAt: cache?.fetchedAt ?? null,

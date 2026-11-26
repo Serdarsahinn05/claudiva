@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AgentSnapshot, PromptTemplate } from '../types';
+import type { AgentSnapshot, CommandDraft, PromptTemplate } from '../types';
 import { api } from '../api';
 import { ROLE_LABEL } from '../format';
 import { Modal } from './Modal';
 import { L } from '../i18n';
+import { AitmplPicker } from './AitmplPicker';
 
 interface Props {
   prompts: PromptTemplate[];
@@ -21,9 +22,13 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
   const [target, setTarget] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  /** aitmpl'den gelen taslak: kaynak etiketi ve uyarılar için. */
+  const [draft, setDraft] = useState<CommandDraft | null>(null);
 
   function openEditor(p?: PromptTemplate) {
     setError('');
+    setDraft(null);
     setEditing(p ?? null);
     setCreating(!p);
     setTitle(p?.title ?? '');
@@ -42,7 +47,8 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
     setBusy(true);
     setError('');
     try {
-      const body = { title, description, template };
+      // aitmpl'den gelen prompt kaynağını etiketle taşır (ileride güncelleme).
+      const body = draft && !editing ? { title, description, template, tags: ['aitmpl', draft.source] } : { title, description, template };
       if (editing) await api.updatePrompt(editing.id, body);
       else await api.createPrompt(body);
       closeEditor();
@@ -81,9 +87,12 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
             {L.prompts.desc}
           </p>
         </div>
-        <button className="primary" onClick={() => openEditor()}>
-          {L.prompts.newPrompt}
-        </button>
+        <div className="sk-modes">
+          <button onClick={() => setPickerOpen(true)}>{L.prompts.fromAitmpl}</button>
+          <button className="primary" onClick={() => openEditor()}>
+            {L.prompts.newPrompt}
+          </button>
+        </div>
       </section>
 
       {prompts.length === 0 && (
@@ -141,6 +150,32 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
         ))}
       </div>
 
+      {pickerOpen && (
+        <Modal onClose={() => setPickerOpen(false)} wide>
+          <div className="modal-head">
+            <h2>{L.prompts.aitmplTitle}</h2>
+          </div>
+          <div className="modal-pane">
+            <AitmplPicker
+              kind="commands"
+              note={L.prompts.aitmplNote}
+              onPick={async (id) => {
+                const d = await api.aitmplCommandDraft(id);
+                setPickerOpen(false);
+                openEditor();
+                setTitle(d.title);
+                setDescription(d.description);
+                setTemplate(d.template);
+                setDraft(d);
+              }}
+            />
+          </div>
+          <div className="modal-actions">
+            <button onClick={() => setPickerOpen(false)}>{L.actions.cancel}</button>
+          </div>
+        </Modal>
+      )}
+
       {editorOpen && (
         <Modal onClose={closeEditor}>
             <div className="modal-head">
@@ -187,6 +222,15 @@ export function PromptLibrary({ prompts, agents, onChanged, onSent }: Props) {
               </label>
             </div>
 
+            {draft && (
+              <div className="sk-notice">
+                {L.prompts.aitmplFilled(draft.title)}
+                {draft.usesArguments && <> {L.prompts.aitmplArgs(draft.argumentHint)}</>}
+              </div>
+            )}
+            {draft && (draft.scan?.severity === 'HIGH' || draft.scan?.severity === 'CRITICAL') && (
+              <div className="sk-src-err">{L.prompts.aitmplRisk}</div>
+            )}
             {error && <div className="error">{error}</div>}
             <div className="modal-actions">
               <button onClick={closeEditor}>{L.actions.cancel}</button>

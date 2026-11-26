@@ -1,6 +1,9 @@
 import type {
   AgentDraft,
-  AitmplAgentsView,
+  AitmplKind,
+  AitmplListView,
+  CatalogSkill,
+  CommandDraft,
   AgentSnapshot,
   BrowserAction,
   BrowserState,
@@ -45,10 +48,13 @@ async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
 export const api = {
   listAgents: () => req<AgentSnapshot[]>('GET', '/api/agents'),
   createAgent: (input: unknown) => req<AgentSnapshot>('POST', '/api/agents', input),
-  aitmplAgents: () => req<AitmplAgentsView>('GET', '/api/aitmpl/agents'),
-  refreshAitmplAgents: () => req<AitmplAgentsView>('POST', '/api/aitmpl/agents/refresh'),
+  scanSkillLink: (url: string) => req<{ skills: CatalogSkill[] }>('POST', '/api/skills/scan-link', { url }),
+  aitmplList: (kind: AitmplKind) => req<AitmplListView>('GET', `/api/aitmpl/${kind}`),
+  refreshAitmplList: (kind: AitmplKind) => req<AitmplListView>('POST', `/api/aitmpl/${kind}/refresh`),
   aitmplAgentDraft: (id: string) =>
     req<AgentDraft>('GET', `/api/aitmpl/agents/draft?id=${encodeURIComponent(id)}`),
+  aitmplCommandDraft: (id: string) =>
+    req<CommandDraft>('GET', `/api/aitmpl/commands/draft?id=${encodeURIComponent(id)}`),
   updateAgent: (id: string, patch: unknown) => req<AgentSnapshot>('PUT', `/api/agents/${id}`, patch),
   deleteAgent: (id: string) => req('DELETE', `/api/agents/${id}`),
   reorderAgents: (ids: string[]) => req<AgentSnapshot[]>('PUT', '/api/agents/order', { ids }),

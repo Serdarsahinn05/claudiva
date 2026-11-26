@@ -1,7 +1,7 @@
 # aitmpl.com (Claude Code Templates) entegrasyonu
 
-**Kayıt tarihi:** 2026-11-25. Durum: **1. adım (skill'ler) ve 2. adım
-(ajan şablonları) YAPILDI 2026-11-26**; 3 (komutlar) ve 4 (MCP) bekliyor.
+**Kayıt tarihi:** 2026-11-25. Durum: **1-3. adımlar (skill'ler, ajan
+şablonları, komutlar) YAPILDI 2026-11-26**; 4 (MCP) bekliyor.
 
 > **Ölçüldü 2026-11-26: aitmpl.com Türkiye'den AÇILMIYOR.** Yerel DNS
 > `www.aitmpl.com` için 213.14.227.50 (Türk Telekom) veriyor, bağlantı zaman
@@ -186,3 +186,58 @@ source      dış skill'lerde { repo, path, sabitlenmiş commit, lisans }; diğe
   hepsi depo içi, `source` yok).
 - Katalog tazeleme 6.5 sn (aitmpl.com zaman aşımı + GitHub); 424 şablon,
   3'ü yüksek/kritik (rozet + formda uyarı; gizlenmez).
+
+## 3. adımda yapılan
+
+- Seçici genelleşti: `AitmplPicker.tsx` (`kind: agents | commands`), sunucuda
+  `aitmplList/refreshAitmplList/readItemFile` + uçlar `/api/aitmpl/:kind`,
+  `/:kind/refresh`, `/:kind/draft` (tanınmayan tür → 400). Önbellek
+  `DATA_DIR/aitmpl-<tür>.json`, alan `items` (eski `agents` biçimli dosya
+  yok sayılıp yeniden indirilir; ölçüldü).
+- Promptlar başlığında "aitmpl’den ekle": komut seçilince düzenleyici dolar
+  (başlık okunur ad, açıklama ilk cümle, metin gövde AYNEN), kullanıcı Ekle
+  der. Gövdenin başındaki `# /<ad>` başlığı atılır, `allowed-tools` alınmaz.
+  Kaynak `tags: ['aitmpl', 'commands/<kat>/<ad>']` ile saklanır.
+- `$ARGUMENTS`/`$1` taşıyan metinde düzenleyici uyarır (frontmatter
+  `argument-hint` ile). 40 örneğin 31'i yer tutucu taşıyor. **Bilinen sınır:**
+  bazı komutlar Claude Code'un `!`komut`` (bash çıktısı ekleme) sözdizimini
+  kullanıyor; Promptlar'dan gönderilen metin CLI komutu olmadığı için bunlar
+  ÇALIŞMAZ, düz metin olarak gider (bilerek: izinsiz kabuk komutu olurdu).
+- 288 komut, 1'i yüksek risk (rozet + düzenleyicide uyarı).
+
+## Ek (2026-11-26): kopya ayıklama, panel düzeni, skills.sh incelemesi
+
+- **Kopya ayıklama** (`skillCatalog.ts` `dedupeCopies`): araç başına
+  kopyalanmış skill'ler (impeccable 27 yol → 1, ponytail 12 → 6) dizin
+  adıyla gruplanır, asıl yol seçilir; yalnız test/örnek klasöründeki
+  fikstürler atılır. Yerleşik üç depo değişmedi (20/15/185).
+- **Kullanıcı kararı: ünlü depolar YERLEŞİK kaynak yapılmayacak** (liste
+  bakımı ve ileride Rust uygulamasında şişme) ve her depo için ayrı filtre
+  çipi olmayacak. Katalogda olmayan skill Keşfet'teki "GitHub linkiyle bul"
+  ile tek seferlik taranıp kurulur (graphify: link → 1 skill → kuruldu).
+- **Panel:** liste iç kaydırma yerine panel gövdesiyle kayar, arama çubuğu
+  yapışkan, filtreler katlanır (`claudiva.skills.filters`), katalog
+  açıklaması 3 satır. Bkz. `web/CLAUDE.md` → "Skill paneli".
+
+### skills.sh: ÇALIŞIYOR, henüz BAĞLANMADI
+
+Ölçüldü (2026-11-26, bu makineden, engel yok):
+
+- Uç: `GET https://skills.sh/api/search?q=<metin>` (anahtar yok). Vercel'in
+  açık kaynak `skills` CLI'ı (`npx skills find`, `find-skills` skill'i) aynı
+  ucu kullanıyor (`vercel-labs/skills` `src/find.ts`). **Belgelenmiş bir
+  kararlılık sözü YOK**; CLI'ın kendisi değişirse uç da değişebilir.
+- Yanıt: `{ skills: [{ id, source: "sahip/depo", skillId, name, installs }], count }`,
+  en fazla 100 sonuç, ~0.5-1.1 sn. Bütün terimler eşleşmeli (CLI çok
+  kelimede terim düşürerek yeniden sorguluyor).
+- `ponytail` → dietrichgebert/ponytail (144k kurulum), `impeccable` →
+  pbakaus/impeccable (436k), `graphify` → graphify-labs/graphify (15k).
+- **Eksikleri:** açıklama yok, depo içi yol yok, güvenlik taraması yok,
+  lisans yok. Yol için depo ağacı (GitHub API, saatte 60 istek) + açıklama
+  için `SKILL.md` başı (raw, kotasız) gerekir.
+
+Önerilen bağlama (onay bekliyor): Keşfet'te ≥2 harfli aramada ayrı bir
+"skills.sh" bölümü; sunucu `/api/skills/search-remote?q=` ile sorar, liste
+DİSKE YAZILMAZ (yerleşik liste yok, şişme yok). "Kur"da sunucu depo ağacını
+okur (`dedupeCopies` ile), `skillId` adlı dizini bulur, `installFromGitHub`
+ile kurar. Tarama olmadığı için rozet "taranmadı" ve kurulumda onay.

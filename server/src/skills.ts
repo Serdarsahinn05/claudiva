@@ -339,7 +339,13 @@ export async function installFromGitHub(opts: {
     ));
     fs.mkdirSync(destDir, { recursive: true });
 
-    for (const e of items) {
+    // SKILL.md ÖNCE: dosya sınırı (MAX_ASSETS) alfabetik sırayla dolunca asıl
+    // dosya hiç inmiyordu (graphify: skill.md 84 girdilik bir Python paketinin
+    // içinde, sınır __init__.py…'lerle doldu; ölçüldü 2026-11-26).
+    const ordered = [...items].sort(
+      (a, b) => Number(b.name.toLowerCase() === 'skill.md') - Number(a.name.toLowerCase() === 'skill.md'),
+    );
+    for (const e of ordered) {
       if (written >= MAX_ASSETS) break;
       // Dosya adı doğrulaması: ayraç ya da üst dizin taşıyan bir ad kabul
       // edilmez (contents API normalde vermez, ama güvenmiyoruz).
@@ -369,6 +375,15 @@ export async function installFromGitHub(opts: {
     // Yarım kurulum bırakma: hata olursa hedefi temizle.
     fs.rmSync(target, { recursive: true, force: true });
     throw err;
+  }
+
+  // Bazı depolar `skill.md` yazıyor (graphify). Claude Code `SKILL.md` arar;
+  // Windows'ta büyük/küçük harf fark etmez ama Linux/macOS'ta skill yüklenmez.
+  const mdName = fs.readdirSync(target).find((n) => n.toLowerCase() === 'skill.md');
+  if (mdName && mdName !== 'SKILL.md') {
+    const tmp = path.join(target, `.${mdName}.tmp`);
+    fs.renameSync(path.join(target, mdName), tmp);
+    fs.renameSync(tmp, path.join(target, 'SKILL.md'));
   }
 
   const info = readOne(target, opts.scope, opts.agentId);

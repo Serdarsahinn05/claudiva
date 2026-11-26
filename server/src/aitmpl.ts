@@ -123,7 +123,7 @@ export interface AitmplResult {
  * indirilmez. Adreslerden hiçbiri çalışmazsa son hata fırlatılır.
  */
 async function fetchCatalog(
-  type: 'skills' | 'agents',
+  type: 'skills' | 'agents' | 'commands',
   prevSha?: string,
 ): Promise<{ sha: string; components: RawComponent[] | null; via: string }> {
   let lastErr: Error = new Error('aitmpl');
@@ -161,31 +161,35 @@ export async function fetchAitmplSkills(prevSha?: string): Promise<AitmplResult>
 // personality.md; doğrudan kopyalanamaz, DÖNÜŞTÜRÜLÜR (`agentDraft`). Taslak
 // diske yazılmaz: panel formu doldurur, kullanıcı gözden geçirip oluşturur.
 
-const AGENTS_CACHE = path.join(DATA_DIR, 'aitmpl-agents.json');
+/** Tek dosyalık, listeden seçilip taslağa çevrilen türler. */
+export type AitmplKind = 'agents' | 'commands';
+export const AITMPL_KINDS: AitmplKind[] = ['agents', 'commands'];
 
-export interface AitmplAgent {
+const cacheFile = (kind: AitmplKind) => path.join(DATA_DIR, `aitmpl-${kind}.json`);
+
+export interface AitmplItem {
   id: string;
   name: string;
   category: string;
   /** `<example>` blokları atılmış kısa açıklama. */
   summary: string;
-  /** Depo içi dosya yolu (`cli-tool/components/agents/<kat>/<ad>.md`). */
+  /** Depo içi dosya yolu (`cli-tool/components/<tür>/<kat>/<ad>.md`). */
   file: string;
   downloads: number;
   scan: { severity: ScanSeverity; score: number } | null;
   page: string | null;
 }
 
-export interface AitmplAgentsView {
+export interface AitmplListView {
   fetchedAt: number | null;
   error?: string;
-  agents: AitmplAgent[];
+  items: AitmplItem[];
 }
 
-interface AgentsCache {
+interface ListCache {
   sha: string;
   fetchedAt: number;
-  agents: AitmplAgent[];
+  items: AitmplItem[];
 }
 
 /**
@@ -200,7 +204,7 @@ export function firstSentence(text: string): string {
   return out.length > 220 ? out.slice(0, 217).trimEnd() + '…' : out;
 }
 
-function toAgent(c: RawComponent): AitmplAgent | null {
+function toItem(kind: AitmplKind, c: RawComponent): AitmplItem | null {
   if (!c.id || !c.path || !c.name) return null;
   const sev = String(c.scan?.severity ?? '').toUpperCase();
   return {
@@ -208,88 +212,67 @@ function toAgent(c: RawComponent): AitmplAgent | null {
     name: c.name,
     category: c.category ?? '',
     summary: firstSentence(c.description ?? ''),
-    file: `cli-tool/components/agents/${c.path}`,
+    file: `cli-tool/components/${kind}/${c.path}`,
     downloads: typeof c.downloads === 'number' ? c.downloads : 0,
     scan: SEVERITIES.has(sev) ? { severity: sev as ScanSeverity, score: Number(c.scan?.score ?? 0) } : null,
     page: c.urls?.page ?? null,
   };
 }
 
-function readAgentsCache(): AgentsCache | null {
+function readListCache(kind: AitmplKind): ListCache | null {
   try {
-    const raw = JSON.parse(fs.readFileSync(AGENTS_CACHE, 'utf-8')) as AgentsCache;
-    if (raw && Array.isArray(raw.agents)) return raw;
+    const raw = JSON.parse(fs.readFileSync(cacheFile(kind), 'utf-8')) as ListCache;
+    if (raw && Array.isArray(raw.items)) return raw;
   } catch {
-    // yok ya da bozuk
+    // yok, bozuk ya da eski biçim (yeniden indirilir)
   }
   return null;
 }
 
 /** Önbellekten okur; ağa ÇIKMAZ. */
-export function aitmplAgents(): AitmplAgentsView {
-  const c = readAgentsCache();
-  return { fetchedAt: c?.fetchedAt ?? null, agents: c?.agents ?? [] };
+export function aitmplList(kind: AitmplKind): AitmplListView {
+  const c = readListCache(kind);
+  return { fetchedAt: c?.fetchedAt ?? null, items: c?.items ?? [] };
 }
 
 /** Katalogu tazeler. Ağ yoksa önbellek korunur, hata yanında döner. */
-export async function refreshAitmplAgents(): Promise<AitmplAgentsView> {
-  const prev = readAgentsCache();
+export async function refreshAitmplList(kind: AitmplKind): Promise<AitmplListView> {
+  const prev = readListCache(kind);
   try {
-    const r = await fetchCatalog('agents', prev?.agents.length ? prev.sha : undefined);
-    const agents = r.components
+    const r = await fetchCatalog(kind, prev?.items.length ? prev.sha : undefined);
+    const items = r.components
       ? r.components
-          .map(toAgent)
-          .filter((a): a is AitmplAgent => a !== null)
+          .map((c) => toItem(kind, c))
+          .filter((a): a is AitmplItem => a !== null)
           .sort((a, b) => a.name.localeCompare(b.name))
-      : (prev?.agents ?? []);
-    const next: AgentsCache = { sha: r.sha, fetchedAt: Date.now(), agents };
+      : (prev?.items ?? []);
+    const next: ListCache = { sha: r.sha, fetchedAt: Date.now(), items };
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(AGENTS_CACHE, JSON.stringify(next), 'utf-8');
+      fs.writeFileSync(cacheFile(kind), JSON.stringify(next), 'utf-8');
     } catch {
       // önbellek yazılamazsa liste yine dönsün
     }
-    return { fetchedAt: next.fetchedAt, agents };
+    return { fetchedAt: next.fetchedAt, items };
   } catch (e) {
     return {
       fetchedAt: prev?.fetchedAt ?? null,
-      agents: prev?.agents ?? [],
+      items: prev?.items ?? [],
       error: S.aitmplUnreachable((e as Error).message),
     };
   }
 }
 
-/** Panelin formu dolduracağı taslak. */
-export interface AgentDraft {
-  template: string;
-  name: string;
-  description: string;
-  model: 'haiku' | 'sonnet' | 'opus' | null;
-  personality: string;
-  scan: AitmplAgent['scan'];
-}
-
-/** Paket ajanlarındaki kural; aitmpl istemleri İngilizce. */
-const LANGUAGE_LINE = 'Reply in the language the user writes in, even though these instructions are in English.';
-
-/** "accessibility-tester" → "Accessibility Tester" */
-function humanize(slug: string): string {
-  return slug
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(' ');
-}
-
 /**
- * Ajan dosyasını indirip taslağa çevirir.
- *
- * Yalnız katalogda olan kimlik kabul edilir; dosya yolu istemciden değil
- * katalogdan gelir (keyfi URL indirtilemesin). `tools` listesi bilerek
- * alınmaz: Claudiva'da karşılığı yok ve personality'ye yazmak yanıltırdı.
+ * Katalogdaki öğenin dosyasını indirir, frontmatter'ı ayırır. Yalnız
+ * önbellekteki kimlik kabul edilir; dosya yolu istemciden değil katalogdan
+ * gelir (keyfi URL indirtilemesin).
  */
-export async function agentDraft(id: string): Promise<AgentDraft> {
-  const entry = readAgentsCache()?.agents.find((a) => a.id === id);
+async function readItemFile(
+  kind: AitmplKind,
+  id: string,
+): Promise<{ entry: AitmplItem; field: (k: string) => string | undefined; body: string }> {
+  const entry = readListCache(kind)?.items.find((a) => a.id === id);
   if (!entry) throw new Error(S.templateNotFound);
 
   const url = `https://raw.githubusercontent.com/${TEMPLATES_REPO}/HEAD/${entry.file.split('/').map(encodeURIComponent).join('/')}`;
@@ -306,6 +289,50 @@ export async function agentDraft(id: string): Promise<AgentDraft> {
   }
   const field = (k: string) =>
     fm.match(new RegExp(`^${k}:\\s*(.+)$`, 'm'))?.[1].trim().replace(/^["']|["']$/g, '');
+  return { entry, field, body };
+}
+
+/** Panelin formu dolduracağı taslak. */
+export interface AgentDraft {
+  template: string;
+  name: string;
+  description: string;
+  model: 'haiku' | 'sonnet' | 'opus' | null;
+  personality: string;
+  scan: AitmplItem['scan'];
+}
+
+/** Promptlar düzenleyicisini dolduracak taslak. */
+export interface CommandDraft {
+  /** Kaynak kimliği ("commands/<kat>/<ad>"); prompt'un `tags`ına yazılır. */
+  source: string;
+  title: string;
+  description: string;
+  template: string;
+  /** Gövde `$ARGUMENTS` taşıyorsa frontmatter'daki ipucu (yoksa boş). */
+  argumentHint: string;
+  usesArguments: boolean;
+  scan: AitmplItem['scan'];
+}
+
+/** Paket ajanlarındaki kural; aitmpl istemleri İngilizce. */
+const LANGUAGE_LINE = 'Reply in the language the user writes in, even though these instructions are in English.';
+
+/** "accessibility-tester" → "Accessibility Tester" */
+function humanize(slug: string): string {
+  return slug
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
+ * Ajan dosyasını indirip taslağa çevirir. `tools` listesi bilerek alınmaz:
+ * Claudiva'da karşılığı yok ve personality'ye yazmak yanıltırdı.
+ */
+export async function agentDraft(id: string): Promise<AgentDraft> {
+  const { entry, field, body } = await readItemFile('agents', id);
   const m = (field('model') ?? '').toLowerCase();
   const model = m === 'haiku' || m === 'sonnet' || m === 'opus' ? m : null;
 
@@ -315,6 +342,26 @@ export async function agentDraft(id: string): Promise<AgentDraft> {
     description: entry.summary,
     model,
     personality: `${body.trim()}\n\n- ${LANGUAGE_LINE}\n`,
+    scan: entry.scan,
+  };
+}
+
+/**
+ * Komut dosyasını prompt taslağına çevirir. Gövde AYNEN kalır
+ * (`$ARGUMENTS` dahil; kullanıcı göndermeden önce yerine yazar).
+ * `allowed-tools` alınmaz (izin Claudiva'nın kapısından geçer); gövdenin
+ * başındaki `# /<ad>` başlığı atılır, başlık zaten prompt adı.
+ */
+export async function commandDraft(id: string): Promise<CommandDraft> {
+  const { entry, field, body } = await readItemFile('commands', id);
+  const text = body.replace(new RegExp(`^\\s*#\\s*/${entry.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n+`), '').trim();
+  return {
+    source: entry.id,
+    title: humanize(entry.name),
+    description: entry.summary,
+    template: text,
+    argumentHint: field('argument-hint') ?? '',
+    usesArguments: /\$ARGUMENTS|\$\d/.test(text),
     scan: entry.scan,
   };
 }

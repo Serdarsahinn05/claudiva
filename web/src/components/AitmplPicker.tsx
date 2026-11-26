@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
-import type { AgentDraft, AitmplAgentsView } from '../types';
+import type { AitmplKind, AitmplListView } from '../types';
 import { L } from '../i18n';
 
 /**
- * Ajan formunun "Şablon" bölümü: aitmpl.com ajanlarından birini seçip formu
- * doldurur. Seçim ajan OLUŞTURMAZ; form önizlemedir, kullanıcı gözden
- * geçirip Oluştur der (bkz. docs/AITMPL-ENTEGRASYON.md, 2. adım).
+ * aitmpl.com'dan tek dosyalık bir şablon seçici (ajan ya da komut).
  *
- * Liste sunucunun önbelleğinden gelir; hiç okunmadıysa bölüm açılınca bir
- * kez tazelenir (kullanıcı bölümü açarak katalogu istemiş oluyor).
+ * Seçim hiçbir şey OLUŞTURMAZ: `onPick` taslağı indirip bir formu doldurur,
+ * kullanıcı gözden geçirip kendisi kaydeder (bkz. docs/AITMPL-ENTEGRASYON.md).
+ * Kullananlar: ajan formunun Şablon bölümü, Promptlar'ın "aitmpl'den ekle"si.
+ *
+ * Liste sunucunun önbelleğinden gelir; hiç okunmadıysa seçici açılınca bir
+ * kez tazelenir (kullanıcı seçiciyi açarak katalogu istemiş oluyor).
  */
 const SCAN_CHIP: Record<string, string> = {
   MEDIUM: 'chip-warn',
@@ -17,8 +19,17 @@ const SCAN_CHIP: Record<string, string> = {
   CRITICAL: 'chip-failed',
 };
 
-export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) {
-  const [view, setView] = useState<AitmplAgentsView | null>(null);
+export function AitmplPicker({
+  kind,
+  note,
+  onPick,
+}: {
+  kind: AitmplKind;
+  note: string;
+  /** Taslağı indirip formu doldurur; hata fırlatırsa seçicide gösterilir. */
+  onPick: (id: string) => Promise<void>;
+}) {
+  const [view, setView] = useState<AitmplListView | null>(null);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -27,7 +38,7 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
   async function refresh() {
     setBusy('*');
     try {
-      const v = await api.refreshAitmplAgents();
+      const v = await api.refreshAitmplList(kind);
       setView(v);
       setError(v.error ?? '');
     } catch (e) {
@@ -41,7 +52,7 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
     let live = true;
     void (async () => {
       try {
-        const v = await api.aitmplAgents();
+        const v = await api.aitmplList(kind);
         if (!live) return;
         setView(v);
         if (v.fetchedAt === null) void refresh();
@@ -52,16 +63,18 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
     return () => {
       live = false;
     };
-  }, []);
+    // `refresh` her çizimde yeni; tür değişmedikçe yeniden okumaya gerek yok.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind]);
 
   const categories = useMemo(
-    () => [...new Set((view?.agents ?? []).map((a) => a.category).filter(Boolean))].sort(),
+    () => [...new Set((view?.items ?? []).map((a) => a.category).filter(Boolean))].sort(),
     [view],
   );
 
   const shown = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr');
-    return (view?.agents ?? [])
+    return (view?.items ?? [])
       .filter((a) => !category || a.category === category)
       .filter(
         (a) =>
@@ -76,7 +89,7 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
     setBusy(id);
     setError('');
     try {
-      onPick(await api.aitmplAgentDraft(id));
+      await onPick(id);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -86,14 +99,14 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
 
   return (
     <div className="tpl">
-      <p className="sk-dialog-note">{L.agentForm.tplNote}</p>
+      <p className="sk-dialog-note">{note}</p>
       <div className="sk-tools">
         <input
           className="mem-search"
-          placeholder={L.agentForm.tplSearch}
+          placeholder={L.aitmpl.search}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label={L.agentForm.tplSearch}
+          aria-label={L.aitmpl.search}
         />
         {categories.length > 0 && (
           <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label={L.skills.categoryAria}>
@@ -106,19 +119,19 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
           </select>
         )}
         <button type="button" onClick={() => void refresh()} disabled={busy !== null}>
-          {busy === '*' ? L.skills.refreshing : L.agentForm.tplRefresh}
+          {busy === '*' ? L.skills.refreshing : L.aitmpl.refresh}
         </button>
       </div>
 
       {error && <div className="error">{error}</div>}
 
-      {!view || (busy === '*' && view.agents.length === 0) ? (
-        <div className="muted">{L.agentForm.tplLoading}</div>
+      {!view || (busy === '*' && view.items.length === 0) ? (
+        <div className="muted">{L.aitmpl.loading}</div>
       ) : shown.length === 0 ? (
-        <div className="muted">{L.agentForm.tplNone}</div>
+        <div className="muted">{L.aitmpl.none}</div>
       ) : (
         <>
-          <span className="sk-cat-when">{L.agentForm.tplCount(shown.length)}</span>
+          <span className="sk-cat-when">{L.aitmpl.count(shown.length)}</span>
           <div className="tpl-list">
             {shown.map((a) => (
               <button
@@ -137,7 +150,7 @@ export function AgentTemplates({ onPick }: { onPick: (d: AgentDraft) => void }) 
                     </span>
                   )}
                   <span className="sk-cat-when">
-                    {busy === a.id ? L.agentForm.tplFetching : L.skills.downloads(a.downloads)}
+                    {busy === a.id ? L.aitmpl.fetching : L.skills.downloads(a.downloads)}
                   </span>
                 </span>
                 {a.summary && <span className="sk-desc">{a.summary}</span>}

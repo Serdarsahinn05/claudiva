@@ -14,13 +14,21 @@ import {
   addSource,
   catalogView,
   installMany,
+  scanLink,
   listSources,
   refreshCatalog,
   removeSource,
 } from '../skillCatalog.js';
 import type { BrowserSession } from '../browser.js';
 import { readMemoryGraph } from '../memory.js';
-import { agentDraft, aitmplAgents, refreshAitmplAgents } from '../aitmpl.js';
+import {
+  agentDraft,
+  aitmplList,
+  AITMPL_KINDS,
+  commandDraft,
+  refreshAitmplList,
+  type AitmplKind,
+} from '../aitmpl.js';
 import { getLocale, setLocale } from '../i18n.js';
 
 /**
@@ -460,6 +468,13 @@ export function createRoutes(
     return catalogView();
   }));
 
+  /** Bir depoyu kaynak olarak kaydetmeden tarar (GitHub linkiyle bulma). */
+  r.post('/skills/scan-link', handle(async (req) => {
+    const url = String(req.body?.url ?? '');
+    if (!url.trim()) throw new ApiError('repo_required', 'Depo gerekli.');
+    return { skills: await scanLink(url) };
+  }));
+
   r.get('/skills/sources', handle(() => listSources()));
 
   r.post('/skills/sources', handle((req) => {
@@ -500,16 +515,22 @@ export function createRoutes(
     return await installMany(parsed, target, agentId ? String(agentId) : undefined);
   }));
 
-  // ------------------------------------------------- aitmpl ajan şablonları
+  // ------------------------------------- aitmpl şablonları (ajan, komut)
 
+  const kindOf = (req: Request): AitmplKind => {
+    const k = String(req.params.kind) as AitmplKind;
+    if (!AITMPL_KINDS.includes(k)) throw new ApiError('template_required', 'Şablon gerekli.');
+    return k;
+  };
   /** Önbellekten; ağa çıkmaz. */
-  r.get('/aitmpl/agents', handle(() => aitmplAgents()));
-  r.post('/aitmpl/agents/refresh', handle(() => refreshAitmplAgents()));
-  /** Şablonu indirip ajan taslağına çevirir; diske YAZMAZ (form doldurulur). */
-  r.get('/aitmpl/agents/draft', handle((req) => {
+  r.get('/aitmpl/:kind', handle((req) => aitmplList(kindOf(req))));
+  r.post('/aitmpl/:kind/refresh', handle((req) => refreshAitmplList(kindOf(req))));
+  /** Şablonu indirip taslağa çevirir; diske YAZMAZ (form doldurulur). */
+  r.get('/aitmpl/:kind/draft', handle((req) => {
+    const kind = kindOf(req);
     const id = String(req.query.id ?? '');
     if (!id) throw new ApiError('template_required', 'Şablon gerekli.');
-    return agentDraft(id);
+    return kind === 'agents' ? agentDraft(id) : commandDraft(id);
   }));
 
   // ------------------------------------------------------------ prompts

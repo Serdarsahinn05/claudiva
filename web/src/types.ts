@@ -447,8 +447,11 @@ export interface CatalogView {
   skills: CatalogSkill[];
 }
 
-/** aitmpl ajan şablonu (sunucu: `server/src/aitmpl.ts`). */
-export interface AitmplAgent {
+/** aitmpl'den listeyle seçilen türler (sunucu: `server/src/aitmpl.ts`). */
+export type AitmplKind = 'agents' | 'commands';
+
+/** aitmpl ajan ya da komut şablonu. */
+export interface AitmplItem {
   id: string;
   name: string;
   category: string;
@@ -459,10 +462,21 @@ export interface AitmplAgent {
   page: string | null;
 }
 
-export interface AitmplAgentsView {
+export interface AitmplListView {
   fetchedAt: number | null;
   error?: string;
-  agents: AitmplAgent[];
+  items: AitmplItem[];
+}
+
+/** Komuttan dönüştürülmüş prompt taslağı; düzenleyiciyi doldurur. */
+export interface CommandDraft {
+  source: string;
+  title: string;
+  description: string;
+  template: string;
+  argumentHint: string;
+  usesArguments: boolean;
+  scan: AitmplItem['scan'];
 }
 
 /** Şablondan dönüştürülmüş ajan taslağı; formu doldurur, diske yazılmaz. */
@@ -472,7 +486,7 @@ export interface AgentDraft {
   description: string;
   model: 'haiku' | 'sonnet' | 'opus' | null;
   personality: string;
-  scan: AitmplAgent['scan'];
+  scan: AitmplItem['scan'];
 }
 
 /** Toplu kurulumda satır başına sonuç — bir hata diğerlerini iptal etmez. */

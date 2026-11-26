@@ -2476,7 +2476,35 @@ label.check.small { font-size: 12px; color: var(--muted); }
 /* ═══════════════════════════════════════════════════════════════════
    SKILL'LER — kapsam rozeti taşıyan hairline satırlar
    ═══════════════════════════════════════════════════════════════════ */
-.skills { display: flex; flex-direction: column; gap: var(--s4); min-height: 0; }
+.skills { display: flex; flex-direction: column; gap: var(--s3); flex: 0 0 auto; }
+/* Liste KENDİ İÇİNDE kaymaz, panel gövdesi (.pf-body) kayar. İç kaydırmada
+   başlık + araç + filtreler dar yan yuvada yüksekliği yiyip listeyi tek
+   satırlık bir şeride sıkıştırıyordu (2026-11-26 ekran görüntüsü). Arama
+   çubuğu `sk-sticky` ile üstte kalır. `.skills` içeriği kadar UZAMALI
+   (flex: 0 0 auto): panel boyuna sıkışırsa yapışkanın kabı da o kadar kalır
+   ve arama çubuğu ilk ekran boyundan sonra kayıp gider (ölçüldü). */
+.sk-sticky {
+  position: sticky; top: calc(-1 * var(--s4)); z-index: 3;
+  margin: calc(-1 * var(--s2)) 0; padding: var(--s2) 0;
+  background: var(--hull-0);
+}
+:root[data-style='glass'] .sk-sticky {
+  background: rgb(var(--surface-rgb) / 0.92);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.sk-filters { border-bottom: var(--border-w) solid var(--edge); padding-bottom: var(--s2); }
+.sk-filters > summary {
+  display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap;
+  cursor: pointer; padding: var(--s1) 0; list-style: none;
+}
+.sk-filters > summary::-webkit-details-marker { display: none; }
+.sk-filters > summary::before {
+  content: '▸'; color: var(--dim); font-size: 10px; transition: transform 140ms var(--ease-out);
+}
+.sk-filters[open] > summary::before { transform: rotate(90deg); }
+.sk-filters-label { font-family: var(--font-ui); font-size: 12.5px; color: var(--fg); font-weight: 500; }
+.sk-filters[open] > summary { margin-bottom: var(--s2); }
+.sk-filters > summary:focus-visible { outline: 2px solid var(--hud); outline-offset: 2px; }
 .sk-tools { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .sk-tools .tb-filters { margin-bottom: 0; }
 .sk-tools .mem-search { margin-left: auto; }
@@ -2488,7 +2516,7 @@ label.check.small { font-size: 12px; color: var(--muted); }
   background: var(--hud-wash);
 }
 
-.sk-list { display: flex; flex-direction: column; overflow-y: auto; min-height: 0; }
+.sk-list { display: flex; flex-direction: column; flex-shrink: 0; }
 .sk-item {
   display: flex; align-items: flex-start; gap: var(--s3);
   padding: var(--s3) 0;
@@ -2498,6 +2526,11 @@ label.check.small { font-size: 12px; color: var(--muted); }
 /* Kapalı skill SÖNÜKLEŞİR ama gizlenmez: kapattığını görebilmelisin. */
 .sk-item.off .sk-name, .sk-item.off .sk-desc { color: var(--dim); }
 .sk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+/* Katalog açıklaması 3 satırda kesilir (tamamı `title`da): bazı skill
+   açıklamaları 15+ satır, dar yuvada tek satır ekranı dolduruyordu. */
+.sk-item:has(> .sk-check-row) .sk-desc {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
 .sk-top { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
 .sk-name { font-family: var(--font-ui); font-size: 13px; color: var(--fg); font-weight: 500; }
 .sk-cmd { font-family: var(--font-mono); font-size: 11px; color: var(--dim); }
@@ -2509,7 +2542,7 @@ label.check.small { font-size: 12px; color: var(--muted); }
   display: flex; gap: var(--s3); flex-wrap: wrap;
   font-family: var(--font-mono); font-size: 10px; color: var(--dim);
 }
-.sk-dir { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46ch; }
+.sk-dir { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: min(46ch, 100%); }
 /* Kapsam rozeti: genel olan vurguyla yazılır çünkü sonucu en geniş olan o. */
 .sk-scope-global { color: var(--hud); border-color: rgb(var(--accent-rgb) / 0.4); }
 .sk-scope-project { color: var(--aux); border-color: rgb(var(--aux-rgb) / 0.4); }
@@ -2566,6 +2599,15 @@ label.check.small { font-size: 12px; color: var(--muted); }
   font-family: var(--font-ui); font-size: 11.5px; color: var(--fg);
 }
 .sk-src-err strong { font-family: var(--font-mono); font-weight: 500; }
+
+/* Keşfet → GitHub linkiyle bul. Filtrelerle aynı ince ayraç; bulunanlar
+   katalog satırıyla AYNI gövdede çizilir. */
+.sk-link {
+  display: flex; flex-direction: column; gap: var(--s2);
+  padding-bottom: var(--s3); border-bottom: var(--border-w) solid var(--edge);
+}
+.sk-link .sk-dialog-note { margin: 0; }
+.sk-link .mem-search { flex: 1 1 200px; min-width: 0; margin-left: 0; }
 
 .sk-meta a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
 .sk-meta a:hover { color: var(--hud); }
@@ -2648,11 +2690,18 @@ label.check.small { font-size: 12px; color: var(--muted); }
 }
 
 @container (max-width: 560px) {
-  .sk-item { flex-direction: column; }
+  /* `stretch` ŞART: satırın `align-items: flex-start`ı sütun yönünde içeriği
+     genişliğe germez, gövde metnin tek satırlık boyuna (900px) uzayıp paneli
+     yatay taşırıyordu (ölçüldü 2026-11-26; eski iç kaydırma bunu gizliyordu). */
+  .sk-item { flex-direction: column; align-items: stretch; }
+  /* Katalog satırında kutu solda kalır; tek başına bir satır yemesin. */
+  .sk-item:has(> .sk-check-row) { flex-direction: row; }
+  /* Uzun açıklama dar yuvada listenin yerini alıyordu; başlık ve kip yeter. */
+  .skills .pl-head-desc { display: none; }
+  .skills .pl-head { padding-bottom: var(--s2); align-items: center; }
   .sk-actions { align-self: flex-start; }
   .sk-tools .mem-search { margin-left: 0; width: 100%; }
   .sk-cat-bar .tb-filters { margin-left: 0; }
-  .sk-check-row { align-self: stretch; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

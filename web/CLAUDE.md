@@ -84,6 +84,28 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   ya da kodsuz hatada (SDK, git, dosya sistemi) sunucu metnine düşer. Yeni
   hata eklerken `ApiError` kullan ve kodu iki sözlüğe ekle.
 
+## Skill paneli (dar yan yuva)
+
+- **Liste iç kaydırma YAPMAZ, `.pf-body` kayar** (2026-11-26). İç kaydırmada
+  başlık + araç + filtreler 330px'lik yuvada yüksekliği yiyip listeyi tek
+  satıra sıkıştırıyordu (kullanıcı ekran görüntüsü). Arama çubuğu
+  `.sk-sticky`. **`.skills` `flex: 0 0 auto` olmak ZORUNDA:** `min-height: 0`
+  iken panel boyuna (600px) sıkışıyor, yapışkanın kabı da o kadar kalıyor ve
+  arama çubuğu ilk ekrandan sonra kayboluyordu (ölçüldü).
+- Filtreler `<details class="sk-filters">`, açık/kapalı `claudiva.skills.filters`;
+  kapalıyken özet satırı kaynak · kategori · gösterilen · gizli riskli sayısını yazar.
+- Katalog açıklaması 3 satır (`line-clamp`, tamamı `title`). Uzun yol
+  `.sk-dir` `max-width: min(46ch, 100%)`: 46ch dar yuvada yatay kaydırma açıyordu.
+- Dar yuvada (`@container ≤560px`) başlık açıklaması gizli; katalog satırında
+  kutu solda kalır (`:has(> .sk-check-row)`), kurulu satır sütuna döner.
+  **Sütuna dönen satırda `align-items: stretch` ŞART:** `flex-start` iken
+  gövde metnin tek satır boyuna (900px) uzayıp paneli yatay taşırıyordu
+  (kullanıcı ekran görüntüsü; eski iç kaydırma bunu gizliyordu).
+- Keşfet'te "GitHub linkiyle bul" kutusu (`.sk-link`): bulunanlar katalogla
+  AYNI satır (`renderRow`) ve aynı seçim/toplu kurulum; kaynaklara eklenmez.
+  Kurulu sekmesinde de buna yönlendiren not var. "Elle kur" depo kutusu tam
+  GitHub linkini ayrıştırır.
+
 ## Paket bölme
 
 - **Varsayılan ekranda görünmeyen her şey `lazy()`** (App.tsx): Sohbet ve Pano
