@@ -1,5 +1,15 @@
 # Devir — Claudiva
 
+# ▶ 0.5.0 HAZIR (2026-11-26)
+
+`chore: release 0.5.0` + açıklamalı `v0.5.0` etiketi (sürüm notu etiket
+mesajında). Öncesinde: README (EN+TR) aitmpl/skills.sh/MCP ve "Ağ istekleri",
+`chat.jpg`/`board.jpg` Cam açıkla yeniden çekildi, `impeccable audit` (14/20)
+ve bulguların düzeltmesi (odak, Keşfet sayfalama, duyuru rolleri, sekme
+çevirisi, link etiketi). `npm publish` kullanıcıda; push kullanıcı isteyince.
+Açık kalan: eklenen bir MCP'nin canlı bağlantısı ölçülmedi (kullanıcı
+"boşver" dedi).
+
 # ▶ aitmpl.com entegrasyonu (2026-11-26)
 
 **1. adım (skill'ler → Keşfet) `8040ab9`, 2. adım (Yeni ajan → Şablon)
