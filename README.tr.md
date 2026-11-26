@@ -23,7 +23,7 @@ harcadığını gösterir.
 ![MCP](https://img.shields.io/badge/MCP-000000?style=for-the-badge&logo=modelcontextprotocol&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge)
 
-[Kurulum](#-kurulum) · [Kullanım](#-kullanım) · [Üç çalışma biçimi](#-üç-çalışma-biçimi) · [Paneller](#-paneller) · [Ekip](#-ekip-ve-delegasyon) · [Görünüm](#-görünüm-ve-dil) · [Geliştirme](#-geliştirme)
+**[Web sitesi](https://serdarsahinn05.github.io/claudiva/)** · [Kurulum](#-kurulum) · [Kullanım](#-kullanım) · [Üç çalışma biçimi](#-üç-çalışma-biçimi) · [Paneller](#-paneller) · [Ekip](#-ekip-ve-delegasyon) · [Görünüm](#-görünüm-ve-dil) · [Geliştirme](#-geliştirme)
 
 </div>
 
