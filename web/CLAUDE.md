@@ -113,6 +113,28 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   Kurulu sekmesinde de buna yönlendiren not var. "Elle kur" depo kutusu tam
   GitHub linkini ayrıştırır.
 
+## Masaüstü uygulaması (desktop/)
+
+- **Panel masaüstünde de AYNI paket**; tek fark `web/src/desktop.ts`. Kabuk
+  `window.__TAURI__` enjekte eder, `isDesktop` buna bakar. Tarayıcıda nesne
+  yok, hiçbir şey değişmez. `@tauri-apps/api` paketi EKLENMEZ.
+- Masaüstünde Windows başlık çubuğu yok: `.app > header` `desktop-bar` sınıfı
+  ve `onTitleBarMouseDown` (boş yere basınca sürükle, çift tık büyüt) alır,
+  sağ ucuna `WindowControls` (Proje değiştir + küçült/büyüt/kapat) eklenir.
+  Üst çubuğa yeni etkileşimli öğe eklerken `desktop.ts` `INTERACTIVE`
+  seçicisine uymalı (düğme/bağlantı/alan/sekme), yoksa ona basmak pencereyi
+  sürükler.
+- Panelin Tauri izinleri dar: yalnız pencere düğmeleri ve `switch_project`
+  (`desktop/src-tauri/capabilities/panel.json`). Yeni bir masaüstü yeteneği
+  izin eklemeden çalışmaz; bkz. `desktop/CLAUDE.md`.
+
+## Logo
+
+- Üst çubukta `BrandMark.tsx` (küçük çizim, `docs/brand/`). Renkler paletten
+  (halka `--accent-rgb`, çekirdek `--fg-rgb`), yani her stilde o stilin
+  vurgusu; sabit marka rengi yalnız uygulama simgesi ve favicon'da.
+  `web/public/favicon.svg` = `docs/brand/claudiva-favicon.svg` kopyası.
+
 ## Paket bölme
 
 - **Varsayılan ekranda görünmeyen her şey `lazy()`** (App.tsx): Sohbet ve Pano

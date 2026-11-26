@@ -1,5 +1,33 @@
 # Devir — Claudiva
 
+# ▶ Masaüstü (Tauri) BAŞLADI, dal `feat/desktop` (2026-11-26), COMMIT YOK
+
+Kullanıcı kararları (yeniden sorma): aynı depo, `desktop/` klasörü; sunucu
+**sistemdeki Node** ile; **açılış ekranı** (klasör seç + son projeler).
+Ayrıntı, ölçümler ve test yöntemi: **`desktop/CLAUDE.md`**.
+
+Çalışan: açılış ekranı (Cam stili, TR/EN), proje açma (<1 sn sıcak, 4,6 sn
+soğuk), **Windows başlık çubuğu yok, panelin üst çubuğu onun yerine**
+(sürükle, çift tık büyüt, Proje değiştir + küçült/büyüt/kapat; kullanıcı
+kararı, `web/src/desktop.ts`), stdin borusuyla düzgün kapanış (pencere
+kapatma ve kabuğun zorla öldürülmesi, ikisi de 0,2 sn), NSIS kurulum dosyası
+`Claudiva_0.5.0_x64-setup.exe` (137 MB) ve release sürümünün kendi paketindeki
+sunucuyla açılması. Kök değişiklikler: `bin/claudiva.js` (`CLAUDIVA_DESKTOP`
+kancası), `.gitignore`, panelde `desktop.ts` + `WindowControls.tsx` + App.tsx
+üst çubuğu + i18n `desktop` + index.css "MASAÜSTÜ" bloğu (tarayıcıda etkisiz).
+Kurulum dosyası başlık çubuğu değişikliğinden ÖNCE üretildi; yeniden üret.
+
+**Logo seçildi: "Çekirdek"** (dışta turkuaz altıgen halka = ekip, içte 30°
+dönük açık altıgen = lider; harfsiz, kullanıcı kararı). Dosyalar, renkler ve
+kurallar `docs/brand/README.md`; Tauri simgeleri, `web/public/favicon.svg` ve
+açılış ekranı ve panelin üst çubuğu (`BrandMark.tsx`, renk paletten; dört
+stil × iki modda bakıldı) güncellendi.
+
+Bekleyen kullanıcı kararları: (1) boyut: 432 MB'ın 385 MB'ı SDK'nın Claude Code
+ikilisi (`claude-agent-sdk-win32-x64`); kullanıcının kurulu `claude`unu
+kullanmak küçültür ama sunucu değişikliği ister; (2) kod imzalama. Denenmedi: masaüstünde canlı ajan oturumu (ücretli),
+dış bağlantılar, kurulum dosyasının kendisi (sisteme kurar).
+
 # ▶ 0.5.0 HAZIR (2026-11-26)
 
 `chore: release 0.5.0` + açıklamalı `v0.5.0` etiketi (sürüm notu etiket
