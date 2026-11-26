@@ -120,7 +120,7 @@ Interface or from the command palette (`Ctrl+K`).
 | **Chat** | The team as a group chat: agents hand work to each other, you step in with `@agent` |
 | **Board** | A customizable widget board: add, drag and resize cards |
 
-![Chat mode: delivery cards with the measured file count](docs/screenshots/chat.jpg)
+![Chat mode, Glass light: delivery cards with the measured file count and the lead in the side panel](docs/screenshots/chat.jpg)
 
 In **Chat**, every delivery card shows how many files the agent actually wrote,
 measured rather than claimed. You can reply to a message (WhatsApp-style quote),
@@ -133,7 +133,7 @@ touched. Context and MCP status come from the agent's open session; when the
 session is closed the panel says so instead of guessing. On a wide screen the
 panel starts open.
 
-![Board mode: brief the team, live flow, status, budget and agents](docs/screenshots/board.jpg)
+![Board mode: brief the team, delegation network, live flow, status, agents and the activity heatmap](docs/screenshots/board.jpg)
 
 Board widgets include an **agent activity heatmap** (tokens per agent per day,
 last 7 days), a **budget dial** and the **delegation network**: who handed work
@@ -158,11 +158,11 @@ terminals: every open agent gets its own tile and all of them stay visible.
 | **Tasks** | Delegation, dependency chains, results |
 | **Code** | Project tree and file contents, syntax-highlighted, read-only |
 | **Reports** | The agent's *claim* next to the *measurement*: what it said and which files it really touched |
-| **Skills** | Enable, disable or remove installed skills; search repositories and install in bulk |
+| **Skills** | Enable, disable or remove installed skills; find new ones in catalogs, on skills.sh or by GitHub link, and install in bulk |
 | **Browser** | A browser on the server; you see the page an agent is driving |
 | **Changes** | File diffs and revert |
 | **Memory** | A map of agent memory (with `[[link]]` relations) |
-| **Prompts** | Saved templates, sent with one click |
+| **Prompts** | Saved templates, sent with one click; add ready-made commands from aitmpl.com |
 
 ### Code panel
 
@@ -186,9 +186,40 @@ parent task.
 ### Skills panel
 
 Two modes. **Installed** manages the skills on disk: disabling doesn't delete
-anything, `SKILL.md` is renamed and can be turned back on. **Discover** searches
-GitHub repositories: tick the ones you want and install them in bulk; the scope
-is asked once. You can add your own repository to the built-in sources.
+anything, `SKILL.md` is renamed and can be turned back on. **Discover** finds new
+skills three ways, and all of them install the same way: tick what you want and
+install in bulk; the scope is asked once.
+
+- **Catalogs**: a few curated GitHub repositories plus the
+  [aitmpl.com](https://www.aitmpl.com) catalog (about 950 skills, with category,
+  downloads, licence and a security scan). High and critical scan results are
+  hidden until you ask for them, and risky or proprietary picks need an explicit
+  "I've read it" before install. Skills from outside repositories install from
+  the exact commit that was scanned.
+- **skills.sh**: type a name and press Enter to search
+  [skills.sh](https://skills.sh) (finds well-known skills such as `ponytail` or
+  `impeccable` with their install counts). These results have no scan data, so
+  they are marked "not scanned" and also need the acknowledgement.
+- **GitHub link**: paste `github.com/owner/repo` (or a link to one skill folder)
+  to scan that repository once. It isn't saved as a source.
+
+When a repository keeps the same skill in one folder per tool (`.claude/`,
+`.cursor/`, …), Discover shows it once.
+
+### Templates from aitmpl.com
+
+- **New agent → Template**: pick one of about 420 ready-made agents. It fills in
+  the name, description, model and persona; nothing is created until you press
+  Create. The template's tool list isn't imported; permissions still go through
+  Claudiva's own gate.
+- **Prompts → Add from aitmpl**: pick a Claude Code command; its text fills the
+  editor as is (placeholders such as `$ARGUMENTS` are pointed out).
+- **Agent → Advanced → Add MCP from aitmpl**: pick an MCP server, fill in the keys
+  it needs and approve it. It is added to **that agent only** (`claude mcp add`
+  in a terminal would add it to every agent). Before approval the panel says
+  whether it runs code on your machine, that the keys are stored unencrypted in
+  the agent's `config.json`, and that every tool definition costs tokens in each
+  of that agent's sessions.
 
 ### Browser panel
 
@@ -390,6 +421,23 @@ and `web/CLAUDE.md`), product decisions in `PRODUCT.md`, the visual authority in
 `npx`, a global install and `npm link`: [`docs/YAYIN.md`](docs/YAYIN.md). These
 developer notes are written in Turkish.
 
+## 🌐 Network requests
+
+Claudiva talks only to the services you use from the panel; the browser never
+calls them directly, the local server does.
+
+- **GitHub** (`api.github.com`, `raw.githubusercontent.com`): scanning catalog
+  repositories and installing skills. Unauthenticated GitHub allows 60 API
+  calls per hour **per IP address**; a repository tree is read once and reused
+  for 10 minutes, and files are downloaded from the raw host, which isn't
+  counted.
+- **aitmpl.com**: the catalog of skills, agents, commands and MCP servers, only
+  when you refresh it. Requests carry the User-Agent
+  `claudiva/<version> (+https://github.com/Serdarsahinn05/claudiva/issues)`. If
+  the site can't be reached, the same files are read from its GitHub
+  repository.
+- **skills.sh**: only when you search there; your search term is sent to it.
+
 ## ⚠️ Known limits
 
 - The provider layer is abstracted (`AgentBackend`), but **there is one provider
@@ -397,6 +445,10 @@ developer notes are written in Turkish.
 - The Browser panel needs Chromium downloaded separately (see above).
 - An agent has to load the `complete_task` tool with `ToolSearch` before calling
   it; that costs an extra turn but doesn't break anything.
+- The skills.sh search endpoint isn't documented by its owners. If it changes,
+  only that part of Discover stops working.
+- "Installed" is matched by folder name, so another author's skill with the same
+  name also shows as installed.
 
 ## ✨ How it was written
 

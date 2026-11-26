@@ -123,7 +123,7 @@ paletinden (`Ctrl+K`) seçilir.
 | **Sohbet** | Ekip bir grup sohbeti gibi: ajanlar birbirine iş verir, siz `@ajan` ile araya girersiniz |
 | **Pano** | Kendi düzenlediğiniz widget panosu: kart ekler, sürükler, boyutlandırırsınız |
 
-![Sohbet modu: ölçülmüş dosya sayısıyla teslim kartları](docs/screenshots/chat.jpg)
+![Sohbet modu, Cam açık: ölçülmüş dosya sayısıyla teslim kartları ve sağ panelde lider](docs/screenshots/chat.jpg)
 
 **Sohbet** modunda her teslim kartı, ajanın gerçekte kaç dosya yazdığını
 gösterir; bu sayı ajanın iddiası değil, ölçümdür. Bir mesajı yanıtlayabilir
@@ -136,7 +136,7 @@ skill'leri (açıp kapatabilirsiniz), MCP sunucuları ve dokunduğu dosyalar. Ba
 ve MCP durumu ajanın açık oturumundan okunur; oturum kapalıysa panel tahmin
 yürütmez, bunu söyler. Geniş ekranda panel açık başlar.
 
-![Pano modu: ekibe yaz, canlı akış, durum, bütçe ve ajanlar](docs/screenshots/board.jpg)
+![Pano modu: ekibe yaz, delegasyon ağı, canlı akış, durum, ajanlar ve etkinlik ısı haritası](docs/screenshots/board.jpg)
 
 Pano widget'ları arasında **ajan etkinliği ısı haritası** (son 7 gün, ajan ve
 gün başına token), **bütçe kadranı** ve **delegasyon ağı** da var: kim kime iş
@@ -160,11 +160,11 @@ açık ajan kendi gözünü alır, hepsi aynı anda görünür.
 | **Görevler** | Dağıtım, bağımlılık zincirleri, sonuçlar |
 | **Kod** | Proje ağacı ve dosya içeriği; sözdizimi renkli, salt okunur |
 | **Raporlar** | Ajanın *iddiası* ile *ölçümü* yan yana: ne dediği ve hangi dosyalara gerçekten dokunduğu |
-| **Skill'ler** | Kurulu skill'leri aç/kapat/sil; depolarda ara ve toplu kur |
+| **Skill'ler** | Kurulu skill'leri aç/kapat/sil; kataloglarda, skills.sh'te ya da GitHub linkiyle yenilerini bul ve toplu kur |
 | **Browser** | Sunucudaki tarayıcı; ajanların sürdüğü sayfayı siz de görürsünüz |
 | **Değişiklikler** | Dosya farkları, geri alma |
 | **Hafıza** | Ajan hafıza haritası (`[[link]]` ilişkileriyle) |
-| **Promptlar** | Kayıtlı şablonlar, tek tıkla gönderim |
+| **Promptlar** | Kayıtlı şablonlar, tek tıkla gönderim; aitmpl.com'dan hazır komut ekleme |
 
 ### Kod paneli
 
@@ -188,8 +188,38 @@ altında toplanır.
 
 İki kip vardır. **Kurulu** kipi diskteki skill'leri yönetir: kapatmak dosyayı
 silmez, `SKILL.md` yeniden adlandırılır ve istediğinizde geri açılır. **Keşfet**
-kipi GitHub depolarında arama yapar: işaretleyip toplu kurarsınız, kapsam bir kez
-sorulur. Yerleşik kaynaklara kendi deponuzu ekleyebilirsiniz.
+kipi yeni skill'leri üç yoldan bulur ve hepsi aynı şekilde kurulur: işaretleyip
+toplu kurarsınız, kapsam bir kez sorulur.
+
+- **Kataloglar**: birkaç seçilmiş GitHub deposu ve
+  [aitmpl.com](https://www.aitmpl.com) katalogu (yaklaşık 950 skill; kategori,
+  indirme sayısı, lisans ve güvenlik taramasıyla). Yüksek ve kritik riskli
+  olanlar siz istemedikçe gizlidir; riskli ya da özel lisanslı bir seçim kurulum
+  öncesi açık bir "Okudum" onayı ister. Dış depolardaki skill'ler, taranan
+  commit'in kendisinden kurulur.
+- **skills.sh**: bir ad yazıp Enter'a basınca [skills.sh](https://skills.sh)'te
+  aranır (`ponytail`, `impeccable` gibi bilinen skill'leri kurulum sayılarıyla
+  bulur). Bu sonuçların tarama bilgisi yoktur; "taranmadı" olarak işaretlenir ve
+  onlar da onay ister.
+- **GitHub linki**: `github.com/sahip/depo` (ya da tek bir skill klasörünün
+  linki) yapıştırılınca o depo bir kez taranır. Kaynak olarak kaydedilmez.
+
+Bir depo aynı skill'i her araç için ayrı klasörde tutuyorsa (`.claude/`,
+`.cursor/`, …) Keşfet onu tek satır gösterir.
+
+### aitmpl.com'dan şablonlar
+
+- **Yeni ajan → Şablon**: yaklaşık 420 hazır ajandan birini seçersiniz; ad,
+  açıklama, model ve kişilik dolar. "Oluştur"a basmadan hiçbir şey oluşmaz.
+  Şablonun araç listesi alınmaz; izinler yine Claudiva'nın kendi kapısından geçer.
+- **Promptlar → aitmpl'den ekle**: bir Claude Code komutu seçersiniz; metni
+  düzenleyiciye olduğu gibi gelir (`$ARGUMENTS` gibi yer tutucular belirtilir).
+- **Ajan → Gelişmiş → aitmpl'den MCP ekle**: bir MCP sunucusu seçer, istediği
+  anahtarları doldurup onaylarsınız. **Yalnız o ajana** eklenir (terminaldeki
+  `claude mcp add` bütün ajanlara ekler). Onaydan önce panel sunucunun
+  bilgisayarınızda kod çalıştırıp çalıştırmadığını, anahtarların ajanın
+  `config.json` dosyasına şifresiz yazıldığını ve her araç tanımının o ajanın her
+  oturumunda token tuttuğunu söyler.
 
 ### Browser paneli
 
@@ -390,6 +420,21 @@ Mimari kararlar ve tuzaklar `CLAUDE.md` (ve `server/CLAUDE.md`, `web/CLAUDE.md`)
 yayınlama, sürüm yükseltme ve `npx` / global kurulum / `npm link` farkı:
 [`docs/YAYIN.md`](docs/YAYIN.md).
 
+## 🌐 Ağ istekleri
+
+Claudiva yalnız panelden kullandığınız servislerle konuşur; bu istekleri tarayıcı
+değil, yerel sunucu yapar.
+
+- **GitHub** (`api.github.com`, `raw.githubusercontent.com`): katalog depolarını
+  tarama ve skill kurma. Kimlik doğrulamasız GitHub, **IP adresi başına** saatte
+  60 API isteğine izin verir; bir deponun ağacı bir kez okunup 10 dakika
+  kullanılır, dosyalar kota saymayan raw adresinden iner.
+- **aitmpl.com**: skill, ajan, komut ve MCP katalogu; yalnız yenilediğinizde.
+  İstekler `claudiva/<sürüm> (+https://github.com/Serdarsahinn05/claudiva/issues)`
+  User-Agent'ını taşır. Siteye ulaşılamazsa aynı dosyalar sitenin GitHub
+  deposundan okunur.
+- **skills.sh**: yalnız orada arama yaptığınızda; arama kelimeniz oraya gider.
+
 ## ⚠️ Bilinen sınırlar
 
 - Sağlayıcı katmanı soyutlanmıştır (`AgentBackend`) ama **şu an tek sağlayıcı
@@ -397,6 +442,10 @@ yayınlama, sürüm yükseltme ve `npx` / global kurulum / `npm link` farkı:
 - Browser paneli için Chromium'u ayrıca indirmeniz gerekir (yukarıya bakın).
 - Ajan `complete_task` aracını çağırmadan önce `ToolSearch` ile yüklemek zorunda
   kalıyor; fazladan bir tur maliyeti var, işlevi bozmuyor.
+- skills.sh arama ucu sahipleri tarafından belgelenmemiştir. Değişirse yalnız
+  Keşfet'in o bölümü çalışmaz.
+- "Kurulu" eşleşmesi klasör adıyla yapılır; başka bir yazarın aynı adlı skill'i
+  de kurulu görünür.
 
 ## ✨ Nasıl yazıldı
 

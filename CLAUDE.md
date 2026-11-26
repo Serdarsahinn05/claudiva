@@ -54,14 +54,17 @@ Rules:
 
 ## ŞU ANKİ İŞ (oku: docs/SONRAKI-ISLER.md, HANDOFF.md, docs/ANALIZ.md)
 
-0.1.1 yayımlı. 2026-11-23/24 turlarında (hepsi commit + push, `88d9ea9`):
-Sohbet modu, `.claudiva` geçişi, İngilizce ajan dosyaları, stil katmanı
-(Gözlemevi/Stüdyo/Fosfor), **Pano modu**, isteğe bağlı **JEV model
-yönlendiricisi** (varsayılan kapalı), sade terminal dökümü. **Sıradaki iş ve
-kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma. (2026-11-25 akşamı: serbest palet yok ama her stilin Açık/Koyu modu var; varsayılan stil Cam. Ayrıntı `HANDOFF.md` başı ve `web/CLAUDE.md` → "Stil katmanı".)
+Durum (2026-11-26, hepsi push edildi): stiller Cam (varsayılan) · Gözlemevi ·
+Stüdyo · Fosfor, her birinin Açık/Koyu modu; Paneller/Sohbet/Pano modları;
+JEV yönlendiricisi (varsayılan kapalı). **aitmpl.com entegrasyonu bitti**
+(skill'ler, ajan şablonları, komutlar, ajana MCP) + skills.sh araması +
+GitHub linkiyle kurulum; ayrıntı `docs/AITMPL-ENTEGRASYON.md`. **Sıradaki iş ve
+kullanıcı kararları `HANDOFF.md`'nin başında.** Kararları yeniden sorma.
 
-**Faz 4 = ikinci sağlayıcı ve kullanıcı onu BİLEREK ertelemişti**, açmadan önce
-sor. **3D ofis de sona bırakıldı**; three.js eklemeden önce sor.
+Kalıcı kararlar: ünlü skill depoları YERLEŞİK kaynak yapılmaz, depo başına
+filtre çipi açılmaz (bakım + ileride Rust uygulaması). `npm publish` ve
+`git push` kullanıcı isteyince. **Faz 4 (ikinci sağlayıcı), 3D ofis, Tauri,
+yeni stiller BİLEREK ertelendi**: açmadan önce sor; three.js eklemeden önce sor.
 
 ## Notlar nerede (token için bölündü)
 
