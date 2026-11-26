@@ -436,6 +436,10 @@ export interface CatalogSkill {
   downloads?: number;
   scan?: { severity: ScanSeverity; score: number } | null;
   page?: string | null;
+  // yalnız skills.sh'te dolu
+  installs?: number;
+  /** Yol bilinmiyor; kurulumda bu adla depo ağacından çözülür. */
+  skillId?: string;
   /** Bu ad hangi kapsamlarda zaten kurulu (boş = kurulu değil). */
   installedScopes: SkillScope[];
 }

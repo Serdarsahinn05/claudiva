@@ -254,8 +254,12 @@ function dropLock(name: string): void {
 const LOCK_FILE = path.join(PROJECT_DIR, 'skills-lock.json');
 /** Tek bir skill dosyası için üst sınır — kaçak bir depo diski doldurmasın. */
 const MAX_ASSET_BYTES = 2_000_000;
-/** SKILL.md yanında indirilecek en fazla dosya (references/, scripts/…). */
-const MAX_ASSETS = 40;
+/**
+ * SKILL.md yanında indirilecek en fazla dosya (references/, scripts/…).
+ * 40'tı; docx (61 dosya) eksik kuruluyordu. Dosyalar raw'dan indiği için
+ * (kotasız, bkz. githubTree.ts) sınır yalnız "kaçak depo" korumasıdır.
+ */
+const MAX_ASSETS = 150;
 
 interface LockFile {
   version: number;

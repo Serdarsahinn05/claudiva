@@ -9,9 +9,10 @@
 Türkiye'den engelli; GitHub kopyasına düşülüyor. Push edilmedi.
 
 Kota iyileştirmesi (`githubTree.ts`, ayrıntı `server/CLAUDE.md`): kurulum
-ve tekrar taramalar artık GitHub kotası harcamıyor. Açık soru: kurulumdaki
-40 dosya sınırı (`MAX_ASSETS`) docx gibi 61 dosyalı skill'i eksik kuruyor
-(eski davranış); raw kotasız olduğu için yükseltilebilir, kullanıcıya sorulacak.
+ve tekrar taramalar artık GitHub kotası harcamıyor. Kurulum dosya sınırı
+40 → 150 (kullanıcı onayı). **skills.sh bağlandı** (Keşfet'te adla arama,
+"taranmadı" rozeti + kurulum onayı; ayrıntı `docs/AITMPL-ENTEGRASYON.md`).
+Sırada: 4. adım (MCP), kullanıcı onayı bekliyor.
 
 Aynı gün ek (`3. adım` commit'inde): depo taramasında kopya ayıklama, Skill
 paneli dar yuva düzeni (panel kayar, yapışkan arama, katlanır filtreler,

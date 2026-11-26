@@ -2488,8 +2488,9 @@ label.check.small { font-size: 12px; color: var(--muted); }
   margin: calc(-1 * var(--s2)) 0; padding: var(--s2) 0;
   background: var(--hull-0);
 }
+/* Cam'da zemin neredeyse opak: 0.92'de alttan kayan metin okunuyordu. */
 :root[data-style='glass'] .sk-sticky {
-  background: rgb(var(--surface-rgb) / 0.92);
+  background: rgb(var(--surface-rgb) / 0.985);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 .sk-filters { border-bottom: var(--border-w) solid var(--edge); padding-bottom: var(--s2); }

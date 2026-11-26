@@ -15,6 +15,7 @@ import {
   catalogView,
   installMany,
   scanLink,
+  searchRemote,
   listSources,
   refreshCatalog,
   removeSource,
@@ -468,6 +469,11 @@ export function createRoutes(
     return catalogView();
   }));
 
+  /** skills.sh'te ad ile arama; yalnız kullanıcı isteyince, sonuç diske yazılmaz. */
+  r.get('/skills/search-remote', handle(async (req) => ({
+    skills: await searchRemote(String(req.query.q ?? '')),
+  })));
+
   /** Bir depoyu kaynak olarak kaydetmeden tarar (GitHub linkiyle bulma). */
   r.post('/skills/scan-link', handle(async (req) => {
     const url = String(req.body?.url ?? '');
@@ -499,11 +505,15 @@ export function createRoutes(
 
     const parsed = items.map((raw: unknown) => {
       const it = (raw ?? {}) as Record<string, unknown>;
-      if (!it.repo || !it.skillPath) throw new ApiError('skill_row_invalid', 'Her satırda repo ve skillPath olmalı.');
+      // skills.sh satırı yol yerine skillId taşır; yol kurulumda çözülür.
+      if (!it.repo || (!it.skillPath && !it.skillId)) {
+        throw new ApiError('skill_row_invalid', 'Her satırda repo ve skillPath olmalı.');
+      }
       return {
-        id: String(it.id ?? `${String(it.repo)}:${String(it.skillPath)}`),
+        id: String(it.id ?? `${String(it.repo)}:${String(it.skillPath ?? it.skillId)}`),
         repo: String(it.repo),
-        skillPath: String(it.skillPath),
+        skillPath: it.skillPath ? String(it.skillPath) : '',
+        skillId: it.skillId ? String(it.skillId) : undefined,
         ref: it.ref ? String(it.ref) : undefined,
         name: it.name ? String(it.name) : undefined,
       };

@@ -48,6 +48,8 @@ async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
 export const api = {
   listAgents: () => req<AgentSnapshot[]>('GET', '/api/agents'),
   createAgent: (input: unknown) => req<AgentSnapshot>('POST', '/api/agents', input),
+  searchSkillsRemote: (q: string) =>
+    req<{ skills: CatalogSkill[] }>('GET', `/api/skills/search-remote?q=${encodeURIComponent(q)}`),
   scanSkillLink: (url: string) => req<{ skills: CatalogSkill[] }>('POST', '/api/skills/scan-link', { url }),
   aitmplList: (kind: AitmplKind) => req<AitmplListView>('GET', `/api/aitmpl/${kind}`),
   refreshAitmplList: (kind: AitmplKind) => req<AitmplListView>('POST', `/api/aitmpl/${kind}/refresh`),
@@ -115,7 +117,7 @@ export const api = {
   removeSkillSource: (repo: string) =>
     req<CatalogSource[]>('DELETE', `/api/skills/sources?repo=${encodeURIComponent(repo)}`),
   installSkills: (input: {
-    items: { id: string; repo: string; skillPath: string; ref?: string; name?: string }[];
+    items: { id: string; repo: string; skillPath: string; ref?: string; skillId?: string; name?: string }[];
     scope: SkillScope;
     agentId?: string;
   }) => req<BulkResult[]>('POST', '/api/skills/install-many', input),

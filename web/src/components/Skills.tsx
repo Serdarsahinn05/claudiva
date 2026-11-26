@@ -68,7 +68,11 @@ function isProprietary(s: CatalogSkill): boolean {
 }
 /** Riskli ya da özel lisanslı: kurulum onayında ayrıca listelenir. */
 function needsAck(s: CatalogSkill): boolean {
-  return isRisky(s) || isProprietary(s);
+  return isRisky(s) || isProprietary(s) || isUnscanned(s);
+}
+/** skills.sh tarama bilgisi vermiyor; rozet ve kurulum onayı bu yüzden. */
+function isUnscanned(s: CatalogSkill): boolean {
+  return s.source === 'skills.sh';
 }
 const SCAN_CHIP: Record<string, string> = {
   LOW: 'chip-pending',
@@ -337,6 +341,10 @@ function Discover({
   const [linkBusy, setLinkBusy] = useState(false);
   const [linkErr, setLinkErr] = useState('');
   const [linkSkills, setLinkSkills] = useState<CatalogSkill[]>([]);
+  /** skills.sh araması: yalnız düğme/Enter ile, sonuç diske yazılmaz. */
+  const [remote, setRemote] = useState<{ q: string; skills: CatalogSkill[] } | null>(null);
+  const [remoteBusy, setRemoteBusy] = useState(false);
+  const [remoteErr, setRemoteErr] = useState('');
   const [category, setCategory] = useState('');
   /** Filtre bölümü açık mı; tercih hatırlanır (yoksa kapalı başlar). */
   const [filtersOpen, setFiltersOpenState] = useState(() => localStorage.getItem(FILTERS_KEY) === '1');
@@ -420,12 +428,27 @@ function Discover({
 
   const chosen: CatalogSkill[] = useMemo(() => {
     const seen = new Set<string>();
-    return [...linkSkills, ...(view?.skills ?? [])].filter((s) => {
+    return [...linkSkills, ...(remote?.skills ?? []), ...(view?.skills ?? [])].filter((s) => {
       if (!sel.has(s.id) || seen.has(s.id)) return false;
       seen.add(s.id);
       return true;
     });
-  }, [view, sel, linkSkills]);
+  }, [view, sel, linkSkills, remote]);
+
+  async function searchRemote() {
+    const term = q.trim();
+    if (term.length < 2) return;
+    setRemoteBusy(true);
+    setRemoteErr('');
+    try {
+      setRemote({ q: term, skills: (await api.searchSkillsRemote(term)).skills });
+    } catch (e) {
+      setRemote(null);
+      setRemoteErr((e as Error).message);
+    } finally {
+      setRemoteBusy(false);
+    }
+  }
 
   async function scanLink() {
     if (!link.trim()) return;
@@ -446,7 +469,14 @@ function Discover({
     setRefreshing(true);
     try {
       const res = await api.installSkills({
-        items: chosen.map((s) => ({ id: s.id, repo: s.repo, skillPath: s.skillPath, ref: s.ref, name: s.name })),
+        items: chosen.map((s) => ({
+          id: s.id,
+          repo: s.repo,
+          skillPath: s.skillPath,
+          ref: s.ref,
+          skillId: s.skillId,
+          name: s.name,
+        })),
         scope,
         agentId,
       });
@@ -460,6 +490,7 @@ function Discover({
       await load();
       // Linkten kurulanların "kurulu" rozeti de tazelensin.
       if (linkSkills.length) setLinkSkills((await api.scanSkillLink(link.trim())).skills);
+      if (remote) setRemote({ q: remote.q, skills: (await api.searchSkillsRemote(remote.q)).skills });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -490,6 +521,7 @@ function Discover({
               </span>
             )}
             {isProprietary(s) && <span className="chip chip-warn">{L.skills.proprietary}</span>}
+            {isUnscanned(s) && <span className="chip chip-pending">{L.skills.notScanned}</span>}
             {installed && (
               <span className="chip chip-done">
                 {L.skills.installedChip(s.installedScopes.map((x) => SCOPE_LABEL[x]).join(', '))}
@@ -503,15 +535,16 @@ function Discover({
           )}
           <div className="sk-meta">
             {s.downloads !== undefined && <span>{L.skills.downloads(s.downloads)}</span>}
+            {s.installs !== undefined && <span>{L.skills.installsN(s.installs)}</span>}
             {s.license && !isProprietary(s) && <span>{s.license}</span>}
             {s.ref && <span title={s.ref}>{L.skills.pinned} {s.ref.slice(0, 7)}</span>}
             {s.page && (
               <a href={s.page} target="_blank" rel="noreferrer noopener">
-                {L.skills.openPage}
+                {isUnscanned(s) ? L.skills.openSkillsSh : L.skills.openPage}
               </a>
             )}
             <span className="sk-dir" title={`${s.repo}/${s.skillPath}`}>
-              {s.source ? `${s.repo}/${s.skillPath}` : s.skillPath}
+              {!s.skillPath ? s.repo : s.source ? `${s.repo}/${s.skillPath}` : s.skillPath}
             </span>
           </div>
         </div>
@@ -534,6 +567,9 @@ function Discover({
           placeholder={L.skills.catalogSearch}
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void searchRemote();
+          }}
           aria-label={L.skills.catalogAria}
         />
         <button onClick={() => void refresh()} disabled={refreshing}>
@@ -616,6 +652,29 @@ function Discover({
         </div>
       )}
       </details>
+
+      {/* skills.sh: adıyla bilinen ama katalogda olmayan skill (ponytail,
+          impeccable, graphify…). Yalnız istenince aranır. */}
+      <div className="sk-link">
+        <p className="sk-dialog-note">{L.skills.remoteHint}</p>
+        {q.trim().length >= 2 && (
+          <div className="sk-tools">
+            <button onClick={() => void searchRemote()} disabled={remoteBusy}>
+              {remoteBusy ? L.skills.refreshing : L.skills.remoteBtn(q.trim())}
+            </button>
+          </div>
+        )}
+        {remoteErr && <div className="error">{remoteErr}</div>}
+        {remote &&
+          (remote.skills.length === 0 ? (
+            <span className="sk-cat-when">{L.skills.remoteNone(remote.q)}</span>
+          ) : (
+            <>
+              <span className="sk-cat-when">{L.skills.remoteFound(remote.skills.length, remote.q)}</span>
+              <div className="sk-list">{remote.skills.map(renderRow)}</div>
+            </>
+          ))}
+      </div>
 
       {/* Katalogda olmayan skill: GitHub linkiyle tek seferlik tarama.
           Kaynak listesine eklenmez (ayrı filtre çipi istenmedi). */}
@@ -775,7 +834,12 @@ function ScopeDialog({
                 <li key={s.id}>
                   {s.name}{' '}
                   <span className="muted">
-                    · {s.scan && isRisky(s) ? L.skills.scanLabel[s.scan.severity] : L.skills.proprietary}
+                    ·{' '}
+                    {s.scan && isRisky(s)
+                      ? L.skills.scanLabel[s.scan.severity]
+                      : isProprietary(s)
+                        ? L.skills.proprietary
+                        : L.skills.notScanned}
                   </span>
                 </li>
               ))}

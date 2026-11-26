@@ -219,7 +219,21 @@ source      dış skill'lerde { repo, path, sabitlenmiş commit, lisans }; diğe
   yapışkan, filtreler katlanır (`claudiva.skills.filters`), katalog
   açıklaması 3 satır. Bkz. `web/CLAUDE.md` → "Skill paneli".
 
-### skills.sh: ÇALIŞIYOR, henüz BAĞLANMADI
+### skills.sh: BAĞLANDI (2026-11-26, kullanıcı onayı)
+
+Uygulanan (`server/src/skillsSh.ts`, `skillCatalog.ts` `searchRemote` /
+`resolveSkillPath`, `GET /api/skills/search-remote?q=`): Keşfet'te arama
+kutusuna yazıp Enter ya da "“…” için skills.sh’te ara" düğmesi; her tuşta
+istek YOK. En fazla 50 sonuç, diske yazılmaz. Satır "taranmadı" rozeti,
+kurulum sayısı ve skills.sh sayfası bağlantısı taşır; kurulum onayı ister.
+Yol kurulumda depo ağacından çözülür (depo başına 1 API isteği, 10 dk
+önbellek). Ölçüldü: ponytail 50 sonuç / 1.2 sn; ponytail-review ve
+impeccable (63 dosya) adla kuruldu, 2 istek; olmayan ad anlaşılır hata.
+**Bilinen sınır:** "kurulu" eşleşmesi dizin adıyla, bu yüzden başka
+yazarların aynı adlı kopyaları (graphify çatalları) da "kurulu" görünür;
+kurulum hedefi de aynı ad olduğu için zaten birlikte kurulamazlar.
+
+İlk inceleme notları:
 
 Ölçüldü (2026-11-26, bu makineden, engel yok):
 

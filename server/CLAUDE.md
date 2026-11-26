@@ -280,6 +280,12 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   "304 sayılmaz" kuralı yalnız token'lı istek için. Kota doluysa eldeki eski
   ağaç kullanılır. Ağaç kesilmişse (çok büyük depo) kurulum eski Contents
   API yoluna düşer.
+- **skills.sh (`skillsSh.ts`) belgelenmemiş bir uç**: her şey o dosyada,
+  hata yalnız panelin o bölümünü susturur. Yanıtta yol yok; satır
+  `skillId` taşır ve `installMany` yolu `resolveSkillPath` ile ağaçtan çözer.
+  Arama yalnız kullanıcı isteyince (kelime üçüncü tarafa gidiyor).
+- **Kurulum dosya sınırı `MAX_ASSETS` 150** (40'tı; docx 61 dosyayla eksik
+  kuruluyordu). Raw kotasız olduğu için sınır yalnız kaçak depo koruması.
 - **GitHub linkiyle bulma** (`POST /api/skills/scan-link`, `scanLink` +
   `parseRepoLink`): depo KAYNAK OLARAK KAYDEDİLMEZ (kullanıcı kararı: her
   depoya ayrı filtre çipi yok, yerleşik liste yok). `github.com/…` (şemasız

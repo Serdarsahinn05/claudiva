@@ -29,6 +29,7 @@ import path from 'node:path';
 import { DATA_DIR } from './paths.js';
 import { AITMPL_KEY, fetchAitmplSkills, type ScanSeverity } from './aitmpl.js';
 import { repoTree, type RepoTree } from './githubTree.js';
+import { searchSkillsSh } from './skillsSh.js';
 import { installFromGitHub, listSkills, parseFrontmatter, type SkillInfo, type SkillScope } from './skills.js';
 
 const CATALOG_FILE = path.join(DATA_DIR, 'skill-catalog.json');
@@ -76,6 +77,11 @@ export interface CatalogSkill {
   downloads?: number;
   scan?: { severity: ScanSeverity; score: number } | null;
   page?: string | null;
+  // ── yalnız skills.sh'te dolu ──
+  /** Kurulum sayısı (skills.sh). */
+  installs?: number;
+  /** Depo içi yol bilinmiyor; kurulumda bu adla depo ağacından çözülür. */
+  skillId?: string;
 }
 
 interface CatalogFile {
@@ -416,6 +422,43 @@ export async function scanLink(input: string): Promise<CatalogView['skills']> {
   return (under.length ? under : r.skills).map((s) => ({ ...s, installedScopes: idx.get(s.folder) ?? [] }));
 }
 
+export const SKILLS_SH_KEY = 'skills.sh';
+
+/** skills.sh araması → katalog satırı. Yol boş: kurulumda çözülür. */
+export async function searchRemote(q: string): Promise<CatalogView['skills']> {
+  const hits = await searchSkillsSh(q);
+  const idx = installedIndex(listSkills());
+  return hits.map((h) => ({
+    id: `${SKILLS_SH_KEY}:${h.id}`,
+    name: h.name,
+    description: '',
+    repo: h.repo,
+    skillPath: '',
+    folder: h.skillId,
+    source: SKILLS_SH_KEY,
+    skillId: h.skillId,
+    installs: h.installs,
+    page: `https://skills.sh/${h.id.split('/').map(encodeURIComponent).join('/')}`,
+    installedScopes: idx.get(h.skillId) ?? [],
+  }));
+}
+
+/**
+ * skills.sh yalnız skill adını veriyor; depo içi yolu ağaçtan bulur
+ * (kopyalar ayıklanmış hâliyle: impeccable'ın 27 yolundan asıl olanı).
+ */
+export async function resolveSkillPath(repo: string, skillId: string): Promise<string> {
+  assertRepo(repo);
+  const tree = await repoTree(repo);
+  const dirs = dedupeCopies(
+    tree.entries.filter((n) => n.type === 'blob' && /(^|\/)SKILL\.md$/i.test(n.path)).map((n) => n.path),
+  ).map((p) => p.replace(/(^|\/)SKILL\.md$/i, ''));
+  const want = skillId.toLowerCase();
+  const hit = dirs.find((d) => (d.split('/').pop() ?? '').toLowerCase() === want);
+  if (hit) return hit;
+  throw new Error(S.skillNotInRepo(skillId, repo));
+}
+
 export function catalogView(installed: SkillInfo[] = listSkills()): CatalogView {
   const cache = readCache();
   const byFolder = installedIndex(installed);
@@ -459,15 +502,17 @@ export interface BulkResult {
  * `skills-lock.json` tek dosya — paralel yazım kilidi bozardı.
  */
 export async function installMany(
-  items: { id: string; repo: string; skillPath: string; ref?: string; name?: string }[],
+  items: { id: string; repo: string; skillPath: string; ref?: string; skillId?: string; name?: string }[],
   scope: SkillScope,
   agentId?: string,
 ): Promise<BulkResult[]> {
   const out: BulkResult[] = [];
   for (const it of items) {
-    const name = it.name || it.skillPath.split('/').pop() || it.skillPath;
+    const name = it.name || it.skillPath.split('/').pop() || it.skillId || it.skillPath;
     try {
-      const info = await installFromGitHub({ repo: it.repo, skillPath: it.skillPath, ref: it.ref, scope, agentId });
+      // skills.sh satırının yolu yok: depo ağacından çözülür (aynı hata izolasyonu).
+      const skillPath = it.skillPath || (it.skillId ? await resolveSkillPath(it.repo, it.skillId) : '');
+      const info = await installFromGitHub({ repo: it.repo, skillPath, ref: it.ref, scope, agentId });
       out.push({ id: it.id, name: info.name, ok: true });
     } catch (e) {
       out.push({ id: it.id, name, ok: false, error: (e as Error).message });
