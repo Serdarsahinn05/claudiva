@@ -1,7 +1,7 @@
 # aitmpl.com (Claude Code Templates) entegrasyonu
 
-**Kayıt tarihi:** 2026-11-25. Durum: **1. adım (skill'ler) YAPILDI 2026-11-26**
-(`server/src/aitmpl.ts`, Skills → Keşfet), 2-4 bekliyor.
+**Kayıt tarihi:** 2026-11-25. Durum: **1. adım (skill'ler) ve 2. adım
+(ajan şablonları) YAPILDI 2026-11-26**; 3 (komutlar) ve 4 (MCP) bekliyor.
 
 > **Ölçüldü 2026-11-26: aitmpl.com Türkiye'den AÇILMIYOR.** Yerel DNS
 > `www.aitmpl.com` için 213.14.227.50 (Türk Telekom) veriyor, bağlantı zaman
@@ -164,3 +164,25 @@ source      dış skill'lerde { repo, path, sabitlenmiş commit, lisans }; diğe
   948 → 806), tarama/lisans/indirme/sabit commit rozetleri, aitmpl sayfası
   bağlantısı. Riskli ya da özel lisanslı seçimde kurulum penceresi listeler ve
   "Okudum, yine de kur" işaretlenmeden Kur kapalı (tarayıcıda denendi).
+
+## 2. adımda yapılan (ölçüldü, aynı test düzeni)
+
+- Yeni ajan formunun ilk bölümü **Şablon** (`AgentTemplates.tsx`; yalnız yeni
+  ajanda, düzenlemede yok: kişiliği sessizce ezerdi). Arama + kategori +
+  tarama rozeti; satıra tıklamak formu doldurur ve Kimlik'e geçer. Ajan
+  OLUŞTURULMAZ: form önizlemedir, kullanıcı Oluştur der.
+- Uçlar: `GET /api/aitmpl/agents` (önbellek, `DATA_DIR/aitmpl-agents.json`),
+  `POST /api/aitmpl/agents/refresh`, `GET /api/aitmpl/agents/draft?id=`.
+  Taslak yalnız katalogdaki kimlikten üretilir; dosya yolu istemciden değil
+  katalogdan gelir (`../../etc` → 400 "Template not in the catalog").
+- Dönüştürme (`agentDraft`): ad `accessibility-tester` → "Accessibility Tester";
+  açıklama `<example>` öncesi ilk cümle (≤220; 424'ünde `<example>` sızan 0,
+  boş 2); model frontmatter'dan, yoksa `null` ve form varsayılanı (Sonnet)
+  kalır (15 örnekte ham dosyayla birebir); gövde → personality + sonuna paket
+  ajanlarıyla AYNI dil satırı; rol `worker`; `tools` alınmaz.
+- `config.json`a `template: "agents/<kat>/<ad>"` yazılır. Aynı şablon ikinci
+  kez oluşturulunca kimlik `-2` soneki alır (yalnız şablonla; elle oluşturmada
+  eski hata davranışı). Ajan dosyası hep GitHub ham adresinden okunur (424'ünün
+  hepsi depo içi, `source` yok).
+- Katalog tazeleme 6.5 sn (aitmpl.com zaman aşımı + GitHub); 424 şablon,
+  3'ü yüksek/kritik (rozet + formda uyarı; gizlenmez).

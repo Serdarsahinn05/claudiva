@@ -1,4 +1,6 @@
 import type {
+  AgentDraft,
+  AitmplAgentsView,
   AgentSnapshot,
   BrowserAction,
   BrowserState,
@@ -43,6 +45,10 @@ async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
 export const api = {
   listAgents: () => req<AgentSnapshot[]>('GET', '/api/agents'),
   createAgent: (input: unknown) => req<AgentSnapshot>('POST', '/api/agents', input),
+  aitmplAgents: () => req<AitmplAgentsView>('GET', '/api/aitmpl/agents'),
+  refreshAitmplAgents: () => req<AitmplAgentsView>('POST', '/api/aitmpl/agents/refresh'),
+  aitmplAgentDraft: (id: string) =>
+    req<AgentDraft>('GET', `/api/aitmpl/agents/draft?id=${encodeURIComponent(id)}`),
   updateAgent: (id: string, patch: unknown) => req<AgentSnapshot>('PUT', `/api/agents/${id}`, patch),
   deleteAgent: (id: string) => req('DELETE', `/api/agents/${id}`),
   reorderAgents: (ids: string[]) => req<AgentSnapshot[]>('PUT', '/api/agents/order', { ids }),

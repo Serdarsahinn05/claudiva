@@ -16,7 +16,8 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { INSTALL_ROOT } from './paths.js';
+import { DATA_DIR, INSTALL_ROOT } from './paths.js';
+import { S } from './i18n.js';
 
 export const AITMPL_KEY = 'aitmpl.com';
 /** Depo içi skill'lerin yaşadığı depo ve kök. */
@@ -117,10 +118,14 @@ export interface AitmplResult {
 }
 
 /**
- * Katalogu okur. `prevSha` önbellekteki katalogun sürümü; aynıysa skill
- * listesi indirilmez. Adreslerden hiçbiri çalışmazsa son hata fırlatılır.
+ * Bir türün katalogunu okur. `prevSha` önbellekteki katalogun sürümü
+ * (`version.json` bütün katalog için tek sha taşır); aynıysa liste
+ * indirilmez. Adreslerden hiçbiri çalışmazsa son hata fırlatılır.
  */
-export async function fetchAitmplSkills(prevSha?: string): Promise<AitmplResult> {
+async function fetchCatalog(
+  type: 'skills' | 'agents',
+  prevSha?: string,
+): Promise<{ sha: string; components: RawComponent[] | null; via: string }> {
   let lastErr: Error = new Error('aitmpl');
   const order = [BASES[preferred], ...BASES.filter((_, i) => i !== preferred)];
   for (const base of order) {
@@ -129,14 +134,187 @@ export async function fetchAitmplSkills(prevSha?: string): Promise<AitmplResult>
       const sha = version.sha256 ?? '';
       const host = new URL(base).host;
       preferred = BASES.indexOf(base);
-      if (sha && sha === prevSha) return { sha, skills: null, via: host };
-      const cat = (await (await get(base + 'catalog/skills.json')).json()) as { components?: RawComponent[] };
+      if (sha && sha === prevSha) return { sha, components: null, via: host };
+      const cat = (await (await get(base + `catalog/${type}.json`)).json()) as { components?: RawComponent[] };
       if (!Array.isArray(cat.components)) throw new Error(`${host}: catalog`);
-      const skills = cat.components.map(convert).filter((s): s is AitmplSkill => s !== null);
-      return { sha, skills, via: host };
+      return { sha, components: cat.components, via: host };
     } catch (e) {
       lastErr = e as Error;
     }
   }
   throw lastErr;
+}
+
+export async function fetchAitmplSkills(prevSha?: string): Promise<AitmplResult> {
+  const r = await fetchCatalog('skills', prevSha);
+  return {
+    sha: r.sha,
+    via: r.via,
+    skills: r.components ? r.components.map(convert).filter((s): s is AitmplSkill => s !== null) : null,
+  };
+}
+
+// ------------------------------------------------------------------ ajanlar
+//
+// aitmpl ajanı tek bir `.md` (Claude Code subagent: frontmatter name,
+// description, tools, model + sistem istemi). Claudiva ajanı config.json +
+// personality.md; doğrudan kopyalanamaz, DÖNÜŞTÜRÜLÜR (`agentDraft`). Taslak
+// diske yazılmaz: panel formu doldurur, kullanıcı gözden geçirip oluşturur.
+
+const AGENTS_CACHE = path.join(DATA_DIR, 'aitmpl-agents.json');
+
+export interface AitmplAgent {
+  id: string;
+  name: string;
+  category: string;
+  /** `<example>` blokları atılmış kısa açıklama. */
+  summary: string;
+  /** Depo içi dosya yolu (`cli-tool/components/agents/<kat>/<ad>.md`). */
+  file: string;
+  downloads: number;
+  scan: { severity: ScanSeverity; score: number } | null;
+  page: string | null;
+}
+
+export interface AitmplAgentsView {
+  fetchedAt: number | null;
+  error?: string;
+  agents: AitmplAgent[];
+}
+
+interface AgentsCache {
+  sha: string;
+  fetchedAt: number;
+  agents: AitmplAgent[];
+}
+
+/**
+ * Açıklamadan ilk cümle. aitmpl ajan açıklamaları uzun ve `<example>`
+ * blokları taşıyor; ajan açıklaması (panelde ve ekip listesinde görünen)
+ * kısa olmalı. Cümle sonu bulunamazsa 220 karakterde kesilir.
+ */
+export function firstSentence(text: string): string {
+  const plain = text.split(/<example>/i)[0].replace(/\s+/g, ' ').trim();
+  const m = plain.match(/^(.{20,}?[.!?])(\s|$)/);
+  const out = m ? m[1] : plain;
+  return out.length > 220 ? out.slice(0, 217).trimEnd() + '…' : out;
+}
+
+function toAgent(c: RawComponent): AitmplAgent | null {
+  if (!c.id || !c.path || !c.name) return null;
+  const sev = String(c.scan?.severity ?? '').toUpperCase();
+  return {
+    id: c.id,
+    name: c.name,
+    category: c.category ?? '',
+    summary: firstSentence(c.description ?? ''),
+    file: `cli-tool/components/agents/${c.path}`,
+    downloads: typeof c.downloads === 'number' ? c.downloads : 0,
+    scan: SEVERITIES.has(sev) ? { severity: sev as ScanSeverity, score: Number(c.scan?.score ?? 0) } : null,
+    page: c.urls?.page ?? null,
+  };
+}
+
+function readAgentsCache(): AgentsCache | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(AGENTS_CACHE, 'utf-8')) as AgentsCache;
+    if (raw && Array.isArray(raw.agents)) return raw;
+  } catch {
+    // yok ya da bozuk
+  }
+  return null;
+}
+
+/** Önbellekten okur; ağa ÇIKMAZ. */
+export function aitmplAgents(): AitmplAgentsView {
+  const c = readAgentsCache();
+  return { fetchedAt: c?.fetchedAt ?? null, agents: c?.agents ?? [] };
+}
+
+/** Katalogu tazeler. Ağ yoksa önbellek korunur, hata yanında döner. */
+export async function refreshAitmplAgents(): Promise<AitmplAgentsView> {
+  const prev = readAgentsCache();
+  try {
+    const r = await fetchCatalog('agents', prev?.agents.length ? prev.sha : undefined);
+    const agents = r.components
+      ? r.components
+          .map(toAgent)
+          .filter((a): a is AitmplAgent => a !== null)
+          .sort((a, b) => a.name.localeCompare(b.name))
+      : (prev?.agents ?? []);
+    const next: AgentsCache = { sha: r.sha, fetchedAt: Date.now(), agents };
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(AGENTS_CACHE, JSON.stringify(next), 'utf-8');
+    } catch {
+      // önbellek yazılamazsa liste yine dönsün
+    }
+    return { fetchedAt: next.fetchedAt, agents };
+  } catch (e) {
+    return {
+      fetchedAt: prev?.fetchedAt ?? null,
+      agents: prev?.agents ?? [],
+      error: S.aitmplUnreachable((e as Error).message),
+    };
+  }
+}
+
+/** Panelin formu dolduracağı taslak. */
+export interface AgentDraft {
+  template: string;
+  name: string;
+  description: string;
+  model: 'haiku' | 'sonnet' | 'opus' | null;
+  personality: string;
+  scan: AitmplAgent['scan'];
+}
+
+/** Paket ajanlarındaki kural; aitmpl istemleri İngilizce. */
+const LANGUAGE_LINE = 'Reply in the language the user writes in, even though these instructions are in English.';
+
+/** "accessibility-tester" → "Accessibility Tester" */
+function humanize(slug: string): string {
+  return slug
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/**
+ * Ajan dosyasını indirip taslağa çevirir.
+ *
+ * Yalnız katalogda olan kimlik kabul edilir; dosya yolu istemciden değil
+ * katalogdan gelir (keyfi URL indirtilemesin). `tools` listesi bilerek
+ * alınmaz: Claudiva'da karşılığı yok ve personality'ye yazmak yanıltırdı.
+ */
+export async function agentDraft(id: string): Promise<AgentDraft> {
+  const entry = readAgentsCache()?.agents.find((a) => a.id === id);
+  if (!entry) throw new Error(S.templateNotFound);
+
+  const url = `https://raw.githubusercontent.com/${TEMPLATES_REPO}/HEAD/${entry.file.split('/').map(encodeURIComponent).join('/')}`;
+  const text = (await (await get(url)).text()).replace(/\r\n/g, '\n');
+
+  let fm = '';
+  let body = text;
+  if (text.startsWith('---\n')) {
+    const end = text.indexOf('\n---', 4);
+    if (end !== -1) {
+      fm = text.slice(4, end);
+      body = text.slice(end + 4).replace(/^[^\n]*\n/, '');
+    }
+  }
+  const field = (k: string) =>
+    fm.match(new RegExp(`^${k}:\\s*(.+)$`, 'm'))?.[1].trim().replace(/^["']|["']$/g, '');
+  const m = (field('model') ?? '').toLowerCase();
+  const model = m === 'haiku' || m === 'sonnet' || m === 'opus' ? m : null;
+
+  return {
+    template: entry.id,
+    name: humanize(field('name') || entry.name),
+    description: entry.summary,
+    model,
+    personality: `${body.trim()}\n\n- ${LANGUAGE_LINE}\n`,
+    scan: entry.scan,
+  };
 }

@@ -714,6 +714,17 @@ export const tr = {
   },
 
   agentForm: {
+    secTemplate: 'Şablon', secTemplateHint: 'aitmpl.com’dan başla',
+    tplNote: 'aitmpl.com’daki hazır ajanlardan birini seç: ad, açıklama, model ve kişilik formu doldurur. Oluşturmadan önce her şeyi değiştirebilirsin. Şablonun araç listesi alınmaz; izinler Claudiva’nın kendi kapısından geçer.',
+    tplSearch: 'ada, kategoriye ya da açıklamaya göre ara…',
+    tplLoading: 'Şablonlar okunuyor…',
+    tplRefresh: 'Yenile',
+    tplNone: 'Eşleşen şablon yok.',
+    tplCount: (n: number) => `${n} şablon`,
+    tplFetching: 'Şablon indiriliyor…',
+    tplFilled: (name: string) => `“${name}” şablonu formu doldurdu. Gözden geçir, sonra Oluştur.`,
+    tplRisk: 'Bu şablon aitmpl taramasında yüksek ya da kritik risk aldı. Kişilik metnini oluşturmadan önce oku.',
+    tplFrom: (id: string) => `Şablon: ${id}`,
     secId: 'Kimlik', secIdHint: 'ad ve açıklama',
     secSkill: 'Yetenek', secSkillHint: 'rol, model, hafıza',
     secPersona: 'Kişilik', secPersonaHint: 'system prompt',
@@ -1270,6 +1281,7 @@ export const tr = {
     skill_row_invalid: 'Her satırda repo ve skillPath olmalı.',
     repo_skillpath_required: 'repo ve skillPath gerekli.',
     repo_required: 'Depo gerekli.',
+    template_required: 'Şablon gerekli.',
     agent_scope_required: 'Ajan kapsamı için ajan seçilmeli.',
   } as Record<string, string>,
 

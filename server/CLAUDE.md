@@ -272,6 +272,11 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   deposudur (şablon deposu ya da dış depo), filtre anahtarı `source`.
   Dış skill taranan commit'ten (`ref`) kurulur, `main`den DEĞİL. Riskli
   (HIGH/CRITICAL) gizleme ve kurulum onayı yalnız panelde.
+- **aitmpl ajan şablonu diske YAZILMAZ, taslak döner** (`agentDraft`): panel
+  formu doldurur, oluşturma normal `POST /agents` yolundan geçer (`template`
+  alanıyla). Taslak ucu yalnız ÖNBELLEKTEKİ kimliği kabul eder; dosya yolu
+  katalogdan gelir, istemciden asla. `manager.create` `template` varken kimlik
+  çakışmasında sonek verir (`-2`), elle oluşturmada hata verir.
 - Bilinen artık: `removeSkill` `skills-lock.json`daki girdiyi TEMİZLEMİYOR
   (mevcut davranış, bu işte değiştirilmedi). Toplu kurulum bunu daha görünür
   yapıyor: 10 kur / 10 kaldır → kilitte 10 bayat girdi kalır.

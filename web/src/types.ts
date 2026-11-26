@@ -52,6 +52,8 @@ export interface AgentConfig {
    * hep `tr` değerini taşır. Kullanıcının oluşturduğu ajanda yoktur.
    */
   i18n?: Record<string, { name?: string; description?: string }>;
+  /** aitmpl şablonundan oluşturulduysa kaynak kimliği ("agents/<kat>/<ad>"). */
+  template?: string;
   createdAt: string;
 }
 
@@ -443,6 +445,34 @@ export interface CatalogView {
   fetchedAt: number | null;
   sources: CatalogSource[];
   skills: CatalogSkill[];
+}
+
+/** aitmpl ajan şablonu (sunucu: `server/src/aitmpl.ts`). */
+export interface AitmplAgent {
+  id: string;
+  name: string;
+  category: string;
+  summary: string;
+  file: string;
+  downloads: number;
+  scan: { severity: ScanSeverity; score: number } | null;
+  page: string | null;
+}
+
+export interface AitmplAgentsView {
+  fetchedAt: number | null;
+  error?: string;
+  agents: AitmplAgent[];
+}
+
+/** Şablondan dönüştürülmüş ajan taslağı; formu doldurur, diske yazılmaz. */
+export interface AgentDraft {
+  template: string;
+  name: string;
+  description: string;
+  model: 'haiku' | 'sonnet' | 'opus' | null;
+  personality: string;
+  scan: AitmplAgent['scan'];
 }
 
 /** Toplu kurulumda satır başına sonuç — bir hata diğerlerini iptal etmez. */

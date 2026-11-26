@@ -703,6 +703,17 @@ export const en: Dict = {
   },
 
   agentForm: {
+    secTemplate: 'Template', secTemplateHint: 'start from aitmpl.com',
+    tplNote: 'Pick one of the ready-made agents on aitmpl.com: it fills in the name, description, model and persona. You can change all of it before creating. The template’s tool list is not imported; permissions go through Claudiva’s own gate.',
+    tplSearch: 'search by name, category or description…',
+    tplLoading: 'Reading templates…',
+    tplRefresh: 'Refresh',
+    tplNone: 'No matching template.',
+    tplCount: (n) => `${n} templates`,
+    tplFetching: 'Downloading template…',
+    tplFilled: (name) => `The “${name}” template filled in the form. Review it, then Create.`,
+    tplRisk: 'This template got a high or critical risk score in the aitmpl scan. Read the persona before creating.',
+    tplFrom: (id) => `Template: ${id}`,
     secId: 'Identity', secIdHint: 'name and description',
     secSkill: 'Capability', secSkillHint: 'role, model, memory',
     secPersona: 'Persona', secPersonaHint: 'system prompt',
@@ -1242,6 +1253,7 @@ export const en: Dict = {
     skill_row_invalid: 'Every row needs a repo and a skillPath.',
     repo_skillpath_required: 'repo and skillPath are required.',
     repo_required: 'A repository is required.',
+    template_required: 'A template is required.',
     agent_scope_required: 'Pick an agent for agent scope.',
   } as Record<string, string>,
 

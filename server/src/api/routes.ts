@@ -20,6 +20,7 @@ import {
 } from '../skillCatalog.js';
 import type { BrowserSession } from '../browser.js';
 import { readMemoryGraph } from '../memory.js';
+import { agentDraft, aitmplAgents, refreshAitmplAgents } from '../aitmpl.js';
 import { getLocale, setLocale } from '../i18n.js';
 
 /**
@@ -497,6 +498,18 @@ export function createRoutes(
     if (target === 'agent' && !agentId) throw new ApiError('agent_scope_required', 'Ajan kapsamı için ajan seçilmeli.');
 
     return await installMany(parsed, target, agentId ? String(agentId) : undefined);
+  }));
+
+  // ------------------------------------------------- aitmpl ajan şablonları
+
+  /** Önbellekten; ağa çıkmaz. */
+  r.get('/aitmpl/agents', handle(() => aitmplAgents()));
+  r.post('/aitmpl/agents/refresh', handle(() => refreshAitmplAgents()));
+  /** Şablonu indirip ajan taslağına çevirir; diske YAZMAZ (form doldurulur). */
+  r.get('/aitmpl/agents/draft', handle((req) => {
+    const id = String(req.query.id ?? '');
+    if (!id) throw new ApiError('template_required', 'Şablon gerekli.');
+    return agentDraft(id);
   }));
 
   // ------------------------------------------------------------ prompts

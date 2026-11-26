@@ -2582,6 +2582,27 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .sk-risk strong { font-family: var(--font-ui); font-size: 12.5px; color: var(--fg); }
 .sk-risk .sk-dialog-note { margin: var(--s1) 0 var(--s2); }
 
+/* Ajan formu → Şablon bölümü. Satır bir düğme (tıklamak formu doldurur);
+   genel düğme biçimi (hap, büyük harf) satıra uymaz, burada sıfırlanır.
+   Liste formun sabit boylu bölmesi içinde kendi kayar. */
+.tpl { display: flex; flex-direction: column; gap: var(--s2); min-height: 0; }
+.tpl .sk-tools { flex-wrap: wrap; }
+.tpl .mem-search { flex: 1 1 220px; min-width: 0; }
+.tpl-list {
+  display: flex; flex-direction: column; overflow-y: auto; max-height: 440px;
+  border-top: var(--border-w) solid var(--edge);
+}
+.tpl-row {
+  display: flex; flex-direction: column; align-items: stretch; gap: 3px;
+  width: 100%; text-align: left; text-transform: none; letter-spacing: 0;
+  padding: var(--s2) var(--s2); border: none; border-radius: 0;
+  border-bottom: var(--border-w) solid rgb(var(--edge-rgb) / 0.5);
+  background: transparent; box-shadow: none; cursor: pointer;
+}
+.tpl-row:hover:not(:disabled) { background: rgb(var(--accent-rgb) / 0.06); }
+.tpl-row:focus-visible { outline: 2px solid var(--hud); outline-offset: -2px; }
+.tpl-row .sk-cat-when { margin-left: auto; }
+
 /* Toplu eylem çubuğu listenin ÜSTÜNDE yüzer: seçim aşağıda yapılırken
    eylemin nerede olduğunu aramak gerekmesin. */
 .sk-bulkbar {

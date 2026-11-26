@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { AgentSnapshot } from '../types';
+import type { AgentDraft, AgentSnapshot } from '../types';
+import { AgentTemplates } from './AgentTemplates';
 import { api } from '../api';
 import { Modal } from './Modal';
 import { L } from '../i18n';
@@ -15,7 +16,11 @@ interface Props {
   onSaved: () => void;
 }
 
-type Section = 'kimlik' | 'yetenek' | 'kisilik' | 'gelismis';
+type Section = 'sablon' | 'kimlik' | 'yetenek' | 'kisilik' | 'gelismis';
+
+/** Şablon bölümü yalnız YENİ ajanda: var olan ajanın üstüne şablon dökmek
+ *  kişiliğini sessizce ezerdi. */
+const TEMPLATE_SECTION = { id: 'sablon' as const, label: L.agentForm.secTemplate, hint: L.agentForm.secTemplateHint };
 
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
   { id: 'kimlik', label: L.agentForm.secId, hint: L.agentForm.secIdHint },
@@ -81,6 +86,22 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [personalityLoaded, setPersonalityLoaded] = useState(!existing);
+  const [template, setTemplate] = useState<string | undefined>(undefined);
+  const [tplRisky, setTplRisky] = useState(false);
+  const [notice, setNotice] = useState('');
+  const sections = existing ? SECTIONS : [TEMPLATE_SECTION, ...SECTIONS];
+
+  function applyDraft(d: AgentDraft) {
+    setName(d.name);
+    setDescription(d.description);
+    if (d.model) setModel(d.model);
+    setPersonality(d.personality);
+    setRole('worker');
+    setTemplate(d.template);
+    setTplRisky(d.scan?.severity === 'HIGH' || d.scan?.severity === 'CRITICAL');
+    setNotice(L.agentForm.tplFilled(d.name));
+    setSection('kimlik');
+  }
 
   // Düzenlemede kişilik metni snapshot'ta gelmez; boş bırakmak "değiştirme" demek.
   async function submit() {
@@ -100,7 +121,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
         await api.updateAgent(existing.config.id, patch);
       } else {
         await api.createAgent({
-          name, team, role, model, memoryMode, autoApprove, autoModel, description, personality, mcpServers,
+          name, team, role, model, memoryMode, autoApprove, autoModel, description, personality, mcpServers, template,
         });
       }
       onSaved();
@@ -122,7 +143,7 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
         <div className="modal-body">
           {/* Bölüm seçici — uzun formu dört parçaya böler */}
           <nav className="modal-nav">
-            {SECTIONS.map((s) => (
+            {sections.map((s) => (
               <button
                 key={s.id}
                 type="button"
@@ -136,6 +157,8 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
           </nav>
 
           <div className="modal-pane">
+            {section === 'sablon' && !existing && <AgentTemplates onPick={applyDraft} />}
+
             {section === 'kimlik' && (
               <>
                 <label className="tb-field">
@@ -273,6 +296,13 @@ export function AgentForm({ existing, teams = [], onClose, onSaved }: Props) {
           </div>
         </div>
 
+        {notice && (
+          <div className="sk-notice">
+            {notice}
+            {template && <span className="muted"> · {L.agentForm.tplFrom(template)}</span>}
+          </div>
+        )}
+        {tplRisky && <div className="sk-src-err">{L.agentForm.tplRisk}</div>}
         {error && <div className="error">{error}</div>}
         <div className="modal-actions">
           <button onClick={onClose}>{L.actions.cancel}</button>

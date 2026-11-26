@@ -405,11 +405,16 @@ export class AgentManager extends EventEmitter {
     description?: string;
     personality: string;
     mcpServers?: AgentConfig['mcpServers'];
+    template?: string;
   }): AgentSnapshot {
-    const id = input.name
+    const base = input.name
       .toLowerCase()
       .replace(/[^a-z0-9çğıöşü]+/gi, '-')
       .replace(/^-+|-+$/g, '') || randomUUID().slice(0, 8);
+    let id = base;
+    // Şablondan oluşturmada aynı şablon ikinci kez seçilebilir: sonek ver.
+    // Elle oluşturmada eski davranış (hata) kalır; kullanıcı adı kendisi yazdı.
+    if (input.template) for (let n = 2; this.sessions.has(id); n++) id = `${base}-${n}`;
     if (this.sessions.has(id)) throw new Error(`"${id}" kimlikli ajan zaten var.`);
 
     const config: AgentConfig = {
@@ -425,6 +430,7 @@ export class AgentManager extends EventEmitter {
       autoModel: input.autoModel ?? true,
       description: input.description,
       mcpServers: input.mcpServers,
+      template: typeof input.template === 'string' && input.template ? input.template : undefined,
       createdAt: new Date().toISOString(),
     };
     this.writeAgentFiles(config, input.personality);

@@ -2,11 +2,12 @@
 
 # ▶ aitmpl.com entegrasyonu (2026-11-26)
 
-**1. adım (skill'ler → Keşfet) YAPILDI, commit EDİLMEDİ.** Ayrıntı ve
-ölçümler: **`docs/AITMPL-ENTEGRASYON.md`**. Kararlar (yeniden sorma):
-User-Agent `claudiva/<sürüm> (+…/claudiva/issues)`, sıra 1 → 2 → 3 → 4.
-aitmpl.com Türkiye'den engelli; GitHub kopyasına düşülüyor. Sıradaki: 2. adım
-(şablondan ajan oluştur).
+**1. adım (skill'ler → Keşfet) commit `8040ab9`. 2. adım (Yeni ajan →
+Şablon) YAPILDI, commit EDİLMEDİ.** Ayrıntı ve ölçümler:
+**`docs/AITMPL-ENTEGRASYON.md`**. Kararlar (yeniden sorma): User-Agent
+`claudiva/<sürüm> (+…/claudiva/issues)`, sıra 1 → 2 → 3 → 4. aitmpl.com
+Türkiye'den engelli; GitHub kopyasına düşülüyor. Sıradaki: 3. adım
+(komutlar → Promptlar). Push edilmedi.
 
 
 # ▶ 2026-11-25 akşamı: açık/koyu mod + Cam stili EKLENDİ (commit BEKLİYOR)

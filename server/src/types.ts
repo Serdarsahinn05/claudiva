@@ -72,6 +72,9 @@ export interface AgentConfig {
    * hep `tr` değerini taşır. Kullanıcının oluşturduğu ajanda yoktur.
    */
   i18n?: Record<string, { name?: string; description?: string }>;
+  /** aitmpl şablonundan oluşturulduysa kaynak kimliği ("agents/<kat>/<ad>"),
+   *  ileride "şablon güncellendi" kontrolü için. */
+  template?: string;
   createdAt: string;
 }
 
