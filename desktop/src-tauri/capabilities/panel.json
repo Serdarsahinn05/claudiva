@@ -1,0 +1,18 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "panel",
+  "description": "The panel served by the local Claudiva server: title-bar duties only (drag, window buttons, switch project). No file, shell or server-start access.",
+  "windows": ["main"],
+  "remote": {
+    "urls": ["http://localhost:*/*"]
+  },
+  "permissions": [
+    "core:event:default",
+    "core:window:allow-is-maximized",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "allow-switch-project"
+  ]
+}

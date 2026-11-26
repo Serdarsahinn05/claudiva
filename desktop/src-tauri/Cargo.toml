@@ -1,0 +1,22 @@
+[package]
+name = "claudiva-desktop"
+version = "0.1.0"
+description = "Claudiva desktop shell: opens the panel in its own window"
+authors = ["Serdarsahinn05"]
+license = "MIT"
+repository = "https://github.com/Serdarsahinn05/claudiva"
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "claudiva_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.6", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "2.12.7", features = [] }
+tauri-plugin-dialog = "2"

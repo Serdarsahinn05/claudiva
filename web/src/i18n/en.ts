@@ -50,6 +50,15 @@ export const en: Dict = {
     newAgent: 'New agent',
   },
 
+  desktop: {
+    switchProject: 'Switch project',
+    switchHint: 'stops the server and returns to project selection',
+    minimize: 'Minimize',
+    maximize: 'Maximize',
+    restore: 'Restore',
+    close: 'Close',
+  },
+
   app: {
     deleteAgent: (name) => `Delete agent "${name}" and its definition files? (Its memory is kept.)`,
     setupTitle: 'Build your team',

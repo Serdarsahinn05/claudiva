@@ -31,5 +31,12 @@ graphify-out/
 .DS_Store
 Thumbs.db
 
+# Masaüstü (Tauri): Rust derleme klasörü birkaç GB, `build/` paketlenecek
+# sunucunun kopyası (scripts/prepare-app.mjs). Kurulum dosyaları GitHub
+# Releases'e yüklenir, depoya girmez.
+desktop/src-tauri/target/
+desktop/src-tauri/gen/schemas/
+desktop/build/
+
 # Referans videolar (büyük ikili dosya; git geçmişine girerse depo kalıcı olarak şişer)
 docs/*.mp4

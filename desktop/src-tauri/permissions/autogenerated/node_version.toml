@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-node-version"
+description = "Enables the node_version command without any pre-configured scope."
+commands.allow = ["node_version"]
+
+[[permission]]
+identifier = "deny-node-version"
+description = "Denies the node_version command without any pre-configured scope."
+commands.deny = ["node_version"]

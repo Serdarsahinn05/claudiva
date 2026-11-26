@@ -1,0 +1,21 @@
+/**
+ * Claudiva logosu (Çekirdek), küçük çizim: dışta ekip halkası, içte 30° dönük
+ * lider. Kaynak `docs/brand/claudiva-mark-small-dark.svg` (yollar oradan,
+ * `docs/brand/build-logo.py` üretir). Renkler paletten: halka `--accent`,
+ * çekirdek `--fg`; her stilde ve modda kendiliğinden uyar.
+ */
+export function BrandMark({ size = 24 }: { size?: number }) {
+  return (
+    <svg className="brand-mark" width={size} height={size} viewBox="0 0 256 256" aria-hidden="true">
+      <path
+        fill="rgb(var(--accent-rgb))"
+        fillRule="evenodd"
+        d="M136.50 17.28 L219.64 65.28 A17.0 17.0 0 0 1 228.14 80.00 L228.14 176.00 A17.0 17.0 0 0 1 219.64 190.72 L136.50 238.72 A17.0 17.0 0 0 1 119.50 238.72 L36.36 190.72 A17.0 17.0 0 0 1 27.86 176.00 L27.86 80.00 A17.0 17.0 0 0 1 36.36 65.28 L119.50 17.28 A17.0 17.0 0 0 1 136.50 17.28 Z M61.86 89.81 L61.86 166.19 L128.00 204.37 L194.14 166.19 L194.14 89.81 L128.00 51.63 Z"
+      />
+      <path
+        fill="rgb(var(--fg-rgb))"
+        d="M156.20 85.16 L179.20 125.00 A6 6 0 0 1 179.20 131.00 L156.20 170.84 A6 6 0 0 1 151.00 173.84 L105.00 173.84 A6 6 0 0 1 99.80 170.84 L76.80 131.00 A6 6 0 0 1 76.80 125.00 L99.80 85.16 A6 6 0 0 1 105.00 82.16 L151.00 82.16 A6 6 0 0 1 156.20 85.16 Z"
+      />
+    </svg>
+  );
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "build": {
+    "beforeBuildCommand": "node scripts/prepare-app.mjs"
+  },
+  "bundle": {
+    "resources": {
+      "../build/app/": "app/"
+    }
+  }
+}

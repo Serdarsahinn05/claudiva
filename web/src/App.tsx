@@ -20,6 +20,9 @@ import { ALL_TEAMS, agentsInTeam, tasksInTeam, teamsOf } from './teams';
 import { PANELS, tileKey, type PanelId } from './workspace';
 import type { AgentSnapshot } from './types';
 import { L as T, LOCALES, locale, setLocale } from './i18n';
+import { isDesktop, onTitleBarMouseDown, switchProject } from './desktop';
+import { WindowControls } from './components/WindowControls';
+import { BrandMark } from './components/BrandMark';
 
 /**
  * Paket bölme (2026-11-25): varsayılan ekranda (Paneller modu, Genel Durum)
@@ -397,6 +400,9 @@ export default function App() {
         keywords: 'oto onay izin hepsi tumu',
         run: () => void toggleAllAutoApprove(),
       },
+      ...(isDesktop
+        ? [{ id: 'desktop-switch', label: T.desktop.switchProject, hint: T.desktop.switchHint, keywords: 'proje klasor folder project switch', run: switchProject }]
+        : []),
       ...agentCommands(teamAgents, openTerminal, (a) => void toggleAgent(a)),
       ...themeCommands(),
     ],
@@ -415,8 +421,12 @@ export default function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>claudiva</h1>
+      {/* Masaüstünde Windows başlık çubuğu yok; bu çubuk onun yerini alır (desktop.ts). */}
+      <header className={isDesktop ? 'desktop-bar' : undefined} onMouseDown={isDesktop ? onTitleBarMouseDown : undefined}>
+        <h1 className="brand">
+          <BrandMark />
+          claudiva
+        </h1>
 
         <TeamTabs agents={store.agents} value={team} onChange={setTeam} />
 
@@ -461,6 +471,7 @@ export default function App() {
         <button className="primary" onClick={() => setFormAgent('new')}>
           {T.header.newAgent}
         </button>
+        {isDesktop && <WindowControls />}
       </header>
 
       <Suspense fallback={null}>

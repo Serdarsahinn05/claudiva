@@ -59,6 +59,16 @@ export const tr = {
     newAgent: 'Yeni ajan',
   },
 
+  // Yalnız masaüstü uygulamasında (desktop/) görünen pencere düğmeleri.
+  desktop: {
+    switchProject: 'Proje değiştir',
+    switchHint: 'sunucuyu kapatıp proje seçimine döner',
+    minimize: 'Küçült',
+    maximize: 'Büyüt',
+    restore: 'Önceki boyut',
+    close: 'Kapat',
+  },
+
   app: {
     deleteAgent: (name: string) => `"${name}" ajanı ve tanım dosyaları silinsin mi? (Hafızası silinmez)`,
     setupTitle: 'Ekibi kur',

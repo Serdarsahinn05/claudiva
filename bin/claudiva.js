@@ -159,4 +159,21 @@ if (!argv.includes('--no-open')) {
   }, 1200);
 }
 
+// Masaüstü kabuğu (desktop/) sunucuyu stdin borusuyla başlatır ve kapatmak
+// için boruyu kapatır: Windows'ta alt sürece SIGINT gönderilemiyor, zorla
+// öldürmek de tamponlanmış yazımları (görevler, döküm) kaybettirir. Kabuk
+// çökerse de boru kapanır; sunucu öksüz kalmaz. `emit`, sunucunun kendi
+// SIGINT dinleyicisini (düzgün kapanış) çağırır.
+if (process.env.CLAUDIVA_DESKTOP === '1') {
+  let closing = false;
+  const close = () => {
+    if (closing) return;
+    closing = true;
+    process.emit('SIGINT');
+  };
+  process.stdin.on('end', close);
+  process.stdin.on('error', close);
+  process.stdin.resume();
+}
+
 await import(new URL('file://' + entry.replace(/\\/g, '/')).href);

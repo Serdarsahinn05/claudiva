@@ -598,6 +598,10 @@ header h1 {
   font-size: 26px; line-height: 1; margin: 0; white-space: nowrap;
   color: var(--fg); letter-spacing: 0;
 }
+/* Logo + yazı (docs/brand). İşaret yazının x-yüksekliğine değil büyük harf
+   boyuna oturur; italik başlıklı stillerde de dik kalır (SVG). */
+header h1.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { flex: none; display: block; }
 
 /* Başlığın yanındaki plaka adı: koordinat satırı gibi okunur */
 .header-sub {
@@ -4352,3 +4356,23 @@ button.gl-bare:hover { background: transparent; border: none; }
   font-size: 11.5px; color: var(--hud); cursor: pointer;
 }
 .ci-more:hover { border: none; background: transparent; text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MASAÜSTÜ (desktop/): Windows başlık çubuğu yok, üst çubuk onun yerini
+   alır. Yalnız `.desktop-bar` (isDesktop) iken; tarayıcıda hiçbiri yok.
+   ═══════════════════════════════════════════════════════════════════ */
+.desktop-bar { user-select: none; -webkit-user-select: none; }
+.win-ctl { display: flex; align-items: center; gap: 2px; margin-right: calc(-1 * var(--s2)); }
+.win-ctl-sep {
+  width: var(--border-w); align-self: stretch; margin: 4px var(--s2);
+  background: var(--edge);
+}
+.win-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 30px; padding: 0;
+  border: none; background: transparent; color: var(--muted);
+  border-radius: var(--radius);
+}
+.win-btn:hover:not(:disabled) { color: var(--fg); background: rgb(var(--fg-rgb) / 0.08); border: none; }
+/* Kapat: Windows'taki gibi kırmızı zemin; durum rengi değil, sabit sistem işareti. */
+.win-btn.close:hover:not(:disabled) { background: rgb(var(--err-rgb)); color: rgb(var(--surface-rgb)); }
