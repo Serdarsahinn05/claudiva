@@ -6,7 +6,7 @@
 mesajında) ve GitHub Release: https://github.com/Serdarsahinn05/claudiva/releases/tag/v0.6.0
 (`Claudiva_0.6.0_x64-setup.exe`). `gh` kurulu ve oturum açık
 (`C:\Program Files\GitHub CLI\gh.exe`; eski oturumlarda PATH'te olmayabilir).
-`npm publish` 0.6.0 kullanıcıda.
+npm'de 0.6.0 YAYINDA (kullanıcı yayımladı, `latest`; paket içeriği doğrulandı).
 
 **GitHub Pages YAYINDA:** https://serdarsahinn05.github.io/claudiva/
 Kaynak `site/` (derlemesiz HTML/CSS/JS, Cam stili, TR/EN, koyu/açık).
