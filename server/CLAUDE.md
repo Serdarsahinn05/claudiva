@@ -394,6 +394,17 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   senkron fırlatır** (ölçüldü), `loop()` catch'i görmez; bu yüzden
   `ClaudeBackend.start()` önce bakar, `S.claudeNotFound` + `exit` yayar.
   Sistem ikilisi SDK'nın `claudeCodeVersion`ından eskiyse yalnız konsola uyarı.
+- **Model adı `agents/models.ts`te doğrulanır** (2026-11-27). Kısa adlar
+  (`default/haiku/sonnet/opus/fable/opusplan/best`, `[1m]` sonekli de) CLI'a
+  OLDUĞU GİBİ gider, CLI en güncele çözer; eski sabit tablo (`sonnet` →
+  `claude-sonnet-5`) kaldırıldı. Liste CLI'ın `supportedModels()` çıktısından
+  ölçüldü (default ve fable da var; daraltırsan sağ paneldeki seçici kırılır).
+  `POST/PUT /agents` geçersiz modeli `invalid_model` ile reddeder (`/model
+  sonnet 5.5` eskiden olduğu gibi kaydediliyordu); diskte kalmış geçersiz
+  değer açılışta aile adına onarılır (`repairModel`).
+- **Test sunucusunda proje yolu argüman DEĞİL**: `bin/claudiva.js` projeyi
+  cwd'den alır. `node bin/claudiva.js --port X <yol>` deponun kendi
+  `.claudiva/data`sına yazdı (ölçüldü); geçici projeyi cwd yaparak başlat.
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
   `env` verilince SDK süreç ortamını devralmaz, bu yüzden `process.env`in
   tamamı taşınıyor. Kullanıcının skill kütüphanesi bu değişkene bakıp ajan

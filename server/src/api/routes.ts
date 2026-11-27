@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import type { AgentManager } from '../agents/manager.js';
 import type { InspectPart } from '../agents/backend.js';
+import { isValidModel, MODEL_CHOICES } from '../agents/models.js';
 import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
 import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
@@ -72,7 +73,19 @@ export function createRoutes(
   // ------------------------------------------------------------- agents
   r.get('/agents', handle(() => manager.list()));
 
-  r.post('/agents', handle((req) => manager.create(req.body)));
+  /** Model yazma anında doğrulanır (bkz. agents/models.ts). */
+  const checkModel = (body: { model?: unknown } | undefined, required: boolean) => {
+    const m = body?.model;
+    if (m === undefined && !required) return;
+    if (!isValidModel(m)) {
+      throw new ApiError('invalid_model', `Geçersiz model: "${String(m)}". Geçerli: ${MODEL_CHOICES.join(', ')} ya da tam model kimliği.`);
+    }
+  };
+
+  r.post('/agents', handle((req) => {
+    checkModel(req.body, true);
+    return manager.create(req.body);
+  }));
 
   /** Panel sırası — :id rotasından ÖNCE gelmeli, yoksa "order" id sanılır. */
   r.put('/agents/order', handle((req) => {
@@ -81,7 +94,10 @@ export function createRoutes(
     return manager.reorder(ids.map(String));
   }));
 
-  r.put('/agents/:id', handle((req) => manager.update(req.params.id, req.body)));
+  r.put('/agents/:id', handle((req) => {
+    checkModel(req.body, false);
+    return manager.update(req.params.id, req.body);
+  }));
 
   r.delete('/agents/:id', handle((req) => manager.remove(req.params.id)));
 

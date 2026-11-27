@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { AgentSession } from './session.js';
+import { repairModel } from './models.js';
 import { SessionStore } from './sessionStore.js';
 import { UsageHistory } from './usageHistory.js';
 import { SettingsStore } from '../settings.js';
@@ -108,8 +109,12 @@ export class AgentManager extends EventEmitter {
       if (!fs.existsSync(file)) continue;
       try {
         const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as AgentConfig;
+        // Geçersiz model (ör. eski `/model sonnet 5.5`) her mesajı "model yok"
+        // hatasına düşürürdü; aile adına onarılır, ilk yazımda diske geçer.
+        const model = repairModel(raw.model);
+        if (model !== raw.model) console.warn(S.modelRepaired(entry.name, String(raw.model), model));
         // Eski config.json dosyalarında provider yok — 'claude' say (geriye uyum).
-        configs.push({ ...raw, provider: raw.provider ?? 'claude' });
+        configs.push({ ...raw, model, provider: raw.provider ?? 'claude' });
       } catch (err) {
         console.error(S.badConfig(file), err);
       }

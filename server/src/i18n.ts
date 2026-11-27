@@ -113,6 +113,7 @@ const tr = {
   unknownProvider: (p: string) => `Bilinmeyen sağlayıcı: ${p}`,
   // konsol
   badConfig: (file: string) => `Bozuk config atlandı: ${file}`,
+  modelRepaired: (agent: string, from: string, to: string) => `  ${agent}: geçersiz model "${from}" → "${to}"`,
   orderWriteFailed: (file: string) => `Sıra yazılamadı: ${file}`,
   upgradeConfigFailed: (id: string, msg: string) => `[claudiva] ${id} yapılandırması güncellenemedi: ${msg}`,
   upgradeSkillsFailed: (id: string, msg: string) => `[claudiva] ${id} skill'leri güncellenemedi: ${msg}`,
@@ -196,6 +197,7 @@ const en: Dict = {
   promptNotFound: 'Prompt not found.',
   unknownProvider: (p) => `Unknown provider: ${p}`,
   badConfig: (file) => `Skipped a broken config: ${file}`,
+  modelRepaired: (agent, from, to) => `  ${agent}: invalid model "${from}" → "${to}"`,
   orderWriteFailed: (file) => `Could not write the order: ${file}`,
   upgradeConfigFailed: (id, msg) => `[claudiva] could not update ${id}'s config: ${msg}`,
   upgradeSkillsFailed: (id, msg) => `[claudiva] could not update ${id}'s skills: ${msg}`,

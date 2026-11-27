@@ -25,11 +25,9 @@ import type {
   SessionInspect,
 } from '../backend.js';
 
-const MODEL_ALIASES: Record<string, string> = {
-  haiku: 'claude-haiku-4-5',
-  sonnet: 'claude-sonnet-5',
-  opus: 'claude-opus-4-8',
-};
+// Kısa adlar (`sonnet` vb.) Claude Code'a OLDUĞU GİBİ gider: CLI onları o
+// anki en güncel sürüme çözer. Sabit tablo yeni sürümde paneli eskide
+// bırakıyordu (bkz. agents/models.ts).
 
 const TRUNCATE_INPUT = 2000;
 
@@ -80,8 +78,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
   private activeModel: string | null = null;
 
   private resolveModel(): string {
-    const m = this.activeModel ?? this.config.model;
-    return MODEL_ALIASES[m] ?? m;
+    return this.activeModel ?? this.config.model;
   }
 
   start(opts: BackendStartOptions): void {
@@ -165,7 +162,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
    * kalmalı, burada tek tip davranış dayatılmamalı.
    */
   async setModel(model: string): Promise<void> {
-    await this.q?.setModel(MODEL_ALIASES[model] ?? model);
+    await this.q?.setModel(model);
     // Başarılıysa hatırlatmadaki "mevcut model" de doğru modeli söylesin.
     if (this.q) this.activeModel = model;
   }
