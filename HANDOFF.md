@@ -1,6 +1,13 @@
 # Devir — Claudiva
 
-# ▶ SÜREN İŞ (2026-11-27): 0.6.4 hazırlığı — KALDIĞIN YERDEN DEVAM ET
+# ▶ 0.6.4 YAYINDA (2026-11-27): GitHub Release + etiket push edildi
+
+https://github.com/Serdarsahinn05/claudiva/releases/tag/v0.6.4 (`Latest`,
+9 MB kurulum dosyası). **npm'de hâlâ 0.6.3: `npm publish` kullanıcıda**
+(OTP ister; oturum düşmüşse önce `npm login`, 404 = oturum yok demek).
+Aşağıdaki iş listesi TAMAMLANDI, tarihçe olarak duruyor.
+
+# (tarihçe) 0.6.4 hazırlığı
 
 Yayında: **0.6.3** (GitHub Release + npm `latest`, ikisi de doğrulandı).
 0.6.4'e girecek, commit'li ama PUSH EDİLMEMİŞ:
