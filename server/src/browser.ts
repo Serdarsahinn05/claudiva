@@ -16,7 +16,7 @@
  * kullanmayan bir kurulumda 300MB'lık bir tarayıcı zorunluluk olmamalı.
  */
 import { S } from './i18n.js';
-import type { Browser, Page } from 'playwright-core';
+import type { Browser, CDPSession, Page } from 'playwright-core';
 
 /** Sabit görüntü alanı; panel tıklama koordinatını buna göre ölçekler. */
 export const VIEWPORT = { width: 1280, height: 800 };
@@ -54,9 +54,76 @@ function normalizeUrl(raw: string): string {
   return u.toString();
 }
 
+/** Akış kalitesi: ölçüldü, PNG 108 ms/353 KB · JPEG q70 34 ms/154 KB (1280×800). */
+const CAST_QUALITY = 70;
+
 export class BrowserSession {
   private browser: Browser | null = null;
   private page: Page | null = null;
+
+  // ------------------------------------------------------------ canlı akış
+  /**
+   * Panelin canlı görüntüsü: Chromium'un ekran akışı (CDP `Page.startScreencast`).
+   * Eskiden her eylemden sonra panel ayrı bir HTTP isteğiyle PNG çekiyordu;
+   * kaydırma, animasyon ve kendiliğinden yüklenen içerik ancak sonraki
+   * tıklamada görünüyordu ("tarayıcı çok yavaş", kullanıcı). Chromium kareyi
+   * yalnız ekran DEĞİŞİNCE üretir: boşta sayfa akış açıkken de maliyetsiz.
+   * Akış yalnız en az bir izleyici (açık Browser paneli) varken döner.
+   */
+  private cdp: CDPSession | null = null;
+  private viewers = new Set<(jpeg: Buffer) => void>();
+  private lastFrame: Buffer | null = null;
+  private casting = false;
+
+  /** İzleyici ekler; son kare hemen verilir. Dönen fonksiyon aboneliği bırakır. */
+  watch(onFrame: (jpeg: Buffer) => void): () => void {
+    this.viewers.add(onFrame);
+    if (this.lastFrame) onFrame(this.lastFrame);
+    void this.syncCast();
+    return () => {
+      this.viewers.delete(onFrame);
+      void this.syncCast();
+    };
+  }
+
+  private async syncCast(): Promise<void> {
+    const want = this.viewers.size > 0 && !!this.page;
+    if (want === this.casting) return;
+    this.casting = want; // await'ten ÖNCE: eşzamanlı iki çağrı iki kez başlatmasın
+    try {
+      if (want) {
+        const page = this.page!;
+        if (!this.cdp) {
+          this.cdp = await page.context().newCDPSession(page);
+          this.cdp.on('Page.screencastFrame', (f) => {
+            // Onay verilmezse Chromium kare göndermeyi keser.
+            void this.cdp?.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => null);
+            const jpeg = Buffer.from(f.data, 'base64');
+            this.lastFrame = jpeg;
+            for (const v of this.viewers) v(jpeg);
+          });
+        }
+        await this.cdp.send('Page.startScreencast', {
+          format: 'jpeg',
+          quality: CAST_QUALITY,
+          maxWidth: VIEWPORT.width,
+          maxHeight: VIEWPORT.height,
+        });
+        // Durağan sayfada akış kare üretmeyebilir: yeni izleyici boş kalmasın.
+        if (!this.lastFrame) {
+          const jpeg = await page.screenshot({ type: 'jpeg', quality: CAST_QUALITY }).catch(() => null);
+          if (jpeg) {
+            this.lastFrame = jpeg;
+            for (const v of this.viewers) v(jpeg);
+          }
+        }
+      } else if (this.cdp) {
+        await this.cdp.send('Page.stopScreencast').catch(() => null);
+      }
+    } catch {
+      this.casting = false;
+    }
+  }
   /** Kurulum eksikse sebebi; her istekte yeniden denememek için saklanır. */
   private unavailable: string | null = null;
 
@@ -119,6 +186,8 @@ export class BrowserSession {
     const ctx = await this.browser.newContext({ viewport: VIEWPORT });
     this.page = await ctx.newPage();
     this.page.setDefaultTimeout(NAV_TIMEOUT);
+    // Panel tarayıcı kapalıyken açılmış olabilir: izleyici bekliyorsa akışı başlat.
+    void this.syncCast();
     return this.page;
   }
 
@@ -176,7 +245,10 @@ export class BrowserSession {
       if (req.isNavigationRequest() && req.frame() === page.mainFrame()) navRequested = true;
     };
     page.on('request', onReq);
-    await page.waitForTimeout(400);
+    // 400 → 200 ms: canlı akış varken ekran zaten anında güncelleniyor; bu
+    // pencere yalnız "gezinme başladı mı" sorusu için. Gezinme isteği tıklamanın
+    // hemen ardından (tipik <50 ms) çıkar.
+    await page.waitForTimeout(200);
     page.off('request', onReq);
 
     if (!navRequested) return;
@@ -205,9 +277,10 @@ export class BrowserSession {
     return await this.changed();
   }
 
+  /** Tek kare (akış bağlantısı yokken panelin yedeği). JPEG: PNG'nin üçte biri sürede. */
   async screenshot(): Promise<Buffer> {
     const page = await this.ensure();
-    return await page.screenshot({ type: 'png' });
+    return await page.screenshot({ type: 'jpeg', quality: CAST_QUALITY });
   }
 
   /**
@@ -244,6 +317,9 @@ export class BrowserSession {
     const b = this.browser;
     this.page = null;
     this.browser = null;
+    this.cdp = null;
+    this.casting = false;
+    this.lastFrame = null;
     await b?.close().catch(() => null);
     // `state()` de çökmüş sayfayı görünce buraya düşer; panel kapanışı bu yolla
     // da öğrenir. Özyineleme yok: `this.page` artık null, `state()` anında döner.

@@ -141,6 +141,15 @@ manager.on('commands_changed', (agentId, commands) =>
 tasks.on('task_update', (task) => hub.broadcast({ type: 'task_update', task }));
 // Tarayıcıyı ajan da sürüyor; panel yoklamayla haber alamazdı (bkz. browser.ts).
 browser.onChange = (state) => hub.broadcast({ type: 'browser_state', state });
+// Canlı kare akışı: bağlantı = izleyici. Akış yalnız en az bir panel açıkken
+// döner; boşta sayfa kare üretmez (bkz. browser.ts `watch`). Yavaş istemci
+// kuyruğu şişirmesin diye tamponu dolu sokete kare atlanır.
+hub.route('/ws/browser', (socket) => {
+  const stop = browser.watch((jpeg) => {
+    if (socket.readyState === socket.OPEN && socket.bufferedAmount < 2_000_000) socket.send(jpeg);
+  });
+  socket.on('close', stop);
+});
 
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {

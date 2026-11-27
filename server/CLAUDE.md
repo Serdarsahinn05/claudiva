@@ -190,6 +190,16 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
 - **Playwright TEMBEL import edilir** ve `playwright-core` + yalnız chromium
   kuruludur (tam paket üç tarayıcı indirip ~1GB olurdu). Paket/tarayıcı yoksa
   sunucu ayakta kalır, yalnız panel "kurulu değil" der.
+- **Panel görüntüsü CANLI akış** (2026-11-27): CDP `Page.startScreencast`
+  JPEG q70 → `/ws/browser` (bağlantı = izleyici, `BrowserSession.watch`).
+  Akış yalnız izleyici varken döner; Chromium kareyi yalnız ekran değişince
+  üretir (ölçüldü: 2 sn boşta 0 kare). `Page.screencastFrameAck` gönderilmezse
+  akış durur. Yavaş istemciye `bufferedAmount` > 2 MB iken kare atlanır.
+  Ölçüldü: tıklama ~600 → 217 ms (`settle` penceresi 400 → 200), kaydırma
+  170 ms. `/api/browser/screenshot` yalnız yedek, JPEG.
+- **İkinci WebSocket yolu = `WsHub.route()`**: `server` seçenekli iki
+  WebSocketServer aynı HTTP sunucusunda yolu tutmayan isteği 400 ile keser;
+  yükseltme `ws.ts`te yola göre elle dağıtılır (`noServer`).
 - URL kapısı yalnız `http`/`https`; `file://` yerel diski, `chrome://` tarayıcı
   iç sayfalarını açardı ve ajan eliyle sürüldüğünde dosya sızdırma yolu olurdu.
 

@@ -11,9 +11,11 @@ import { L } from '../i18n';
  * görür ve istediği an devralır. Ajana ayrı bir tarayıcı örneği vermek
  * "ajan ne yapıyor" sorusunu yeniden görünmez kılardı.
  *
- * Görüntü sürekli AKMAZ, olaya bağlı tazelenir: sayfa her DEĞİŞTİĞİNDE bir
- * kare. Sürekli akış, boşta duran bir panelde sunucuyu durmadan ekran
- * görüntüsü almaya zorlardı.
+ * Görüntü CANLI akar (2026-11-27): panel açıkken `/ws/browser`a bağlanır,
+ * sunucu Chromium'un ekran akışından JPEG kareleri iter. Chromium kareyi yalnız
+ * ekran değişince üretir, boşta sayfa maliyetsiz. Eskiden her eylemden sonra
+ * ayrı istekle PNG çekiliyordu: kaydırma/animasyon görünmüyordu, "çok yavaş"
+ * (kullanıcı). Bağlantı yoksa eski yol (`/api/browser/screenshot`) yedektir.
  *
  * Değişikliği sunucu bildirir (WS `browser_state`), panel yoklamaz. Yoklama
  * yanlış taraftı: ajan sürerken panel hiçbir istek atmıyor, dolayısıyla
@@ -36,6 +38,31 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
   const imgRef = useRef<HTMLImageElement>(null);
 
   const refreshShot = useCallback(() => setStamp(Date.now()), []);
+  /** Canlı akıştan son kare (blob URL); yoksa tek kare yedeği kullanılır. */
+  const [frame, setFrame] = useState<string | null>(null);
+  const running = !!state?.running;
+
+  useEffect(() => {
+    if (!running) {
+      setFrame(null);
+      return;
+    }
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${proto}//${location.host}/ws/browser`);
+    ws.binaryType = 'blob';
+    let url: string | null = null;
+    ws.onmessage = (e) => {
+      const next = URL.createObjectURL(e.data as Blob);
+      setFrame(next);
+      // Önceki kare artık gösterilmiyor; bırakılmazsa bellek her karede büyür.
+      if (url) URL.revokeObjectURL(url);
+      url = next;
+    };
+    return () => {
+      ws.close();
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [running]);
 
   /**
    * Adres kutusu KULLANICI YAZARKEN ezilmez; başka her durumda sunucudaki
@@ -168,7 +195,7 @@ export function Browser({ pushed }: { pushed: BrowserState | null }) {
             {state?.running ? (
               <img
                 ref={imgRef}
-                src={`/api/browser/screenshot?t=${stamp}`}
+                src={frame ?? `/api/browser/screenshot?t=${stamp}`}
                 alt={L.browser.shotAlt}
                 onClick={onImgClick}
                 onError={() => setError(L.browser.shotFailed)}

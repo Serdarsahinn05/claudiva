@@ -438,8 +438,8 @@ export function createRoutes(
 
   /** PNG ikili olarak döner; base64'e sarmak %33 şişirirdi. */
   r.get('/browser/screenshot', handle(async (_req, res) => {
-    const png = await browser.screenshot();
-    res.type('png').set('Cache-Control', 'no-store').send(png);
+    const jpeg = await browser.screenshot();
+    res.type('jpeg').set('Cache-Control', 'no-store').send(jpeg);
   }));
 
   r.post('/browser/close', handle(async () => {
