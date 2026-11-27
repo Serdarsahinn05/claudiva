@@ -1,6 +1,16 @@
 # Devir — Claudiva
 
-# ▶ 0.6.4 YAYINDA (2026-11-27): GitHub Release + etiket push edildi
+# ▶ 0.6.5 YAYINDA (2026-11-27): GitHub Release + etiket push edildi
+
+https://github.com/Serdarsahinn05/claudiva/releases/tag/v0.6.5 (9 MB kurulum).
+**npm publish kullanıcıda** (OTP). İçerik: ajan eforu (varsayılan medium,
+sağ panelden canlı), "çalışıyor"da takılma düzeltmesi (SDK idle olayı),
+sohbette `/` komutları + statusline (efor ve 5s/7g limit), ekip sohbetinde
+ajan profili, seçenek kartı elips hatası. Ayrıntı `server/CLAUDE.md` ve
+`web/CLAUDE.md`. Masaüstü derlemesi PowerShell'den: Git Bash `tar`ı `D:`
+yolunu uzak sunucu sanıyor.
+
+# (tarihçe) 0.6.4 YAYINDA (2026-11-27): GitHub Release + etiket push edildi
 
 https://github.com/Serdarsahinn05/claudiva/releases/tag/v0.6.4 (`Latest`,
 9 MB kurulum dosyası). **npm'de hâlâ 0.6.3: `npm publish` kullanıcıda**
