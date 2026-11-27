@@ -9,6 +9,7 @@ import {
   zeroUsage,
   type AgentConfig,
   type AgentStatus,
+  type EffortLevel,
   type PermissionRequestInfo,
   type SlashCommand,
   type TokenUsage,
@@ -98,6 +99,8 @@ export class AgentSession extends EventEmitter {
   private pending = new Map<string, PendingPermission>();
   /** Set while a turn is in flight so queued sends show as working. */
   private turnDepth = 0;
+  /** Son result'tan sonra gönderilen tur sayısı (bkz. onSessionIdle). */
+  private turnsSinceResult = 0;
 
   /**
    * Henüz sonuçlanmamış turlar: ham metin + (varsa) görev kimliği.
@@ -218,6 +221,7 @@ export class AgentSession extends EventEmitter {
     if (!opts.replay) this.pushEvent({ kind: 'user', text });
     this.inFlightTurns.push({ text, taskId, routed: opts.routed });
     this.turnDepth += 1;
+    this.turnsSinceResult += 1;
     this.setStatus('working');
     // Yönlendirilmiş görevde modeli yönlendirici seçti: "modeli değerlendir,
     // gerekirse değiştir" hatırlatması gönderilmez — oturum ortasında model
@@ -269,6 +273,16 @@ export class AgentSession extends EventEmitter {
       // sonraki start()'ta uygulanır
     }
     this.emit('model_changed', model);
+  }
+
+  /** Panelden efor değişikliği; model gibi canlı, hata sonraki start()'a kalır. */
+  async setEffort(effort: EffortLevel): Promise<void> {
+    this.config.effort = effort;
+    try {
+      await this.backend?.setEffort(effort);
+    } catch {
+      // sonraki start()'ta settings.effortLevel ile uygulanır
+    }
   }
 
   /**
@@ -379,6 +393,7 @@ export class AgentSession extends EventEmitter {
     }
     this.backend = null;
     this.turnDepth = 0;
+    this.turnsSinceResult = 0;
     this.inFlightTurns = [];
     // Kapanan oturumun modeli (yükseltilmiş ya da yönlendirilmiş) bir sonraki
     // açılışa sızmasın: start() artık currentModel ile açıyor.
@@ -426,7 +441,7 @@ export class AgentSession extends EventEmitter {
         } else if (e.subtype === 'session_state_changed') {
           if (e.state === 'running') this.setStatus('working');
           else if (e.state === 'requires_action') this.setStatus('waiting');
-          else if (e.state === 'idle' && this.turnDepth <= 0) this.setStatus('idle');
+          else if (e.state === 'idle') this.onSessionIdle();
         }
         break;
       }
@@ -469,6 +484,7 @@ export class AgentSession extends EventEmitter {
           meta: { costUSD: e.costUSD },
         });
         this.turnDepth = Math.max(0, this.turnDepth - 1);
+        this.turnsSinceResult = 0;
         // Bu tur sonuçlandı: tekrar gönderilmeyecek, kimliği sonuca eşlik edecek.
         const finished = this.inFlightTurns.shift();
         this.currentActivity = undefined;
@@ -489,6 +505,24 @@ export class AgentSession extends EventEmitter {
         this.emit('turn_complete', e.text, e.isError, finished?.taskId);
         break;
       }
+    }
+  }
+
+  /**
+   * SDK'nın kesin "tur bitti" sinyali. Tur sürerken gönderilen mesaj o tura
+   * EMİLİR (iki send, tek result): sayaç 0'a inmez ve ajan sonsuza dek
+   * "çalışıyor" görünürdü. Son result'tan ÖNCE gönderilmiş her tur artık
+   * bitmiştir; SONRA gönderilenler (idle olayı yoldayken yazılmış mesaj)
+   * henüz başlamamış olabilir, onlar korunur. Emilen görev turu terk edilmiş
+   * sayılmaz: görev complete_task ya da GRACE yedeğiyle kapanır.
+   */
+  private onSessionIdle(): void {
+    const keep = this.turnsSinceResult;
+    this.inFlightTurns = keep > 0 ? this.inFlightTurns.slice(-keep) : [];
+    this.turnDepth = keep;
+    if (keep === 0) {
+      this.currentActivity = undefined;
+      this.setStatus('idle');
     }
   }
 

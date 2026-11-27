@@ -24,7 +24,7 @@ import { buildFeed, busyHere, isIncoming, previewOf, type ChatItem, type FeedSco
 import { hasQuestion } from '../../permissions';
 import { ROLE_LABEL, STATUS_LABEL } from '../../format';
 import { sendToAgent } from '../../agentSend';
-import { Avatar, ChatMessage } from './ChatMessage';
+import { Avatar, ChatMessage, ProfileCtx } from './ChatMessage';
 import { clock } from './chatFormat';
 import { ChatComposer, type ReplyTarget } from './ChatComposer';
 import { ChatInspector } from './ChatInspector';
@@ -87,6 +87,12 @@ export function ChatShell(props: Props) {
     });
   const [seen, setSeen] = useState<Record<string, number>>(loadSeen);
   const [replyTo, setReplyTo] = useState<ReplyTarget | null>(null);
+  /** Ekip sohbetinde sağ panelde açık ajan profili; null = lider (varsayılan). */
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const openProfile = (id: string) => {
+    setProfileId(id);
+    setInfoOpen(() => true);
+  };
 
   // Liste önizlemeleri bütün ajanların dökümüne bakar: hepsi yüklenmeli.
   // (Panel modunda yalnız açık terminaller yükleniyordu.)
@@ -155,6 +161,7 @@ export function ChatShell(props: Props) {
   const members = conv.kind === 'team' ? activeGroup.members : [byId.get(conv.id)].filter(Boolean) as AgentSnapshot[];
   const feed = (conv.kind === 'team' ? groupFeeds.get(activeGroup.key) : dmFeeds.get(conv.id)) ?? [];
   const lead = conv.kind === 'team' ? leadOf(members) : members[0] ?? null;
+  const profile = profileId ? byId.get(profileId) ?? null : null;
   const title = conv.kind === 'team' ? activeGroup.label : members[0]?.config.name ?? '';
 
   // Başlat/durdur: kapalı üye varsa onları açar, hepsi açıksa hepsini kapatır
@@ -256,7 +263,10 @@ export function ChatShell(props: Props) {
   // ------------------------------------------------------------ yanıt
   // Konuşma değişince bekleyen yanıt düşer: başka sohbetteki mesaja yanıt
   // bu sohbete gitmemeli.
-  useEffect(() => setReplyTo(null), [convKey]);
+  useEffect(() => {
+    setReplyTo(null);
+    setProfileId(null);
+  }, [convKey]);
 
   function reply(item: ChatItem) {
     const q = quoteOf(item, nameOf);
@@ -294,7 +304,18 @@ export function ChatShell(props: Props) {
 
   async function directSend(text: string) {
     const agent = members[0];
+    if (agent) await sendTo(agent, text);
+  }
+
+  /** Grupta `/komut`: çıktısı ajanın DM'ine düşer (etiketsiz), oraya geçilir. */
+  async function groupCommand(agentId: string, text: string) {
+    const agent = byId.get(agentId);
     if (!agent) return;
+    await sendTo(agent, text);
+    setConv({ kind: 'dm', id: agentId });
+  }
+
+  async function sendTo(agent: AgentSnapshot, text: string) {
     await sendToAgent(text, {
       agent,
       agents,
@@ -319,6 +340,7 @@ export function ChatShell(props: Props) {
 
   return (
     <main className="chat-wrap">
+    <ProfileCtx.Provider value={conv.kind === 'team' ? openProfile : null}>
     <div className={`chat${infoOpen ? ' info-open' : ''}`}>
       <aside className="chat-list" aria-label={L.extra.conversations}>
         <div className="chat-list-head">{L.chat.chats}</div>
@@ -470,7 +492,7 @@ export function ChatShell(props: Props) {
             )
             .map((a) => (
               <div key={`typing:${a.config.id}`} className="cm-row">
-                <Avatar agent={a} />
+                <Avatar agent={a} link />
                 <div className="cm-bubble cm-typing-bubble">
                   <div className="cm-typing">
                     <span className="cm-dots" aria-hidden>
@@ -499,6 +521,7 @@ export function ChatShell(props: Props) {
           budget={props.budget}
           label={title}
           onDirectSend={conv.kind === 'dm' ? directSend : undefined}
+          onAgentCommand={groupCommand}
           onToggleAutoApprove={toggleAutoApprove}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
@@ -507,6 +530,31 @@ export function ChatShell(props: Props) {
 
       {infoOpen && (
         <aside className="chat-info" aria-label={L.chat.infoAria}>
+          {conv.kind === 'team' && profile ? (
+            <>
+              <div className="chat-list-sec ci-profile-head">
+                <span>{L.chat.profile}</span>
+                <button className="cm-link" onClick={() => setConv({ kind: 'dm', id: profile.config.id })}>
+                  {L.chat.messageAgent}
+                </button>
+                <button
+                  className="icon-btn ci-profile-x"
+                  onClick={() => setProfileId(null)}
+                  aria-label={L.chat.closeProfile}
+                  title={L.chat.closeProfile}
+                >
+                  ×
+                </button>
+              </div>
+              <ChatInspector
+                key={profile.config.id}
+                agent={profile}
+                budget={props.budget}
+                refreshAgents={props.refreshAgents}
+              />
+            </>
+          ) : (
+          <>
           {conv.kind === 'team' && lead && <div className="chat-list-sec">{L.chat.ciLead}</div>}
           {lead && (
             <ChatInspector
@@ -517,9 +565,17 @@ export function ChatShell(props: Props) {
               refreshAgents={props.refreshAgents}
             />
           )}
+          </>
+          )}
           {conv.kind === 'team' && <div className="chat-list-sec">{L.chat.members}</div>}
           {conv.kind === 'team' && members.map((a) => (
-            <button key={a.config.id} className="chat-member" onClick={() => setConv({ kind: 'dm', id: a.config.id })}>
+            <button
+              key={a.config.id}
+              className={`chat-member${profile?.config.id === a.config.id ? ' sel' : ''}`}
+              aria-pressed={profile?.config.id === a.config.id}
+              onClick={() => (profile?.config.id === a.config.id ? setProfileId(null) : setProfileId(a.config.id))}
+              title={L.chat.openProfile(a.config.name)}
+            >
               <Avatar agent={a} size="sm" />
               <span className="chat-conv-body">
                 <span className="chat-conv-name">{a.config.name}</span>
@@ -543,6 +599,7 @@ export function ChatShell(props: Props) {
         </aside>
       )}
     </div>
+    </ProfileCtx.Provider>
     </main>
   );
 }

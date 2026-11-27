@@ -7,8 +7,14 @@
  *    ("araya girme"): çalışan bir ajana yazılan mesaj onun sürmekte olan turuna
  *    katılır.
  *  · Doğrudan (DM): tek ajanla konuşma; `/` komutları da çalışır (agentSend.ts).
+ *
+ * `/komut` iki kipte de ÇIPLAK gider (brif/etiket/yanıt bloğu yok; CLI ancak
+ * ilk karakter `/` ise komut sayar). Grupta hedef `@ajan`, yoksa LİDER; çıktı
+ * o ajanın DM'ine düşer (etiketsiz mesaj), bu yüzden kabuk oraya geçer.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { commandsFor, matchCommands, slashPrefix } from '../../slashMenu';
+import { StatusLine } from '../StatusLine';
 import type { AgentSnapshot, BudgetState, Task } from '../../types';
 import { api } from '../../api';
 import { buildBrief } from '../../brief';
@@ -36,6 +42,8 @@ interface Props {
   label: string;
   /** DM gönderimi (yerel komut ayrımı dahil). */
   onDirectSend?: (text: string) => Promise<void>;
+  /** Grupta `/komut`: o ajana çıplak gönderir (yerel komut ayrımı dahil). */
+  onAgentCommand?: (agentId: string, text: string) => Promise<void>;
   /** Grubun oto-onay durumunu değiştirir. */
   onToggleAutoApprove?: () => Promise<void>;
   replyTo?: ReplyTarget | null;
@@ -56,6 +64,7 @@ export function ChatComposer({
   budget,
   label,
   onDirectSend,
+  onAgentCommand,
   onToggleAutoApprove,
   replyTo = null,
   onCancelReply,
@@ -67,6 +76,9 @@ export function ChatComposer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [mentionSel, setMentionSel] = useState(0);
+  const [cmdSel, setCmdSel] = useState(0);
+  const [cmdOpen, setCmdOpen] = useState(true);
+  const cmdMenuRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
 
   // İçeriğe göre büyüyen alan (CSS max-height'a kadar).
@@ -112,6 +124,34 @@ export function ChatComposer({
     return replyTo?.agentId ? members.find((a) => a.config.id === replyTo.agentId) ?? null : null;
   }, [text, members, mode, replyTo]);
 
+  // ------------------------------------------------------------- / komutları
+  // Grupta `@ajan ` öneki komutun hedefini seçer; komut onun ardından gelir.
+  const atPrefix = mode === 'group' ? /^@[\w.-]+\s+/.exec(text)?.[0] ?? '' : '';
+  const body = text.slice(atPrefix.length);
+  const cmdAgent = mode === 'dm' ? members[0] ?? null : target ?? lead;
+  const allCommands = useMemo(() => commandsFor(cmdAgent), [cmdAgent?.commands]); // eslint-disable-line react-hooks/exhaustive-deps
+  const cmdPrefix = slashPrefix(body);
+  const cmdMatches = useMemo(
+    () => (cmdPrefix === null ? [] : matchCommands(allCommands, cmdPrefix)),
+    [cmdPrefix, allCommands],
+  );
+  const showCmds = !showMentions && cmdOpen && cmdPrefix !== null && cmdMatches.length > 0;
+  const isCommand = body.trimStart().startsWith('/');
+
+  useEffect(() => {
+    setCmdOpen(true);
+    setCmdSel(0);
+  }, [cmdPrefix]);
+  useEffect(() => {
+    cmdMenuRef.current?.querySelector('.cmd-row.sel')?.scrollIntoView({ block: 'nearest' });
+  }, [cmdSel, showCmds]);
+
+  function pickCommand(c: { name: string }) {
+    setText(`${atPrefix}/${c.name} `);
+    setCmdOpen(false);
+    ref.current?.focus();
+  }
+
   // ------------------------------------------------------------- gönder
   async function send() {
     const raw = text.trim();
@@ -123,6 +163,8 @@ export function ChatComposer({
       const quoted = (s: string) => (s.startsWith('/') ? s : withReply(s, replyTo));
       if (mode === 'dm') {
         await onDirectSend?.(quoted(raw));
+      } else if (isCommand && cmdAgent) {
+        await onAgentCommand?.(cmdAgent.config.id, body.trim());
       } else if (target) {
         // @ile ajana yazılan mesaj da grubun konuşmasıdır, özel sohbet değil.
         await api.sendMessage(target.config.id, withConvTag(quoted(raw.replace(/^@[\w.-]+\s+/, '')), groupKey));
@@ -200,6 +242,28 @@ export function ChatComposer({
         </div>
       )}
 
+      {showCmds && (
+        <div className="cmd-menu chat-cmds" ref={cmdMenuRef} role="listbox" aria-label={L.composer.commandsFor(cmdAgent?.config.name ?? '')}>
+          {cmdMatches.map((c, i) => (
+            <div
+              key={c.name}
+              className={`cmd-row${i === cmdSel ? ' sel' : ''}`}
+              role="option"
+              aria-selected={i === cmdSel}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                pickCommand(c);
+              }}
+              onMouseEnter={() => setCmdSel(i)}
+            >
+              <span className="cmd-name">/{c.name}</span>
+              {c.argumentHint && <span className="cmd-args">{c.argumentHint}</span>}
+              <span className="cmd-desc">{c.description}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {replyTo && (
         <div className="chat-replying">
           <Quote author={replyTo.author} text={replyTo.text} />
@@ -227,6 +291,8 @@ export function ChatComposer({
             setText(e.target.value);
             if (error) setError('');
           }}
+          onBlur={() => setCmdOpen(false)}
+          onFocus={() => setCmdOpen(true)}
           onKeyDown={(e) => {
             if (showMentions) {
               if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -238,6 +304,24 @@ export function ChatComposer({
               if (e.key === 'Enter' || e.key === 'Tab') {
                 e.preventDefault();
                 pickMention(mentionMatches[mentionSel]);
+                return;
+              }
+            }
+            if (showCmds) {
+              if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const d = e.key === 'ArrowDown' ? 1 : -1;
+                setCmdSel((s) => (s + d + cmdMatches.length) % cmdMatches.length);
+                return;
+              }
+              if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey && cmdPrefix !== cmdMatches[cmdSel].name)) {
+                e.preventDefault();
+                pickCommand(cmdMatches[cmdSel]);
+                return;
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setCmdOpen(false);
                 return;
               }
             }
@@ -267,9 +351,11 @@ export function ChatComposer({
         {mode === 'group' && (
           <>
             <span className="chat-chip static" title={L.composer.leadChipTitle}>
-              {target ? L.composer.target(target.config.name) : lead ? L.composer.lead(lead.config.name) : L.composer.noLead}
+              {isCommand && cmdAgent
+                ? L.composer.commandTo(cmdAgent.config.name)
+                : target ? L.composer.target(target.config.name) : lead ? L.composer.lead(lead.config.name) : L.composer.noLead}
             </span>
-            {!target && (
+            {!target && !isCommand && (
             <div className="chat-seg" role="group" aria-label={L.composer.mode}>
               <button className={`chat-chip${kind === 'task' ? ' on' : ''}`} aria-pressed={kind === 'task'} onClick={() => setKind('task')}>
                 {L.composer.task}
@@ -279,7 +365,7 @@ export function ChatComposer({
               </button>
             </div>
             )}
-            {kind === 'task' && delegates && (
+            {kind === 'task' && delegates && !isCommand && (
               <div className="chat-seg" role="group" aria-label={L.composer.plan}>
                 <button
                   className={`chat-chip${plan === 'auto' ? ' on' : ''}`}
@@ -334,18 +420,18 @@ export function ChatComposer({
         </span>
         <span className="chat-hints">
           <kbd>Enter</kbd> {L.composer.send} · <kbd>Shift+Enter</kbd> {L.composer.newline}
-          {mode === 'group' ? (
+          {mode === 'group' && (
             <>
               {' '}· <kbd>@</kbd> {L.composer.mentionHint}
             </>
-          ) : (
-            <>
-              {' '}· <kbd>/</kbd> {L.composer.commandHint}
-            </>
           )}
+          {' '}· <kbd>/</kbd> {mode === 'group' ? L.composer.commandHintLead : L.composer.commandHint}
         </span>
         {budget && <span className="chat-spend">{L.composer.today(fmtCost(budget.spentUSD))}</span>}
       </div>
+      {/* Kullanıcının Claude Code durum çubuğu (kalan limit vb.): DM'de o ajanın,
+          grupta liderin. Ayarda statusLine yoksa hiçbir şey çizmez. */}
+      {(mode === 'dm' ? members[0] : lead) && <StatusLine agent={(mode === 'dm' ? members[0] : lead)!} />}
     </div>
   );
 }

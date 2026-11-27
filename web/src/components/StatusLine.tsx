@@ -18,7 +18,7 @@ export function StatusLine({ agent }: { agent: AgentSnapshot }) {
   const [text, setText] = useState<string | null>(null);
   const last = useRef(0);
   const id = agent.config.id;
-  const trigger = `${agent.status === 'idle' || agent.status === 'offline' ? 'rest' : 'busy'}:${agent.currentModel ?? ''}:${agent.sessionId ?? ''}`;
+  const trigger = `${agent.status === 'idle' || agent.status === 'offline' ? 'rest' : 'busy'}:${agent.currentModel ?? ''}:${agent.config.effort ?? ''}:${agent.sessionId ?? ''}`;
 
   useEffect(() => {
     let live = true;

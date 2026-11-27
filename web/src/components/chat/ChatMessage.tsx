@@ -5,7 +5,7 @@
  * uygulamasının yeşil balonları DEĞİL. Sohbet hissi biçimden geliyor:
  * gönderen başlığı, sağa yaslı "sen" balonu, gün ayıracı, katlanan araçlar.
  */
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { AgentSnapshot } from '../../types';
 import type { ChatItem, ToolCall } from '../../chatFeed';
 import { ROLE_LABEL, fmtCost } from '../../format';
@@ -14,13 +14,65 @@ import { answerPermission, isQuestion, permissionSummary, PERMISSION_OPTIONS, ty
 import { QuestionForm } from '../QuestionForm';
 import { L } from '../../i18n';
 
-export function Avatar({ agent, size = 'md' }: { agent: AgentSnapshot | undefined; size?: 'sm' | 'md' }) {
+/**
+ * Ekip sohbetinde ajan profilini sağ panelde açar (WhatsApp'taki gibi
+ * avatara/ada dokununca). Sağlayıcı yoksa (DM, pano) avatar ve ad düz kalır.
+ */
+export const ProfileCtx = createContext<((agentId: string) => void) | null>(null);
+
+export function Avatar({
+  agent,
+  size = 'md',
+  link = false,
+}: {
+  agent: AgentSnapshot | undefined;
+  size?: 'sm' | 'md';
+  /** Ekip sohbetinde tıklanınca profili açsın mı. */
+  link?: boolean;
+}) {
+  const open = useContext(ProfileCtx);
   const name = agent?.config.name ?? '?';
-  return (
+  const face = (
     <span className={`cm-avatar cm-avatar-${size}`} data-role={agent?.config.role} aria-hidden>
       {initials(name)}
       {agent && <span className={`led led-${agent.status}`} />}
     </span>
+  );
+  if (!link || !open || !agent) return face;
+  return (
+    <button
+      type="button"
+      className="cm-avatar-btn"
+      onClick={() => open(agent.config.id)}
+      title={L.chat.openProfile(name)}
+      aria-label={L.chat.openProfile(name)}
+    >
+      {face}
+    </button>
+  );
+}
+
+/** Mesaj başlığındaki ajan adı; ekip sohbetinde profili açar. */
+function AgentName({ agent, fallback }: { agent: AgentSnapshot | undefined; fallback: string }) {
+  const open = useContext(ProfileCtx);
+  const name = agent?.config.name ?? fallback;
+  if (!open || !agent) {
+    return (
+      <span className="cm-name" data-role={agent?.config.role}>
+        {name}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className="cm-name cm-name-btn"
+      data-role={agent.config.role}
+      onClick={() => open(agent.config.id)}
+      title={L.chat.openProfile(name)}
+    >
+      {name}
+    </button>
   );
 }
 
@@ -111,14 +163,12 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump, ev
       const speaking = item.texts.length > 0;
       return (
         <div className={`cm-row${continued ? ' cont' : ''}`} data-item={item.id}>
-          {continued ? <span className="cm-avatar-gap" /> : <Avatar agent={agent} />}
+          {continued ? <span className="cm-avatar-gap" /> : <Avatar agent={agent} link />}
           <div className="cm-bubble">
             <ReplyBtn item={item} onReply={onReply} />
             {!continued && (
               <div className="cm-meta">
-                <span className="cm-name" data-role={agent?.config.role}>
-                  {agent?.config.name ?? item.agentId}
-                </span>
+                <AgentName agent={agent} fallback={item.agentId} />
                 {agent && <span className="cm-role">{ROLE_LABEL[agent.config.role] ?? agent.config.role}</span>}
                 {agent && <span className="cm-chip">{agent.currentModel ?? agent.config.model}</span>}
                 <time>{clock(item.ts)}</time>
@@ -283,13 +333,11 @@ function ResultCard(props: {
   const [open, setOpen] = useState(text.length <= LONG);
   return (
     <div className="cm-row" data-item={itemId}>
-      <Avatar agent={agent} />
+      <Avatar agent={agent} link />
       <div className={`cm-bubble cm-result${ok ? '' : ' failed'}`}>
         {replyBtn}
         <div className="cm-meta">
-          <span className="cm-name" data-role={agent?.config.role}>
-            {agent?.config.name ?? fallbackName}
-          </span>
+          <AgentName agent={agent} fallback={fallbackName} />
           <span className="cm-role">→ {to}</span>
           <span className={`cm-status s-${ok ? 'done' : 'failed'}`}>{ok ? L.chat.delivered : L.chat.failed}</span>
           {files !== undefined && (
@@ -343,10 +391,10 @@ function PermissionCard({
   if (isQuestion(item.req)) {
     return (
       <div className="cm-row">
-        <Avatar agent={agent} />
+        <Avatar agent={agent} link />
         <div className="cm-bubble cm-perm cm-question">
           <div className="cm-meta">
-            <span className="cm-name">{agent?.config.name ?? item.agentId}</span>
+            <AgentName agent={agent} fallback={item.agentId} />
             <span className="cm-status s-waiting">{L.question.asks}</span>
             <time>{clock(item.ts)}</time>
           </div>
@@ -357,10 +405,10 @@ function PermissionCard({
   }
   return (
     <div className="cm-row">
-      <Avatar agent={agent} />
+      <Avatar agent={agent} link />
       <div className="cm-bubble cm-perm">
         <div className="cm-meta">
-          <span className="cm-name">{agent?.config.name ?? item.agentId}</span>
+          <AgentName agent={agent} fallback={item.agentId} />
           <span className="cm-status s-waiting">{L.chat.awaitingApproval}</span>
           <time>{clock(item.ts)}</time>
         </div>

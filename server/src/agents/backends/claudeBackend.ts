@@ -12,7 +12,7 @@ import {
 } from '@anthropic-ai/claude-agent-sdk';
 import { AsyncQueue } from '../asyncQueue.js';
 import { claudeExecutable } from '../claudeExecutable.js';
-import type { AgentConfig, SlashCommand } from '../../types.js';
+import { DEFAULT_EFFORT, type AgentConfig, type EffortLevel, type SlashCommand } from '../../types.js';
 import { agentDir, agentMemoryDir, SHARED_MEMORY_DIR } from '../../paths.js';
 import { S, agentFacing } from '../../i18n.js';
 import type {
@@ -161,6 +161,12 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
    * currentModel'i geri alıp yeniden fırlatır) — o ilke AgentSession'da
    * kalmalı, burada tek tip davranış dayatılmamalı.
    */
+  /** Açılışta verilen `settings.effortLevel` ile AYNI katman (flag settings):
+   *  kullanıcı ayarının üstünde, oturum sürerken değiştirilebilir. */
+  async setEffort(effort: string): Promise<void> {
+    await this.q?.applyFlagSettings({ effortLevel: effort as EffortLevel });
+  }
+
   async setModel(model: string): Promise<void> {
     await this.q?.setModel(model);
     // Başarılıysa hatırlatmadaki "mevcut model" de doğru modeli söylesin.
@@ -340,12 +346,19 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
 
     return {
       model: this.resolveModel(),
+      // Efor flag ayar katmanında: kullanıcının ~/.claude effortLevel'ını
+      // (ör. xhigh) ezer ve setEffort() ile aynı katmanda canlı değişir.
+      settings: { effortLevel: config.effort ?? DEFAULT_EFFORT },
       cwd: opts.workspace,
       // Ajan oturumunu işaretler: kullanıcının kendi hook'ları (ör. skill
       // kütüphanesinin SessionStart önerileri) bu değişkene bakıp Claudiva'nın
       // çalıştırdığı oturumlarda sessiz kalır. `env` verildiğinde SDK süreç
       // ortamını DEVRALMAZ, bu yüzden process.env'in tamamı taşınıyor.
-      env: { ...process.env, CLAUDIVA_AGENT: '1' },
+      // EMIT_SESSION_STATE_EVENTS: SDK `session_state_changed` olayını ancak
+      // bununla yollar. 'idle' turun bittiğinin TEK kesin sinyali; tur sürerken
+      // gelen mesaj aynı tura emildiğinde (iki send, tek result) ajan onsuz
+      // sonsuza dek "çalışıyor" kalıyordu (ölçüldü).
+      env: { ...process.env, CLAUDIVA_AGENT: '1', CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS: '1' },
       pathToClaudeCodeExecutable: claudeExecutable().path,
       abortController: this.abort ?? undefined,
       systemPrompt: {

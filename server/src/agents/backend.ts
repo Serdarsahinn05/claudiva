@@ -175,6 +175,8 @@ export interface AgentBackend extends EventEmitter {
   /** Oturum akışta değilse ya da desteklenmiyorsa reddedebilir — çağıran
    *  (AgentSession) bunu yakalayıp kendi ilkesine göre yutar ya da geri sarar. */
   setModel(model: string): Promise<void>;
+  /** Düşünme eforunu canlı değiştirir; oturum kapalıysa sessizce çözülür. */
+  setEffort(effort: string): Promise<void>;
   /** Desteklenmiyorsa/oturum kapalıysa boş dizi döner; gerçek bir hata olursa reddeder. */
   refreshCommands(): Promise<SlashCommand[]>;
   /**

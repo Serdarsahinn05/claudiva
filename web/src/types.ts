@@ -28,11 +28,17 @@ export interface McpServerDef {
  *  elle çoğaltılmış. Tek üye: soyutlama katmanı kuruldu, ikinci sağlayıcı yok. */
 export type ProviderId = 'claude';
 
+export type EffortLevel = 'low' | 'medium' | 'high' | 'xhigh';
+export const EFFORT_LEVELS: EffortLevel[] = ['low', 'medium', 'high', 'xhigh'];
+export const DEFAULT_EFFORT: EffortLevel = 'medium';
+
 export interface AgentConfig {
   id: string;
   name: string;
   role: AgentRole;
   model: string;
+  /** Düşünme eforu; tanımsız = 'medium' (sunucu DEFAULT_EFFORT). */
+  effort?: EffortLevel;
   /** Tanımsızsa 'claude' sayılır. */
   provider?: ProviderId;
   memoryMode: MemoryMode;

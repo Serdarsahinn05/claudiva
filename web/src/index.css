@@ -446,7 +446,7 @@ button, .agent-row, .cat-row, .tb-agent, .choice, .rail-btn,
 .eph-mod.clickable, .modal-nav-btn, .tb-filter, .pl-card, .theme-card,
 .task-head, .cli-link, .agent-grip, .task-caret, .cmd-row, .ch-file, .tb-step,
 .sky-star, .chat-conv, .chat-chip, .chat-member, .mode-card, .cm-link,
-.cm-reply-btn, .cm-quote {
+.cm-reply-btn, .cm-quote, .cm-avatar-btn, .cm-name-btn {
   transition:
     transform var(--t-release) var(--ease-spring),
     background-color var(--t-ui) var(--ease-out),
@@ -3189,6 +3189,21 @@ label.check.small { font-size: 12px; color: var(--muted); }
 }
 .chat-conv:hover, .chat-member:hover { background: rgb(var(--fg-rgb) / 0.04); }
 .chat-conv.active { background: var(--hud-wash-2); border-left-color: var(--hud); }
+.chat-member.sel { background: var(--hud-wash-2); border-left-color: var(--hud); }
+/* Ekip sohbetinde avatar/ad profili açar (ProfileCtx): düğme görünümü sıfırlanır. */
+.cm-avatar-btn {
+  padding: 0; border: 0; background: none; height: auto; border-radius: 50%;
+  align-self: flex-start; flex-shrink: 0; cursor: pointer;
+}
+.cm-avatar-btn:hover .cm-avatar, .cm-avatar-btn:focus-visible .cm-avatar { box-shadow: 0 0 0 2px var(--hud); }
+.cm-name-btn {
+  padding: 0; border: 0; background: none; height: auto; border-radius: 0;
+  letter-spacing: normal; cursor: pointer;
+}
+.cm-name-btn:hover, .cm-name-btn:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+.ci-profile-head { display: flex; align-items: center; gap: var(--s2); }
+.ci-profile-head > span { flex: 1; }
+.ci-profile-x { width: 24px; height: 24px; padding: 0; font-size: 16px; line-height: 1; }
 .chat-conv-icon {
   width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center;
   font-family: var(--font-meta); font-size: 15px; color: var(--hud);
@@ -3362,6 +3377,8 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .qf-opt {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
   height: auto; padding: 8px 12px; white-space: normal;
+  /* Çok satırlı kart: hap köşe (--btn-radius 999px) onu elipse çeviriyordu. */
+  border-radius: var(--radius);
 }
 .qf-opt-label { color: var(--fg); font-weight: 600; font-size: 13px; }
 .qf-opt-desc { color: var(--muted); font-size: 12px; line-height: 1.35; }
@@ -3413,6 +3430,9 @@ label.check.small { font-size: 12px; color: var(--muted); }
 }
 .chat-mentions { left: var(--s5); right: auto; width: min(360px, 80%); }
 .chat-mentions .cmd-row { display: flex; align-items: center; gap: var(--s2); }
+.chat-cmds { left: var(--s5); right: var(--s5); }
+/* Statusline sohbet kutusunun altında: terminaldeki koyu şerit, köşeli kart olarak. */
+.chat-composer .statusline { border: var(--border-w) solid var(--edge); border-radius: var(--radius); padding: 4px 10px; }
 .chat-input-wrap {
   display: flex; align-items: flex-end; gap: var(--s2);
   padding: 6px 6px 6px var(--s3);
@@ -4364,6 +4384,7 @@ button.gl-bare:hover { background: transparent; border: none; }
   border-radius: var(--radius); border: var(--border-w) solid var(--edge);
   background: rgb(var(--surface-2-rgb)); color: var(--fg);
 }
+.ci-select.ci-effort { width: auto; font-family: var(--font-ui); padding: 4px 8px; }
 .ci-tog {
   flex: none; width: 32px; height: 18px; padding: 0; position: relative; cursor: pointer;
   border-radius: 999px; border: none; background: rgb(var(--surface-3-rgb));

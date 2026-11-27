@@ -446,7 +446,7 @@ export class AgentManager extends EventEmitter {
 
   async update(
     id: string,
-    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'provider' | 'team' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
+    patch: Partial<Pick<AgentConfig, 'name' | 'role' | 'model' | 'effort' | 'provider' | 'team' | 'memoryMode' | 'autoApprove' | 'autoModel' | 'description' | 'mcpServers'>> & {
       personality?: string;
     },
   ): Promise<AgentSnapshot> {
@@ -461,6 +461,7 @@ export class AgentManager extends EventEmitter {
 
     // Model can be switched live; other changes apply on next session start.
     if (patch.model) await session.setModel(patch.model);
+    if (patch.effort) await session.setEffort(patch.effort);
 
     this.emit('agents_changed');
     return this.snapshot(session);

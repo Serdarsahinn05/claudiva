@@ -22,6 +22,12 @@ export interface MemoryNode {
 /** Short aliases mapped to real model IDs in session.ts; full IDs pass through. */
 export type ModelChoice = 'haiku' | 'sonnet' | 'opus' | string;
 
+/** Düşünme eforu. Tanımsız = DEFAULT_EFFORT ('medium'); kullanıcının
+ *  ~/.claude ayarındaki effortLevel ajanlara sızmasın diye her oturumda verilir. */
+export type EffortLevel = 'low' | 'medium' | 'high' | 'xhigh';
+export const EFFORT_LEVELS: EffortLevel[] = ['low', 'medium', 'high', 'xhigh'];
+export const DEFAULT_EFFORT: EffortLevel = 'medium';
+
 /**
  * Ajanın arkasında hangi CLI/SDK'nın konuştuğu. Şimdilik tek üye — soyutlama
  * katmanı (bkz. agents/backend.ts) kuruldu ama ikinci bir sağlayıcı henüz
@@ -46,6 +52,8 @@ export interface AgentConfig {
   name: string;
   role: AgentRole;
   model: ModelChoice;
+  /** Düşünme eforu; tanımsız = 'medium'. Oturum sürerken canlı değişir. */
+  effort?: EffortLevel;
   /** Tanımsızsa 'claude' sayılır (bkz. AgentManager.readConfigs/create). */
   provider?: ProviderId;
   memoryMode: MemoryMode;

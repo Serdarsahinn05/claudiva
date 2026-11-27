@@ -9,7 +9,7 @@ import type {
 } from '../types';
 import { api } from '../api';
 import { fmtCost, fmtNum, ROLE_LABEL, STATUS_LABEL, totalTokens } from '../format';
-import { isLocal, localAsSlashCommands } from '../localCommands';
+import { commandsFor, matchCommands, slashPrefix } from '../slashMenu';
 import { sendToAgent } from '../agentSend';
 import type { CliSkin } from '../cliSkins';
 import { useCliSkin } from '../cliSkins';
@@ -37,24 +37,6 @@ const GROK_LOGO = `⠿⠿⠿⠿⠿
 ⠿⠿⠿⠿⠿`;
 
 const SKIN_LOGO: Record<CliSkin, string> = { claude: CAT_LOGO, codex: CODEX_LOGO, grok: GROK_LOGO };
-
-/** Girdi bir slash komutu yazılıyorsa henüz tamamlanmamış komut adını verir. */
-function slashPrefix(input: string): string | null {
-  const m = /^\/([^\s]*)$/.exec(input);
-  return m ? m[1] : null;
-}
-
-/** Claude Code CLI'daki gibi: önce baştan eşleşenler, sonra içinde geçenler. */
-function matchCommands(commands: SlashCommand[], prefix: string): SlashCommand[] {
-  const q = prefix.toLowerCase();
-  if (!q) return commands;
-  const names = (c: SlashCommand) => [c.name, ...(c.aliases ?? [])];
-  const starts = commands.filter((c) => names(c).some((n) => n.toLowerCase().startsWith(q)));
-  const contains = commands.filter(
-    (c) => !starts.includes(c) && names(c).some((n) => n.toLowerCase().includes(q)),
-  );
-  return [...starts, ...contains];
-}
 
 /**
  * Terminalin token/maliyet okuması.
@@ -141,10 +123,7 @@ export function Terminal({
 
   // Panelin kendi komutları listenin başında durur; ajanınkilerle isim
   // çakışırsa (ör. /clear) panel sürümü kazanır, çünkü yerel işlenir.
-  const allCommands = useMemo(() => {
-    const agentCmds = (agent.commands ?? []).filter((c) => !isLocal(c.name));
-    return [...localAsSlashCommands(), ...agentCmds];
-  }, [agent.commands]);
+  const allCommands = useMemo(() => commandsFor(agent), [agent.commands]);
 
   const cmdCount = allCommands.length;
   const prefix = slashPrefix(input);

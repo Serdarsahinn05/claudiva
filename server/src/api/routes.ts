@@ -5,6 +5,7 @@ import { isValidModel, MODEL_CHOICES } from '../agents/models.js';
 import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
 import fs from 'node:fs';
+import { DEFAULT_EFFORT, EFFORT_LEVELS, type EffortLevel } from '../types.js';
 import path from 'node:path';
 import { CLAUDE_USER_DIR, MEMORY_DIR, PROJECT_DIR } from '../paths.js';
 import { runStatusLine, statusLineCommand } from '../statusline.js';
@@ -85,8 +86,16 @@ export function createRoutes(
     }
   };
 
+  const checkEffort = (body: { effort?: unknown } | undefined) => {
+    const e = body?.effort;
+    if (e !== undefined && !EFFORT_LEVELS.includes(e as EffortLevel)) {
+      throw new ApiError('invalid_effort', `Geçersiz efor: "${String(e)}". Geçerli: ${EFFORT_LEVELS.join(', ')}.`);
+    }
+  };
+
   r.post('/agents', handle((req) => {
     checkModel(req.body, true);
+    checkEffort(req.body);
     return manager.create(req.body);
   }));
 
@@ -99,6 +108,7 @@ export function createRoutes(
 
   r.put('/agents/:id', handle((req) => {
     checkModel(req.body, false);
+    checkEffort(req.body);
     return manager.update(req.params.id, req.body);
   }));
 
@@ -163,6 +173,7 @@ export function createRoutes(
     if (!command) return { configured: false, text: null };
     const ctx = (await s.inspect(['context']).catch(() => ({}))) as { context?: { totalTokens: number; maxTokens: number } | null };
     const c = ctx.context;
+    const rateLimits = await planRateLimits(s);
     // Claude Code dökümü: ~/.claude/projects/<cwd'nin harf/rakam dışı → '-'>/<oturum>.jsonl
     const transcript = s.sessionId
       ? path.join(CLAUDE_USER_DIR, 'projects', PROJECT_DIR.replace(/[^a-zA-Z0-9]/g, '-'), `${s.sessionId}.jsonl`)
@@ -184,6 +195,8 @@ export function createRoutes(
             },
           }
         : {}),
+      effort: { level: s.config.effort ?? DEFAULT_EFFORT },
+      ...(rateLimits ? { rate_limits: rateLimits } : {}),
       agent: { id: s.config.id, name: s.config.name },
     };
     return { configured: true, text: await runStatusLine(command, input, PROJECT_DIR) };
@@ -630,4 +643,30 @@ export function createRoutes(
   r.put('/locale', handle((req) => ({ locale: setLocale(req.body?.locale) })));
 
   return r;
+}
+
+type PlanWindow = { utilization: number | null; resets_at: string | null } | null | undefined;
+
+/**
+ * Statusline'ın `rate_limits` alanı (Claude Code biçimi: `used_percentage`,
+ * `resets_at` unix saniye), SDK'nın `/usage` verisinden. Oturum kapalıysa,
+ * plan limiti yoksa (API anahtarı) ya da 2 sn'de dönmezse alan hiç yazılmaz:
+ * uydurma limit gösterilmez. SDK ucu deneysel (session.planUsage).
+ */
+async function planRateLimits(s: { planUsage(): Promise<unknown | null> }): Promise<Record<string, unknown> | null> {
+  const timeout = new Promise<null>((r) => setTimeout(() => r(null), 2000));
+  const u = (await Promise.race([s.planUsage().catch(() => null), timeout])) as {
+    rate_limits?: Record<string, PlanWindow> | null;
+  } | null;
+  const rl = u?.rate_limits;
+  if (!rl) return null;
+  const out: Record<string, unknown> = {};
+  for (const [k, w] of Object.entries(rl)) {
+    if (!w || w.utilization == null) continue;
+    out[k] = {
+      used_percentage: w.utilization,
+      ...(w.resets_at ? { resets_at: Math.floor(Date.parse(w.resets_at) / 1000) } : {}),
+    };
+  }
+  return Object.keys(out).length ? out : null;
 }

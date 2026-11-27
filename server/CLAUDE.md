@@ -429,6 +429,22 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   `POST/PUT /agents` geçersiz modeli `invalid_model` ile reddeder (`/model
   sonnet 5.5` eskiden olduğu gibi kaydediliyordu); diskte kalmış geçersiz
   değer açılışta aile adına onarılır (`repairModel`).
+- **Düşünme eforu `AgentConfig.effort`** (2026-11-27, iki types.ts; tanımsız =
+  `DEFAULT_EFFORT` 'medium'). SDK'ya `settings.effortLevel` (flag katmanı) olarak
+  gider, `effort` seçeneği olarak DEĞİL: kullanıcının `~/.claude` `effortLevel`ı
+  (xhigh) ajanlara sızıyordu ve canlı değişim `applyFlagSettings` ile AYNI
+  katmanda olmalı. Ölçüldü (`$CLAUDE_EFFORT`): açılış medium, sağ panelden
+  high → sonraki tur high. Seçici `ChatInspector`.
+- **"Çalışıyor"da takılma ve `session_state_changed`** (2026-11-27). SDK bu
+  olayı YALNIZ `CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS=1` ile yollar (claudeBackend
+  `env`); yokken `idle` dalı ölüydü. Tur sürerken gelen mesaj tura EMİLİNCE
+  (iki send, tek result) `turnDepth` 0'a inmiyor, ajan sonsuza dek "çalışıyor"
+  görünüyordu (ölçüldü). `onSessionIdle` son result'tan önceki turları düşürür,
+  sonrakileri (`turnsSinceResult`) korur.
+- **Statusline girdisi `effort.level` ve `rate_limits` taşır** (Claude Code
+  biçimi: `used_percentage`, `resets_at` unix sn). Limit `planUsage()`
+  (deneysel SDK ucu) üzerinden, 2 sn sınırlı; oturum kapalıysa/plan yoksa alan
+  yazılmaz. Ölçüldü: kullanıcının betiği "5 saat %94 ↻ 13dk" çizdi.
 - **Test sunucusunda proje yolu `--dir <yol>` ile verilir**, çıplak argüman
   yok sayılır ve cwd kullanılır: `node bin/claudiva.js --port X <yol>` deponun
   kendi `.claudiva/data`sına yazdı (ölçüldü).

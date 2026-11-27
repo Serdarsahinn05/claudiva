@@ -20,6 +20,7 @@
  * `compact` (ekip sohbeti, lider özeti): skill/MCP/dosya bölümleri çizilmez.
  */
 import { useEffect, useState } from 'react';
+import { DEFAULT_EFFORT, EFFORT_LEVELS, type EffortLevel } from '../../types';
 import type { AgentSnapshot, BudgetState, ChangedFile, ContextUsageInfo, McpStatusInfo, ModelOption, SkillInfo } from '../../types';
 import { api } from '../../api';
 import { fmtCost, fmtNum, totalTokens, ROLE_LABEL, STATUS_LABEL } from '../../format';
@@ -194,6 +195,22 @@ export function ChatInspector({ agent, budget, compact = false, refreshAgents }:
             <small>{live ? L.extra.reading : L.chat.ciModelsOff}</small>
           </div>
         )}
+        <div className="ci-row">
+          <span>{L.chat.ciEffort}</span>
+          <select
+            className="ci-select ci-effort"
+            aria-label={L.chat.ciEffort}
+            value={agent.config.effort ?? DEFAULT_EFFORT}
+            disabled={busy}
+            onChange={(e) => void patch({ effort: e.target.value as EffortLevel }, L.chat.ciSaved)}
+          >
+            {EFFORT_LEVELS.map((lv) => (
+              <option key={lv} value={lv}>
+                {L.chat.effortLevels[lv]}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="ci-row">
           <span>{L.chat.ciAutoModel}</span>
           <Toggle

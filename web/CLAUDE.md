@@ -248,6 +248,18 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   sohbette balonda kalır (`askedOf`, araç sonuç metninden). Ölçüldü (4632,
   oto-onay AÇIK ajan): üç yüzeyde çizildi; terminalden çoklu cevap ve
   sohbetten "Diğer" cevabı ajana ulaştı.
+- **Sohbette `/` komutları** (2026-11-27): menü ve eşleştirme terminalle ORTAK
+  (`slashMenu.ts`). Grupta komut ÇIPLAK gider (brif/etiket yok; eskiden brife
+  sarılıp lidere düz metin gidiyordu), hedef `@ajan` yoksa LİDER; çıktı o
+  ajanın DM'ine düşer, kabuk oraya geçer (`groupCommand`). Sohbet kutusunun
+  altında kullanıcının statusline'ı (DM'de o ajan, grupta lider).
+- **Ajan profili (ekip sohbeti, 2026-11-27):** mesajdaki avatar/ad ve sağdaki
+  katılımcı satırı o ajanın TAM `ChatInspector`ını sağ panelde açar (WhatsApp
+  gibi); × ya da aynı satıra tekrar tıklamak lidere döner, "Mesaj yaz" DM'e
+  geçer. Tıklanabilirlik `ProfileCtx` (ChatMessage.tsx) ile: sağlayıcı yalnız
+  ekip sohbetinde değer taşır, DM'de/panoda avatar ve ad düz kalır. Katılımcı
+  satırı eskiden DM'e atlıyordu (kullanıcı ayar için sohbet değiştirip
+  duruyordu). Konuşma değişince profil kapanır.
 - **Sohbet başlığında Başlat/Durdur** (`.chat-power`, ChatShell): kapalı üye
   varsa onları açar, hepsi açıksa hepsini kapatır; hepsi kapalıyken
   `button.primary`. Kullanıcı isteği: Ctrl+K paletindeki toplu eylemi bilmeyen
