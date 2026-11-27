@@ -402,9 +402,16 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   `POST/PUT /agents` geçersiz modeli `invalid_model` ile reddeder (`/model
   sonnet 5.5` eskiden olduğu gibi kaydediliyordu); diskte kalmış geçersiz
   değer açılışta aile adına onarılır (`repairModel`).
-- **Test sunucusunda proje yolu argüman DEĞİL**: `bin/claudiva.js` projeyi
-  cwd'den alır. `node bin/claudiva.js --port X <yol>` deponun kendi
-  `.claudiva/data`sına yazdı (ölçüldü); geçici projeyi cwd yaparak başlat.
+- **Test sunucusunda proje yolu `--dir <yol>` ile verilir**, çıplak argüman
+  yok sayılır ve cwd kullanılır: `node bin/claudiva.js --port X <yol>` deponun
+  kendi `.claudiva/data`sına yazdı (ölçüldü).
+- **`index.html` `no-store` ve ETag/tarihsiz servis edilir** (`index.ts`,
+  2026-11-27). `npm pack` dosya tarihlerini 1985'e sabitliyor, index.html'in
+  boyu sürümler arasında aynı kalıyor → ETag aynı → tarayıcı 304 ile ESKİ
+  sayfayı açıp olmayan eski hash'li dosyaları istiyordu; panel "sunucuya
+  bağlanılıyor" perdesinde kaldı (0.6.2 masaüstü güncellemesi, ölçüldü).
+  `assets/` `immutable`; olmayan `assets/` dosyası 404 (eskiden index.html
+  dönüp "MIME text/html" hatasıyla sessiz kalıyordu).
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
   `env` verilince SDK süreç ortamını devralmaz, bu yüzden `process.env`in
   tamamı taşınıyor. Kullanıcının skill kütüphanesi bu değişkene bakıp ajan

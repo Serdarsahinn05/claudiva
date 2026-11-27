@@ -75,9 +75,35 @@ app.use('/api', createRoutes(manager, tasks, prompts, changes, browser));
 // böylece tek süreçle çalışır (vite dev sunucusu gerekmez).
 const webDist = path.join(INSTALL_ROOT, 'web', 'dist');
 if (fs.existsSync(path.join(webDist, 'index.html'))) {
-  app.use(express.static(webDist));
+  // index.html ASLA önbellekten gelmemeli. `npm pack` her dosyanın tarihini
+  // 1985'e sabitliyor ve sürümler arasında index.html'in boyu aynı kalıyor
+  // (hash'li adlar eşit uzunlukta): ETag (boy+tarih) de aynı çıkıyor, tarayıcı
+  // "değişmedi" (304) cevabıyla ESKİ sayfayı açıp artık olmayan eski
+  // dosyaları istiyordu, panel açılış perdesinde kalıyordu (0.6.2 masaüstü,
+  // ölçüldü). ETag/tarih gönderilmez ki eski kopyanın koşullu isteği de 200 alsın.
+  const sendIndex = (_req: express.Request, res: express.Response) =>
+    res.sendFile(path.join(webDist, 'index.html'), {
+      etag: false,
+      lastModified: false,
+      headers: { 'Cache-Control': 'no-store' },
+    } as Parameters<express.Response['sendFile']>[1]);
+  app.get(['/', '/index.html'], sendIndex);
+  app.use(
+    express.static(webDist, {
+      index: false,
+      // Hash'li adlar içerikle değişir: aynı ad hep aynı dosya.
+      setHeaders: (res, file) => {
+        if (file.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }),
+  );
+  // Olmayan bir paket dosyası HTML'e düşmesin: tarayıcı "text/html MIME"
+  // hatası verip sessizce kalıyordu; 404 neyin eksik olduğunu söyler.
+  app.use('/assets', (_req, res) => res.status(404).end());
   // SPA: /api ve /ws dışındaki her yol index.html'e düşer
-  app.get(/^\/(?!api|ws).*/, (_req, res) => res.sendFile(path.join(webDist, 'index.html')));
+  app.get(/^\/(?!api|ws).*/, sendIndex);
 }
 
 const server = http.createServer(app);
