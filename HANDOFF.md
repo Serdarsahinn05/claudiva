@@ -40,9 +40,12 @@ kurallar `docs/brand/README.md`; Tauri simgeleri, `web/public/favicon.svg` ve
 açılış ekranı ve panelin üst çubuğu (`BrandMark.tsx`, renk paletten; dört
 stil × iki modda bakıldı) güncellendi.
 
-Bekleyen kullanıcı kararları: (1) boyut: 432 MB'ın 385 MB'ı SDK'nın Claude Code
-ikilisi (`claude-agent-sdk-win32-x64`); kullanıcının kurulu `claude`unu
-kullanmak küçültür ama sunucu değişikliği ister; (2) kod imzalama. Denenmedi: masaüstünde canlı ajan oturumu (ücretli),
+**Boyut ÇÖZÜLDÜ (2026-11-27, kullanıcı kararı):** masaüstü paketi SDK'nın
+Claude Code ikilisini taşımaz, kullanıcının kurulu `claude`u kullanılır
+(`server/src/agents/claudeExecutable.ts`). Kurulum 137 MB → 9 MB. npm
+kurulumu DEĞİŞMEDİ (npm isteğe bağlı ikiliyi yine indirir; `--omit=optional`
+ile kuran kullanıcı da artık çalışır). Bekleyen: kod imzalama; açılış ekranı
+Claude Code yokluğunu önceden söylemiyor (yalnız ajan açılınca mesaj). Denenmedi: masaüstünde canlı ajan oturumu (ücretli),
 dış bağlantılar, kurulum dosyasının kendisi (sisteme kurar).
 
 # ▶ 0.5.0 HAZIR (2026-11-26)

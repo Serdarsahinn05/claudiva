@@ -11,6 +11,7 @@ import {
   type McpServerConfig,
 } from '@anthropic-ai/claude-agent-sdk';
 import { AsyncQueue } from '../asyncQueue.js';
+import { claudeExecutable } from '../claudeExecutable.js';
 import type { AgentConfig, SlashCommand } from '../../types.js';
 import { agentDir, agentMemoryDir, SHARED_MEMORY_DIR } from '../../paths.js';
 import { S, agentFacing } from '../../i18n.js';
@@ -85,6 +86,16 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
 
   start(opts: BackendStartOptions): void {
     if (this.q) return;
+    // İkili yoksa SDK `query()` İÇİNDE senkron fırlatır (ölçüldü); loop()'un
+    // catch'ine hiç ulaşmaz. Oturum açılış akışını bitirsin diye olaylar bir
+    // sonraki tikte: önce anlaşılır mesaj, sonra kapanış (ajan çevrimdışı).
+    if (claudeExecutable().source === 'missing') {
+      setImmediate(() => {
+        this.emit('message', { kind: 'error', text: S.claudeNotFound } satisfies BackendEvent);
+        this.emit('exit', { resumeFailed: false });
+      });
+      return;
+    }
     this.opts = opts;
     this.config = opts.config;
     this.activeModel = opts.model ?? null;
@@ -338,6 +349,7 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
       // çalıştırdığı oturumlarda sessiz kalır. `env` verildiğinde SDK süreç
       // ortamını DEVRALMAZ, bu yüzden process.env'in tamamı taşınıyor.
       env: { ...process.env, CLAUDIVA_AGENT: '1' },
+      pathToClaudeCodeExecutable: claudeExecutable().path,
       abortController: this.abort ?? undefined,
       systemPrompt: {
         type: 'preset',

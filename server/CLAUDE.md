@@ -386,6 +386,14 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
     geri gelmedi; ikinci açılış sessiz.
   - **Özet sondaki boşluğu kırpar** (`trimEnd`): eski manifestler aynı içerikte ama sondaki satır sonu eksikti, tek bayt yüzünden eşleşmiyordu.
   - **`writeAgentFiles` plugin.json'u yalnız YOKSA yazar.** Eskiden her ajan güncellemesinde (oto-onay düğmesi dahil) `"<ad> skill'leri"` diye yeniden yazıp paketteki açıklamayı eziyordu; bu üretilmiş kalıp ada göre değiştiği için özetle tanınamaz, `isGeneratedManifest` onu ayrıca tanıyıp onarır.
+- **Claude Code ikilisi `agents/claudeExecutable.ts`ten** (2026-11-27):
+  `CLAUDIVA_CLAUDE_PATH` → SDK'nın platform paketi → sistemdeki `claude`
+  (PATH; Windows'ta npm kabuğu `.cmd` olduğu için yanındaki
+  `node_modules/@anthropic-ai/claude-code/bin/claude.exe`; `~/.local/bin`).
+  Masaüstü paketi SDK ikilisini taşımaz. **İkili yoksa SDK `query()` İÇİNDE
+  senkron fırlatır** (ölçüldü), `loop()` catch'i görmez; bu yüzden
+  `ClaudeBackend.start()` önce bakar, `S.claudeNotFound` + `exit` yayar.
+  Sistem ikilisi SDK'nın `claudeCodeVersion`ından eskiyse yalnız konsola uyarı.
 - **Ajan oturumları `CLAUDIVA_AGENT=1` taşır** (`claudeBackend` → SDK `env`).
   `env` verilince SDK süreç ortamını devralmaz, bu yüzden `process.env`in
   tamamı taşınıyor. Kullanıcının skill kütüphanesi bu değişkene bakıp ajan

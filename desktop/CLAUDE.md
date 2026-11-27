@@ -33,7 +33,14 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `desktop/` altında çalış
 - `prepare-app.mjs`: kök derleme → `npm pack` (npm kullanıcısının aldığı
   dosyaların AYNISI) → aç → `workspaces/devDependencies/scripts` sil (paketlenmiş
   package.json `workspaces` taşıyor, server/ web/ kaynakları pakette yok) →
-  `npm install --omit=dev`.
+  `npm install --omit=dev` → SDK'nın platform ikili paketlerini
+  (`@anthropic-ai/claude-agent-sdk-*`) SİL. Sunucu kullanıcının `claude`unu
+  bulur (`server/src/agents/claudeExecutable.ts`). Ölçüldü (2026-11-27):
+  kurulum dosyası 137 MB → 9 MB, `build/app` 432 → 47,7 MB.
+- **Bu paketi depo İÇİNDEN denemek yanıltır:** Node üst klasörlere çıkıp
+  deponun kök `node_modules`'undaki ikiliyi bulur, çözücü `bundled` der.
+  `build/app`i depo dışına kopyalayıp dene (ölçüldü). `tauri dev` de depodan
+  çalıştığı için SDK'nın kendi ikilisini kullanır.
 
 ## Ölçülmüş davranışlar
 

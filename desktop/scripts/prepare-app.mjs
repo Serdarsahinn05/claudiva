@@ -47,6 +47,18 @@ fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 run('npm install --omit=dev --no-audit --no-fund --no-package-lock', APP);
 
+// SDK'nın gömülü Claude Code ikilisi (Windows'ta ~250 MB, paketin büyük
+// kısmı) taşınmaz: sunucu kullanıcının kendi `claude`unu bulur
+// (server/src/agents/claudeExecutable.ts). `--omit=optional` kullanılmadı,
+// çünkü başka paketlerin isteğe bağlı bağımlılıklarını da düşürürdü.
+const scope = path.join(APP, 'node_modules', '@anthropic-ai');
+for (const name of fs.existsSync(scope) ? fs.readdirSync(scope) : []) {
+  if (name.startsWith('claude-agent-sdk-')) {
+    fs.rmSync(path.join(scope, name), { recursive: true, force: true });
+    console.log(`  removed bundled binary package: @anthropic-ai/${name}`);
+  }
+}
+
 function size(dir) {
   let bytes = 0;
   let files = 0;

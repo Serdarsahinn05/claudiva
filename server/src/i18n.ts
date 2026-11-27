@@ -53,6 +53,8 @@ const tr = {
   reasonTurnEnded: 'tur bitti — temel modele dönüş',
   reasonRouter: (why: string) => `yönlendirici: ${why}`,
   sessionError: (msg: string) => `Oturum hatası: ${msg}`,
+  claudeNotFound:
+    'Claude Code bulunamadı. Ajanlar bilgisayarınızdaki Claude Code ile çalışır: https://claude.com/claude-code adresinden kurun, sonra ajanı yeniden başlatın. (Başka bir yerdeyse yolunu CLAUDIVA_CLAUDE_PATH ile verin.)',
   // görev sonucu notları
   taskInterruptedByRestart: 'Sunucu yeniden başlatıldı; görev yarıda kaldı.',
   depMissing: 'Bağlı olduğu görev kayıtlarda yok.',
@@ -142,6 +144,8 @@ const en: Dict = {
   reasonTurnEnded: 'turn ended — back to the base model',
   reasonRouter: (why) => `router: ${why}`,
   sessionError: (msg) => `Session error: ${msg}`,
+  claudeNotFound:
+    'Claude Code was not found. Agents run on the Claude Code installed on this computer: install it from https://claude.com/claude-code, then restart the agent. (If it lives elsewhere, set its path in CLAUDIVA_CLAUDE_PATH.)',
   taskInterruptedByRestart: 'The server restarted; the task was left unfinished.',
   depMissing: 'The task it depends on is not in the records.',
   chainStopped: (id) => `The previous step failed (${id}); the chain was stopped.`,

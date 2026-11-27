@@ -16,6 +16,7 @@
  * Hata, zaman aşımı ya da anlaşılmayan cevap → `null` (çağıran varsayılana düşer).
  */
 import { query } from '@anthropic-ai/claude-agent-sdk';
+import { claudeExecutable } from '../agents/claudeExecutable.js';
 import type { Tier } from './rules.js';
 
 export interface ClassifierVerdict {
@@ -69,6 +70,7 @@ export async function classify(title: string, prompt: string): Promise<Classifie
         // Kullanıcının hook'ları (skill kütüphanesi vb.) ajan oturumlarında
         // olduğu gibi burada da sessiz kalsın.
         env: { ...process.env, CLAUDIVA_AGENT: '1' },
+        pathToClaudeCodeExecutable: claudeExecutable().path,
       },
     })) {
       if (m.type === 'assistant') {
