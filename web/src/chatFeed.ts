@@ -16,6 +16,7 @@
 import { isTaskMessage } from './taskMessage';
 import type { AgentSnapshot, PermissionRequestInfo, Task, TranscriptEvent } from './types';
 import { stripBrief } from './brief';
+import { readConvTag } from './convTag';
 import { parseReply, type ReplyRef } from './reply';
 import { L } from './i18n';
 
@@ -57,15 +58,55 @@ export type ChatItem =
   | { type: 'note'; id: string; ts: number; agentId: string; text: string; tone: 'local' | 'error' };
 
 
+/**
+ * Bir öğenin ait olduğu sohbet: `dm:<ajan>`, `group:<anahtar>`, `group:*`
+ * (etiketsiz eski brif: her grup) ya da `*` (bilinmiyor: her yer).
+ */
+type Conv = string;
+
+/**
+ * Dökümde bir kullanıcı/görev mesajıyla başlayan dilim. Ajanın cevabı ve o
+ * sırada verdiği görevler dilimin sohbetine aittir. Görev mesajının sohbeti
+ * görevi verenin o anki diliminden gelir (zincir boyunca çözülür).
+ */
+interface Seg {
+  ts: number;
+  conv?: Conv;
+  taskId?: string;
+}
+
+const TASK_ID = /^# (?:Task|Görev) \(id: ([^)\s]+)\)/;
+
+function userConv(agentId: string, text: string): Seg['conv'] | { taskId: string } {
+  if (isTaskMessage(text)) {
+    const id = TASK_ID.exec(text)?.[1];
+    return id ? { taskId: id } : '*';
+  }
+  const { text: rest, group } = readConvTag(text);
+  if (group !== null) return `group:${group}`;
+  return stripBrief(rest).briefed ? 'group:*' : `dm:${agentId}`;
+}
+
 /** Bir ajanın dökümünü balonlara çevirir. */
 export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatItem[] {
+  return parsedAgent(agentId, events).items;
+}
+
+function parseAgent(agentId: string, events: TranscriptEvent[]) {
   const out: ChatItem[] = [];
+  const segs: Seg[] = [];
+  const segOf = new Map<ChatItem, Seg>();
+  let seg: Seg | null = null;
+  const push = (item: ChatItem) => {
+    out.push(item);
+    if (seg) segOf.set(item, seg);
+  };
   let turn: Extract<ChatItem, { type: 'turn' }> | null = null;
 
   const openTurn = (e: TranscriptEvent) => {
     if (!turn) {
       turn = { type: 'turn', id: `${agentId}:${e.id}`, ts: e.ts, agentId, texts: [], tools: [], live: true };
-      out.push(turn);
+      push(turn);
     }
     return turn;
   };
@@ -81,12 +122,16 @@ export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatI
         // GÖSTERİLMEZ (delegasyon kartı onu zaten söylüyor) ama turu açar.
         closeTurn();
         const text = e.text ?? '';
+        const c = userConv(agentId, text);
+        seg = typeof c === 'string' ? { ts: e.ts, conv: c } : { ts: e.ts, taskId: c?.taskId };
+        segs.push(seg);
         // Görev kuyruğunun çalışana yazdığı mesaj — delegasyon kartının kopyası.
         if (isTaskMessage(text)) break;
-        // Sıra önemli: brif yanıt bloğunun ALTINA eklenir, önce o kesilir.
-        const { text: own, briefed } = stripBrief(text);
+        // Sıra önemli: sohbet etiketi en sonda, brif yanıt bloğunun ALTINDA;
+        // önce etiket, sonra brif, en son yanıt bloğu kesilir.
+        const { text: own, briefed } = stripBrief(readConvTag(text).text);
         const { reply, text: body } = parseReply(own);
-        out.push({ type: 'user', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: body, briefed, reply });
+        push({ type: 'user', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: body, briefed, reply });
         break;
       }
       case 'text':
@@ -119,16 +164,85 @@ export function itemsForAgent(agentId: string, events: TranscriptEvent[]): ChatI
           (turn as Extract<ChatItem, { type: 'turn' }>).error = e.text ?? L.chat.error;
           closeTurn();
         } else {
-          out.push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? L.chat.error, tone: 'error' });
+          push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? L.chat.error, tone: 'error' });
         }
         break;
       case 'local':
-        out.push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? '', tone: 'local' });
+        push({ type: 'note', id: `${agentId}:${e.id}`, ts: e.ts, agentId, text: e.text ?? '', tone: 'local' });
         break;
       // 'thinking' ve 'system' sohbette gösterilmez (terminal görünümünde var).
     }
   }
-  return out;
+  return { items: out, segs, segOf };
+}
+
+/**
+ * Ayrıştırma döküm dizisine göre önbellekli: sohbet kabuğu her grup ve her
+ * ajan için ayrı akış kuruyor, görev sohbeti de başka ajanların dökümüne
+ * bakıyor. Store dökümü değişince yeni dizi verir, önbellek kendiliğinden düşer.
+ */
+const parseCache = new WeakMap<TranscriptEvent[], Map<string, ReturnType<typeof parseAgent>>>();
+const EMPTY: TranscriptEvent[] = [];
+
+function parsedAgent(id: string, events: TranscriptEvent[] = EMPTY) {
+  let byAgent = parseCache.get(events);
+  if (!byAgent) parseCache.set(events, (byAgent = new Map()));
+  let p = byAgent.get(id);
+  if (!p) byAgent.set(id, (p = parseAgent(id, events)));
+  return p;
+}
+
+/** Bütün dökümlerden sohbet çözücüsü: öğe, görev ve an → sohbet. */
+function convResolver(transcripts: Record<string, TranscriptEvent[]>, tasks: Task[]) {
+  const get = (id: string) => parsedAgent(id, transcripts[id]);
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  const memo = new Map<string, Conv>();
+
+  /** Ajanın `ts` anındaki dilimi (son kullanıcı/görev mesajı). */
+  const segAt = (agentId: string, ts: number): Seg | null => {
+    const segs = get(agentId).segs;
+    let found: Seg | null = null;
+    for (const s of segs) {
+      if (s.ts > ts) break;
+      found = s;
+    }
+    return found;
+  };
+  const ofSeg = (s: Seg | null | undefined, depth: number): Conv => {
+    if (!s) return '*';
+    if (s.conv) return s.conv;
+    return s.taskId ? ofTask(s.taskId, depth + 1) : '*';
+  };
+  // Panelden kullanıcının açtığı görev bir sohbete ait değil: her yerde görünür.
+  const ofTask = (taskId: string, depth = 0): Conv => {
+    const hit = memo.get(taskId);
+    if (hit) return hit;
+    const t = byId.get(taskId);
+    const conv = !t || t.assignedBy === 'user' || depth > 20 ? '*' : ofSeg(segAt(t.assignedBy, t.createdAt), depth);
+    memo.set(taskId, conv);
+    return conv;
+  };
+  return {
+    agent: get,
+    ofItem: (agentId: string, item: ChatItem) => ofSeg(get(agentId).segOf.get(item), 0),
+    ofTask,
+    at: (agentId: string, ts: number) => ofSeg(segAt(agentId, ts), 0),
+  };
+}
+
+/**
+ * Sohbet kapsamı. Verilmezse süzme yok (Pano'nun "son mesajlar"ı).
+ * `groups`: şu an var olan grup anahtarları; artık olmayan bir gruba
+ * (takım silindi/adı değişti) yazılmış mesaj kaybolmasın, her grupta görünür.
+ */
+export type FeedScope = { kind: 'group'; key: string; groups: ReadonlySet<string> } | { kind: 'dm'; id: string };
+
+function inScope(conv: Conv, scope: FeedScope | undefined): boolean {
+  if (!scope || conv === '*') return true;
+  if (scope.kind === 'dm') return conv === `dm:${scope.id}`;
+  if (!conv.startsWith('group:')) return false;
+  const key = conv.slice('group:'.length);
+  return key === '*' || key === scope.key || !scope.groups.has(key);
 }
 
 export interface FeedInput {
@@ -137,24 +251,31 @@ export interface FeedInput {
   transcripts: Record<string, TranscriptEvent[]>;
   tasks: Task[];
   permissions: PermissionRequestInfo[];
+  /** Hangi sohbetin akışı (bkz. convTag.ts). Yoksa katılımcıların her şeyi. */
+  scope?: FeedScope;
 }
 
 /**
  * Bir konuşmanın tüm akışı. Görev mesajları yalnız İKİ ucundan biri
  * katılımcıysa girer: grup sohbetinde takım içi delegasyonlar, DM'de o
- * ajanın verdiği ya da aldığı işler.
+ * ajanın verdiği ya da aldığı işler. `scope` verilince her öğe ait olduğu
+ * sohbete göre süzülür: özel mesaj gruplarda, ekip işi özel sohbette görünmez.
  */
-export function buildFeed({ agents, transcripts, tasks, permissions }: FeedInput): ChatItem[] {
+export function buildFeed({ agents, transcripts, tasks, permissions, scope }: FeedInput): ChatItem[] {
   const ids = new Set(agents.map((a) => a.config.id));
+  const conv = convResolver(transcripts, tasks);
   const items: ChatItem[] = [];
 
-  for (const id of ids) items.push(...itemsForAgent(id, transcripts[id] ?? []));
+  for (const id of ids) {
+    for (const item of conv.agent(id).items) if (inScope(conv.ofItem(id, item), scope)) items.push(item);
+  }
 
   for (const t of tasks) {
     // Kullanıcının panelden açtığı görev bir "konuşma" değil; o yüzden
     // yalnız ajandan ajana devirler mesaj olur.
     if (t.assignedBy === 'user') continue;
     if (!ids.has(t.assignedBy) && !ids.has(t.assignedTo)) continue;
+    if (!inScope(conv.ofTask(t.id), scope)) continue;
     items.push({ type: 'delegation', id: `d:${t.id}`, ts: t.createdAt, task: t });
     if ((t.status === 'done' || t.status === 'failed') && t.finishedAt) {
       items.push({ type: 'result', id: `r:${t.id}`, ts: t.finishedAt, task: t });
@@ -162,7 +283,8 @@ export function buildFeed({ agents, transcripts, tasks, permissions }: FeedInput
   }
 
   for (const p of permissions) {
-    if (ids.has(p.agentId)) items.push({ type: 'permission', id: `p:${p.id}`, ts: p.ts, agentId: p.agentId, req: p });
+    if (!ids.has(p.agentId) || !inScope(conv.at(p.agentId, p.ts), scope)) continue;
+    items.push({ type: 'permission', id: `p:${p.id}`, ts: p.ts, agentId: p.agentId, req: p });
   }
 
   // Aynı zaman damgasında sıra kararlı kalsın (React anahtarı sabit, balonlar

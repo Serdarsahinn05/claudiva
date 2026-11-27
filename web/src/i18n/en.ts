@@ -251,6 +251,12 @@ export const en: Dict = {
     previewWaiting: (name) => `${name} is awaiting approval`,
     headTeam: (n, lead, working) =>
       `${n} ${n === 1 ? 'agent' : 'agents'}${lead ? ` · lead ${lead}` : ''}${working ? ` · ${working} working` : ''}`,
+    startTeam: 'Start team',
+    startRest: (n) => `Start the rest (${n})`,
+    stopTeam: 'Stop team',
+    startOne: 'Start',
+    stopOne: 'Stop',
+    powerHint: 'You can write to stopped agents too: they start on their own when a message or task arrives.',
     infoTitle: 'Agent, team and open tasks',
     infoAria: 'Team info',
     members: 'Members',
@@ -1292,6 +1298,7 @@ export const en: Dict = {
 
   apiErrors: {
     agent_not_found: 'Agent not found.',
+    invalid_model: 'Invalid model name. Valid: haiku, sonnet, opus, fable (or a full model id starting with claude-).',
     empty_message: 'Cannot send an empty message.',
     permission_not_found: 'Permission request not found (it may have timed out).',
     step_required: 'At least one step is required.',

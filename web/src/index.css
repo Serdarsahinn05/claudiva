@@ -3230,6 +3230,15 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .chat-head-faces .cm-avatar + .cm-avatar { margin-left: -6px; }
 .chat-head-faces .cm-avatar { box-shadow: 0 0 0 2px var(--hull-1); }
 .chat-more { margin-left: 6px; align-self: center; font-family: var(--font-meta); font-size: 11px; color: var(--muted); }
+/* Başlat/durdur. Hepsi kapalıyken `button.primary` (seçicisi daha özgül,
+   renkleri o verir): bilmeyen kullanıcı ilk bunu görsün. */
+.chat-power {
+  background: transparent; border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+  padding: 6px var(--s3); cursor: pointer; color: var(--muted);
+  font-family: var(--font-ui); font-size: 11.5px; white-space: nowrap;
+}
+.chat-power:not(.primary):hover:not(:disabled) { border-color: var(--edge-lit); color: var(--fg); background: none; }
+.chat-power:disabled { opacity: 0.55; cursor: default; }
 .chat-info-btn { font-family: var(--font-display); font-style: var(--title-style); font-size: 16px; width: 30px; height: 30px; }
 .chat-info-btn.on { color: var(--hud); border-color: var(--hud); }
 

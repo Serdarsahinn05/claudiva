@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AgentSnapshot, BudgetState, Task } from '../../types';
 import { api } from '../../api';
 import { buildBrief } from '../../brief';
+import { withConvTag } from '../../convTag';
 import { canDelegate } from '../../teams';
 import { fmtCost } from '../../format';
 import { Avatar, Quote } from './ChatMessage';
@@ -25,6 +26,8 @@ export interface ReplyTarget extends ReplyRef {
 
 interface Props {
   mode: 'group' | 'dm';
+  /** Grubun anahtarı: grup gönderimi bununla etiketlenir (convTag.ts). */
+  groupKey: string;
   /** Grupta katılımcılar; DM'de tek eleman. */
   members: AgentSnapshot[];
   lead: AgentSnapshot | null;
@@ -44,6 +47,7 @@ type Plan = 'auto' | 'approve';
 
 export function ChatComposer({
   mode,
+  groupKey,
   members,
   lead,
   tasks,
@@ -117,11 +121,12 @@ export function ChatComposer({
       if (mode === 'dm') {
         await onDirectSend?.(quoted(raw));
       } else if (target) {
-        await api.sendMessage(target.config.id, quoted(raw.replace(/^@[\w.-]+\s+/, '')));
+        // @ile ajana yazılan mesaj da grubun konuşmasıdır, özel sohbet değil.
+        await api.sendMessage(target.config.id, withConvTag(quoted(raw.replace(/^@[\w.-]+\s+/, '')), groupKey));
       } else if (lead) {
         await api.sendMessage(
           lead.config.id,
-          buildBrief(quoted(raw), lead, members, { plan, ask: kind === 'ask' })
+          withConvTag(buildBrief(quoted(raw), lead, members, { plan, ask: kind === 'ask' }), groupKey)
         );
       }
       setText('');

@@ -20,7 +20,7 @@ import type {
 } from '../../types';
 import { api } from '../../api';
 import { ALL_TEAMS, agentsInTeam, leadOf, teamsOf } from '../../teams';
-import { buildFeed, isIncoming, previewOf, type ChatItem } from '../../chatFeed';
+import { buildFeed, isIncoming, previewOf, type ChatItem, type FeedScope } from '../../chatFeed';
 import { ROLE_LABEL, STATUS_LABEL } from '../../format';
 import { sendToAgent } from '../../agentSend';
 import { Avatar, ChatMessage } from './ChatMessage';
@@ -128,15 +128,18 @@ export function ChatShell(props: Props) {
     return list;
   }, [teams, agents]);
 
-  const feedOf = (members: AgentSnapshot[]) => buildFeed({ agents: members, transcripts, tasks, permissions });
+  const feedOf = (members: AgentSnapshot[], scope: FeedScope) =>
+    buildFeed({ agents: members, transcripts, tasks, permissions, scope });
 
-  const groupFeeds = useMemo(
-    () => new Map(groups.map((g) => [g.key, feedOf(g.members)])),
+  // Her konuşma yalnız KENDİ mesajlarını gösterir (convTag.ts): aynı lider
+  // birkaç grupta ve özel sohbette olsa da mesaj gönderildiği yerde kalır.
+  const groupFeeds = useMemo(() => {
+    const keys = new Set(groups.map((g) => g.key));
+    return new Map(groups.map((g) => [g.key, feedOf(g.members, { kind: 'group', key: g.key, groups: keys })]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [groups, transcripts, tasks, permissions]
-  );
+  }, [groups, transcripts, tasks, permissions]);
   const dmFeeds = useMemo(
-    () => new Map(agents.map((a) => [a.config.id, feedOf([a])])),
+    () => new Map(agents.map((a) => [a.config.id, feedOf([a], { kind: 'dm', id: a.config.id })])),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [agents, transcripts, tasks, permissions]
   );
@@ -148,6 +151,25 @@ export function ChatShell(props: Props) {
   const feed = (conv.kind === 'team' ? groupFeeds.get(activeGroup.key) : dmFeeds.get(conv.id)) ?? [];
   const lead = conv.kind === 'team' ? leadOf(members) : members[0] ?? null;
   const title = conv.kind === 'team' ? activeGroup.label : members[0]?.config.name ?? '';
+
+  // Başlat/durdur: kapalı üye varsa onları açar, hepsi açıksa hepsini kapatır
+  // (Paneller'deki toplu eylemle aynı kural). Durum WS ile geri gelir.
+  const offlineMembers = members.filter((a) => a.status === 'offline');
+  const [powerBusy, setPowerBusy] = useState(false);
+  async function togglePower() {
+    setPowerBusy(true);
+    try {
+      await Promise.all(
+        offlineMembers.length
+          ? offlineMembers.map((a) => api.startAgent(a.config.id))
+          : members.map((a) => api.stopAgent(a.config.id))
+      );
+    } catch {
+      /* tek ajanın hatası düğmeyi kilitlemesin; durum WS'ten gelir */
+    } finally {
+      setPowerBusy(false);
+    }
+  }
 
   /**
    * İlk ziyarette (kayıt yok) mevcut geçmiş "görülmüş" sayılır: sohbet modunu
@@ -374,6 +396,22 @@ export function ChatShell(props: Props) {
             ))}
             {members.length > 6 && <span className="chat-more">+{members.length - 6}</span>}
           </div>
+          {members.length > 0 && (
+            <button
+              className={`chat-power${offlineMembers.length === members.length ? ' primary' : ''}`}
+              disabled={powerBusy}
+              onClick={() => void togglePower()}
+              title={L.chat.powerHint}
+            >
+              {offlineMembers.length === 0
+                ? conv.kind === 'team' ? L.chat.stopTeam : L.chat.stopOne
+                : conv.kind === 'dm'
+                  ? L.chat.startOne
+                  : offlineMembers.length === members.length
+                    ? L.chat.startTeam
+                    : L.chat.startRest(offlineMembers.length)}
+            </button>
+          )}
           <button
             className={`icon-btn chat-info-btn${infoOpen ? ' on' : ''}`}
             onClick={() => setInfoOpen((v) => !v)}
@@ -440,6 +478,7 @@ export function ChatShell(props: Props) {
         <ChatComposer
           key={convKey}
           mode={conv.kind === 'team' ? 'group' : 'dm'}
+          groupKey={activeGroup.key}
           members={members}
           lead={lead}
           tasks={tasks}

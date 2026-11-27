@@ -225,6 +225,22 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   araçlar balonun içinde katlanır. Görev kuyruğunun çalışana yazdığı `# Görev (id:`
   mesajı BASTIRILIR, çünkü delegasyon kartı onu zaten söylüyor. Üçüncü bir
   mod ("Akış") gelirse veri kaynağı yine bu dosya.
+- **Her konuşma yalnız KENDİ mesajlarını gösterir (`convTag.ts`, 2026-11-27).**
+  Ajanın tek dökümü var; etiketsiz akış her konuşmaya dökümün tamamını
+  koyuyordu (özel mesaj bütün gruplarda göründü, kullanıcı hatası). Grup
+  gönderimi (brif ve `@ajan`) sonuna `⟪claudiva:sohbet=<grup anahtarı>⟫`
+  ekler; DM etiket eklemez. `buildFeed({ scope })` öğeyi dilimine göre süzer:
+  etiket → o grup; etiketsiz brif → her grup (eski kayıt); etiketsiz düz
+  mesaj → o ajanın DM'i. Görev mesajının dilimi görevi verenin o anki
+  diliminden çözülür (zincir boyunca), panelden kullanıcının açtığı görev her
+  yerde. Artık olmayan grubun etiketi her grupta görünür. "Tüm ekip" takım
+  gruplarının mesajlarını İÇERMEZ (ayrı konuşma). Pano `scope` vermez, süzmez.
+  Ayrıştırma döküm dizisine göre `WeakMap` önbellekli (store her olayda yeni
+  dizi verir; yerinde değiştirmeye geçerse önbellek bayatlar).
+- **Sohbet başlığında Başlat/Durdur** (`.chat-power`, ChatShell): kapalı üye
+  varsa onları açar, hepsi açıksa hepsini kapatır; hepsi kapalıyken
+  `button.primary`. Kullanıcı isteği: Ctrl+K paletindeki toplu eylemi bilmeyen
+  kullanıcı sohbette ajanı açamıyordu.
 - **Ekip talimatı `brief.ts`te ve `BRIEF_MARKER` ile başlar.** Sohbet, liderin
   dökümündeki kullanıcı mesajını bu işaretten keser (`stripBrief`); eski
   işaretsiz brifler (`

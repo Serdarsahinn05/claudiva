@@ -263,6 +263,12 @@ export const tr = {
     previewWaiting: (name: string) => `${name} onay bekliyor`,
     headTeam: (n: number, lead: string | null, working: number) =>
       `${n} ajan${lead ? ` · lider ${lead}` : ''}${working ? ` · ${working} çalışıyor` : ''}`,
+    startTeam: 'Ekibi başlat',
+    startRest: (n: number) => `Kapalıları başlat (${n})`,
+    stopTeam: 'Ekibi durdur',
+    startOne: 'Başlat',
+    stopOne: 'Durdur',
+    powerHint: 'Kapalı ajanlara da yazabilirsin: mesaj ya da görev gelince kendiliğinden açılırlar.',
     infoTitle: 'Ajan, ekip ve açık görevler',
     infoAria: 'Ekip bilgisi',
     members: 'Katılımcılar',
@@ -1322,6 +1328,7 @@ export const tr = {
   /** Sunucu hata kodları (server/src/api/routes.ts ApiError). Tanınmayan kod sunucu metnine düşer. */
   apiErrors: {
     agent_not_found: 'Ajan bulunamadı.',
+    invalid_model: 'Geçersiz model adı. Geçerli olanlar: haiku, sonnet, opus, fable (ya da claude-… ile başlayan tam model kimliği).',
     empty_message: 'Boş mesaj gönderilemez.',
     permission_not_found: 'İzin isteği bulunamadı (zaman aşımına uğramış olabilir).',
     step_required: 'En az bir adım gerekli.',
