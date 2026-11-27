@@ -353,6 +353,12 @@ export class ClaudeBackend extends EventEmitter implements AgentBackend {
         preset: 'claude_code',
         append:
           `# Identity\nYou are an agent named "${agentFacing(config, 'name')}". Your role: ${config.role}.\n\n` +
+          // Panel AskUserQuestion'ı tıklanabilir seçenek kartı olarak gösterir
+          // ve oto-onay onu geçmez (session.ts QUESTION_TOOL).
+          `# Asking the user\nWhen you are blocked on a decision that is genuinely the user's (a ` +
+          `preference, a trade-off, which of several valid directions), ask with the AskUserQuestion ` +
+          `tool: the user sees clickable options and can also type their own answer. Do not use it ` +
+          `for things you can decide yourself or verify from the code.\n\n` +
           this.personality +
           memoryInstructions +
           autoModelInstructions,

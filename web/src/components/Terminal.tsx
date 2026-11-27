@@ -16,6 +16,8 @@ import { useCliSkin } from '../cliSkins';
 import { SkinnedTranscript } from './SkinnedTranscript';
 import { setToolDetail, useToolDetail } from '../toolDetail';
 import { SkinnedPermission } from './SkinnedPermission';
+import { QuestionForm } from './QuestionForm';
+import { isQuestion } from '../permissions';
 import { SkinnedComposer } from './SkinnedComposer';
 import { L, locale } from '../i18n';
 
@@ -245,9 +247,13 @@ export function Terminal({
 
       {agent.pendingPermissions.length > 0 && (
         <div className="perm-wrap" data-cli={skin}>
-          {agent.pendingPermissions.map((p) => (
-            <SkinnedPermission key={p.id} agentId={id} req={p} skin={skin} />
-          ))}
+          {agent.pendingPermissions.map((p) =>
+            isQuestion(p) ? (
+              <QuestionForm key={p.id} agentId={id} req={p} variant="terminal" />
+            ) : (
+              <SkinnedPermission key={p.id} agentId={id} req={p} skin={skin} />
+            )
+          )}
         </div>
       )}
 

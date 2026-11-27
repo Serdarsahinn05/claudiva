@@ -178,8 +178,14 @@ export function createRoutes(
   r.post('/agents/:id/permission', handle((req) => {
     const s = manager.get(req.params.id);
     if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
-    const { requestId, allow, message } = req.body ?? {};
-    if (!s.resolvePermission(String(requestId), Boolean(allow), message)) {
+    const { requestId, allow, message, answers } = req.body ?? {};
+    // Seçenekli soru cevabı: yalnız metin → metin çiftleri geçer.
+    let clean: Record<string, string> | undefined;
+    if (answers && typeof answers === 'object' && !Array.isArray(answers)) {
+      clean = {};
+      for (const [q, a] of Object.entries(answers)) if (typeof a === 'string') clean[q] = a.slice(0, 4000);
+    }
+    if (!s.resolvePermission(String(requestId), Boolean(allow), message, clean)) {
       throw new ApiError('permission_not_found', 'İzin isteği bulunamadı (zaman aşımına uğramış olabilir).');
     }
   }));

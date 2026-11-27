@@ -71,8 +71,8 @@ export const api = {
   /** Yerleşik komutların (`/context`, `/model`, `/mcp`…) oturum iç görüsü. */
   inspect: (id: string, parts: InspectPart[]) =>
     req<SessionInspect>('GET', `/api/agents/${id}/inspect?parts=${parts.join(',')}`),
-  permission: (id: string, requestId: string, allow: boolean, message?: string) =>
-    req('POST', `/api/agents/${id}/permission`, { requestId, allow, message }),
+  permission: (id: string, requestId: string, allow: boolean, message?: string, answers?: Record<string, string>) =>
+    req('POST', `/api/agents/${id}/permission`, { requestId, allow, message, answers }),
   getMemory: () => req<{ nodes: MemoryNode[] }>('GET', '/api/memory'),
   listTasks: () => req<Task[]>('GET', '/api/tasks'),
   createTask: (input: { title: string; prompt: string; assignedTo: string }) => req<Task>('POST', '/api/tasks', input),

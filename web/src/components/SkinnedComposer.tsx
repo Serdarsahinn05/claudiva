@@ -3,6 +3,7 @@ import type { AgentSnapshot } from '../types';
 import type { CliSkin } from '../cliSkins';
 import { CLI_MARKS } from '../cliSkins';
 import { L } from '../i18n';
+import { hasQuestion } from '../permissions';
 
 /**
  * Giriş kutusu — her CLI'ın kendi composer'ı.
@@ -35,7 +36,10 @@ interface Props {
 /** Kip: gerçek `autoApprove` ayarı + bekleyen izin sayısı. */
 function modeOf(agent: AgentSnapshot): { glyph: string; label: string; tone: 'auto' | 'manual' | 'wait' } {
   if (agent.pendingPermissions.length > 0) {
-    return { glyph: '⏸', label: L.composerMode.pending(agent.pendingPermissions.length), tone: 'wait' };
+    const label = hasQuestion(agent.pendingPermissions)
+      ? L.question.asks
+      : L.composerMode.pending(agent.pendingPermissions.length);
+    return { glyph: '⏸', label, tone: 'wait' };
   }
   return agent.config.autoApprove
     ? { glyph: '⏵⏵', label: L.composerMode.auto, tone: 'auto' }

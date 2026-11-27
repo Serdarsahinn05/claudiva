@@ -21,6 +21,7 @@ import type {
 import { api } from '../../api';
 import { ALL_TEAMS, agentsInTeam, leadOf, teamsOf } from '../../teams';
 import { buildFeed, isIncoming, previewOf, type ChatItem, type FeedScope } from '../../chatFeed';
+import { hasQuestion } from '../../permissions';
 import { ROLE_LABEL, STATUS_LABEL } from '../../format';
 import { sendToAgent } from '../../agentSend';
 import { Avatar, ChatMessage } from './ChatMessage';
@@ -369,7 +370,9 @@ export function ChatShell(props: Props) {
                   {f.length > 0 && <time>{clock(f[f.length - 1].ts)}</time>}
                 </span>
                 <span className="chat-conv-prev">
-                  {a.pendingPermissions.length > 0 ? L.chat.awaitingApproval : previewOf(f.at(-1), nameOf)}
+                  {a.pendingPermissions.length > 0
+                    ? hasQuestion(a.pendingPermissions) ? L.question.asks : L.chat.awaitingApproval
+                    : previewOf(f.at(-1), nameOf)}
                 </span>
               </span>
               {n > 0 && <span className="chat-unread">{n}</span>}
@@ -386,7 +389,9 @@ export function ChatShell(props: Props) {
               {conv.kind === 'team'
                 ? L.chat.headTeam(members.length, lead?.config.name ?? null, workingCount)
                 : members[0]
-                  ? `${ROLE_LABEL[members[0].config.role] ?? members[0].config.role} · ${STATUS_LABEL[members[0].status]}`
+                  ? `${ROLE_LABEL[members[0].config.role] ?? members[0].config.role} · ${
+                      hasQuestion(members[0].pendingPermissions) ? L.question.asks : STATUS_LABEL[members[0].status]
+                    }`
                   : ''}
             </span>
           </div>

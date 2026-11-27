@@ -394,6 +394,14 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   senkron fırlatır** (ölçüldü), `loop()` catch'i görmez; bu yüzden
   `ClaudeBackend.start()` önce bakar, `S.claudeNotFound` + `exit` yayar.
   Sistem ikilisi SDK'nın `claudeCodeVersion`ından eskiyse yalnız konsola uyarı.
+- **Seçenekli soru (`AskUserQuestion`, 2026-11-27).** İzin kanalından
+  (`canUseTool`) gelir ama izin DEĞİL: `session.ts` `QUESTION_TOOL` oto-onayı
+  ATLAR (yoksa cevapsız onaylanıp ajan sormadan sürerdi). Cevap
+  `resolvePermission(..., answers)` → `updatedInput.answers` (soru metni →
+  etiket; çoklu seçim ", " ile). Ölçüldü: CLI sonuç metni `Your questions have
+  been answered: "S"="C"`; panel sohbet kaydını bu metinden okur. "Geç" =
+  deny + "kendin karar ver" mesajı. Sistem isteminde "# Asking the user"
+  bölümü aracı yalnız gerçekten kullanıcıya ait kararlar için önerir.
 - **Model adı `agents/models.ts`te doğrulanır** (2026-11-27). Kısa adlar
   (`default/haiku/sonnet/opus/fable/opusplan/best`, `[1m]` sonekli de) CLI'a
   OLDUĞU GİBİ gider, CLI en güncele çözer; eski sabit tablo (`sonnet` →

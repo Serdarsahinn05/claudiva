@@ -69,6 +69,10 @@ export function friendlyTool(toolName: string, inputStr: string, nameOf: (id: st
       return f.toolSearch;
     case 'TodoWrite':
       return f.todo;
+    case 'AskUserQuestion': {
+      const q = Array.isArray(i.questions) ? (i.questions[0] as { question?: unknown } | undefined) : undefined;
+      return f.ask(typeof q?.question === 'string' ? q.question : '');
+    }
     case 'Skill':
       return f.skill(str(i.skill) || str(i.command));
   }

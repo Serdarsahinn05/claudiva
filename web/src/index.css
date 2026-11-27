@@ -3337,6 +3337,53 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .cm-link:hover { text-decoration: underline; }
 .cm-perm { border-color: rgb(var(--warn-rgb) / 0.6); box-shadow: inset 2px 0 0 var(--caution); }
 .cm-perm-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
+
+/* ---------------------------------------------------------- SEÇENEKLİ SORU
+   QuestionForm.tsx: terminal / sohbet / pano aynı bileşen, `qf-<variant>`
+   yalnız yoğunluğu ve yazıyı ayarlar. Renkler token; seçili seçenek vurgu. */
+.qf { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+.qf-q { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--s2); }
+.qf-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px var(--s2); padding: 0; }
+.qf-chip {
+  font-family: var(--font-meta); font-size: 10.5px; padding: 1px 8px; border-radius: 999px;
+  color: var(--hud); border: var(--border-w) solid rgb(var(--accent-rgb) / 0.45);
+}
+.qf-text { color: var(--fg); font-weight: 600; font-size: 14px; line-height: 1.4; }
+.qf-hint { font-size: 11.5px; color: var(--muted); }
+.qf-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--s2); }
+.qf-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  height: auto; padding: 8px 12px; white-space: normal;
+}
+.qf-opt-label { color: var(--fg); font-weight: 600; font-size: 13px; }
+.qf-opt-desc { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.qf-opt.multi .qf-opt-label::before { content: '☐ '; color: var(--muted); }
+.qf-opt.multi.on .qf-opt-label::before { content: '☑ '; color: var(--hud); }
+.qf-opt.on { border-color: var(--hud); background: var(--hud-wash); }
+.qf-opt-other .qf-opt-label { color: var(--muted); font-weight: 500; }
+.qf-other { width: 100%; }
+.qf-preview {
+  margin: 0; padding: var(--s2) var(--s3); max-height: 240px; overflow: auto;
+  font-family: var(--font-mono); font-size: 12px; white-space: pre; color: var(--fg);
+  background: rgb(var(--fg-rgb) / 0.04); border: var(--border-w) solid var(--edge); border-radius: var(--radius);
+}
+.qf-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.qf-skip { color: var(--muted); }
+/* Terminal: mono, sıkı; döküm gibi okunur. */
+.qf-terminal .qf-text, .qf-terminal .qf-opt-label { font-family: var(--font-mono); font-size: 13px; }
+.qf-terminal .qf-opts { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+/* Pano: dar kart; seçenekler alt alta. */
+.qf-board .qf-opts { grid-template-columns: 1fr; }
+.qf-board .qf-text { font-size: 13px; }
+.bw-question { flex-direction: column; align-items: stretch; }
+/* Sohbette cevaplanmış sorunun kaydı. */
+.cm-asked {
+  display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--s2);
+  padding: 6px 10px; border-left: 2px solid rgb(var(--accent-rgb) / 0.5); background: rgb(var(--fg-rgb) / 0.03);
+  font-size: 12.5px;
+}
+.cm-asked-q { color: var(--muted); }
+.cm-asked-a { color: var(--fg); }
 .cm-note { align-self: stretch; display: flex; flex-direction: column; gap: 2px; }
 .cm-note-who { font-family: var(--font-meta); font-size: 10.5px; color: var(--dim); }
 .cm-note pre {

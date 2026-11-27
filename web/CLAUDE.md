@@ -237,6 +237,17 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `web/` altında çalışırk
   gruplarının mesajlarını İÇERMEZ (ayrı konuşma). Pano `scope` vermez, süzmez.
   Ayrıştırma döküm dizisine göre `WeakMap` önbellekli (store her olayda yeni
   dizi verir; yerinde değiştirmeye geçerse önbellek bayatlar).
+- **Seçenekli soru kartı TEK bileşen: `QuestionForm.tsx`** (2026-11-27).
+  Üç yüzey de `isQuestion(req)` ile izin düğmeleri yerine onu çizer:
+  terminal (`Terminal.tsx`, SkinnedPermission yerine), sohbet
+  (`PermissionCard`), pano (`ApprovalsWidget`). Yeni bir izin yüzeyi eklenirse
+  o dalı da almalı, yoksa soru "izin ver/reddet" olur ve cevapsız onaylanır.
+  Tek soru + tek seçim: tıklamak cevaptır; diğerleri Gönder. "Diğer…" serbest
+  metin, `preview` üstüne gelince. Durum etiketleri `hasQuestion` ile "soru
+  soruyor" (sohbet listesi/başlığı, terminal alt satırı). Cevaplanan soru
+  sohbette balonda kalır (`askedOf`, araç sonuç metninden). Ölçüldü (4632,
+  oto-onay AÇIK ajan): üç yüzeyde çizildi; terminalden çoklu cevap ve
+  sohbetten "Diğer" cevabı ajana ulaştı.
 - **Sohbet başlığında Başlat/Durdur** (`.chat-power`, ChatShell): kapalı üye
   varsa onları açar, hepsi açıksa hepsini kapatır; hepsi kapalıyken
   `button.primary`. Kullanıcı isteği: Ctrl+K paletindeki toplu eylemi bilmeyen

@@ -470,6 +470,17 @@ export const tr = {
     manual: 'her araç için izin sorulur',
   },
 
+  question: {
+    asks: 'soru soruyor',
+    aria: 'Ajanın sorusu',
+    other: 'Diğer…',
+    otherPlaceholder: 'Kendi cevabını yaz',
+    multiHint: 'birden fazla seçebilirsin',
+    submit: 'Gönder',
+    skip: 'Cevaplamadan geç',
+    asked: 'Sordu',
+    answered: 'Cevabın',
+  },
   permissionDesc: {
     always: 'Bu ajanda otomatik onayı açar.',
     deny: 'İsteği reddeder.',
@@ -1407,6 +1418,7 @@ export const tr = {
     webSearch: (q: string) => `Web'de aradı: ${q}`,
     toolSearch: 'Araç yükledi',
     todo: 'Yapılacaklar listesini güncelledi',
+    ask: (q: string) => `Sana sordu${q ? `: ${q}` : ''}`,
     skill: (s: string) => `Skill kullandı: ${s}`,
   },
 

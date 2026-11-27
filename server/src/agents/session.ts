@@ -20,6 +20,9 @@ import { S } from '../i18n.js';
 
 const MAX_TRANSCRIPT = 500;
 
+/** Claude Code'un seçenekli soru aracı (panel bunu izin değil soru kartı olarak çizer). */
+export const QUESTION_TOOL = 'AskUserQuestion';
+
 export interface SessionEvents {
   status: (status: AgentStatus) => void;
   event: (event: TranscriptEvent) => void;
@@ -291,12 +294,17 @@ export class AgentSession extends EventEmitter {
     this.emit('model_changed', model);
   }
 
-  resolvePermission(requestId: string, allow: boolean, message?: string): boolean {
+  /**
+   * @param answers Seçenekli soru (`AskUserQuestion`) cevabı: soru metni →
+   *   seçilen etiket(ler). CLI cevabı aracın girdisindeki `answers`tan okur
+   *   (ölçüldü: "Your questions have been answered: "…"="Blue"").
+   */
+  resolvePermission(requestId: string, allow: boolean, message?: string, answers?: Record<string, string>): boolean {
     const p = this.pending.get(requestId);
     if (!p) return false;
     this.pending.delete(requestId);
     if (allow) {
-      p.resolve({ behavior: 'allow', updatedInput: p.info.input });
+      p.resolve({ behavior: 'allow', updatedInput: answers ? { ...p.info.input, answers } : p.info.input });
     } else {
       p.resolve({ behavior: 'deny', message: message || 'The user denied this action.' });
     }
@@ -324,7 +332,9 @@ export class AgentSession extends EventEmitter {
       input: Record<string, unknown>,
       opts: { title?: string; description?: string; signal: AbortSignal },
     ): Promise<{ behavior: 'allow' | 'deny'; updatedInput?: Record<string, unknown>; message?: string }> => {
-      if (this.config.autoApprove) {
+      // Seçenekli soru bir izin değil, kullanıcıya soru: oto-onay onu ASLA
+      // geçemez. Geçseydi araç cevapsız "onaylanır" ve ajan sormadan sürerdi.
+      if (this.config.autoApprove && toolName !== QUESTION_TOOL) {
         return { behavior: 'allow', updatedInput: input };
       }
       const info: PermissionRequestInfo = {

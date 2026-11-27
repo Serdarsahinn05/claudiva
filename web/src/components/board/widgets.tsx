@@ -20,7 +20,8 @@ import { api } from '../../api';
 import { buildBrief } from '../../brief';
 import { canDelegate, leadOf } from '../../teams';
 import { fmtCost, fmtNum, totalTokens, ROLE_LABEL, STATUS_LABEL } from '../../format';
-import { answerPermission, permissionSummary } from '../../permissions';
+import { answerPermission, isQuestion, permissionSummary } from '../../permissions';
+import { QuestionForm } from '../QuestionForm';
 import { Avatar } from '../chat/ChatMessage';
 import { buildFeed, previewOf } from '../../chatFeed';
 import { L, dateLocale } from '../../i18n';
@@ -153,7 +154,15 @@ export function ApprovalsWidget({ agents }: WidgetData) {
   if (!items.length) return <div className="bw-empty bw-calm">{L.board.noApprovals}</div>;
   return (
     <ul className="bw-list">
-      {items.map(({ agent, req }) => (
+      {items.map(({ agent, req }) =>
+        isQuestion(req) ? (
+          <li key={req.id} className="bw-approval bw-question">
+            <span className="bw-row-title">
+              {agent.config.name} · {L.question.asks}
+            </span>
+            <QuestionForm agentId={agent.config.id} req={req} variant="board" />
+          </li>
+        ) : (
         <li key={req.id} className="bw-approval">
           <div className="bw-row-main">
             <span className="bw-row-title">
@@ -185,7 +194,8 @@ export function ApprovalsWidget({ agents }: WidgetData) {
             </button>
           </div>
         </li>
-      ))}
+        )
+      )}
     </ul>
   );
 }

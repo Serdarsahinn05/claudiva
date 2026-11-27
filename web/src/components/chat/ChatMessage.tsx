@@ -10,7 +10,8 @@ import type { AgentSnapshot } from '../../types';
 import type { ChatItem, ToolCall } from '../../chatFeed';
 import { ROLE_LABEL, fmtCost } from '../../format';
 import { clock, initials, inlineParts } from './chatFormat';
-import { answerPermission, permissionSummary, PERMISSION_OPTIONS, type PermissionChoice } from '../../permissions';
+import { answerPermission, isQuestion, permissionSummary, PERMISSION_OPTIONS, type PermissionChoice } from '../../permissions';
+import { QuestionForm } from '../QuestionForm';
 import { L } from '../../i18n';
 
 export function Avatar({ agent, size = 'md' }: { agent: AgentSnapshot | undefined; size?: 'sm' | 'md' }) {
@@ -123,6 +124,14 @@ export function ChatMessage({ item, byId, leadId, continued, onReply, onJump, ev
                 <time>{clock(item.ts)}</time>
               </div>
             )}
+            {/* Cevaplanan seçenekli sorular: kart kalkınca ne sorulup ne
+                denildiği görünür kalsın (araç ayrıntılarında gömülmesin). */}
+            {askedOf(item.tools).map((qa, i) => (
+              <div key={i} className="cm-asked">
+                <span className="cm-asked-q">{L.question.asked}: {qa.question}</span>
+                <span className="cm-asked-a">{L.question.answered}: <b>{qa.answer}</b></span>
+              </div>
+            ))}
             {speaking && <RichText text={item.texts.join('\n\n')} />}
             {item.live && (
               <div className="cm-typing">
@@ -302,6 +311,22 @@ function ResultCard(props: {
   );
 }
 
+/**
+ * Turdaki cevaplanmış `AskUserQuestion` çağrıları. Cevap aracın sonuç
+ * metnindedir (CLI biçimi, ölçüldü): `… answered: "Soru"="Cevap", "S2"="C2". …`
+ * Biçim değişirse satır sessizce çizilmez; ayrıntılarda ham hâli durur.
+ */
+function askedOf(tools: ToolCall[]): { question: string; answer: string }[] {
+  const out: { question: string; answer: string }[] = [];
+  for (const t of tools) {
+    if (t.name !== 'AskUserQuestion' || !t.result || t.isError) continue;
+    for (const m of t.result.matchAll(/"((?:[^"\\]|\\.)*)"="((?:[^"\\]|\\.)*)"/g)) {
+      out.push({ question: m[1], answer: m[2] });
+    }
+  }
+  return out;
+}
+
 function PermissionCard({
   item,
   agent,
@@ -314,6 +339,21 @@ function PermissionCard({
     if (busy) return;
     setBusy(true);
     await answerPermission(item.agentId, item.req, c);
+  }
+  if (isQuestion(item.req)) {
+    return (
+      <div className="cm-row">
+        <Avatar agent={agent} />
+        <div className="cm-bubble cm-perm cm-question">
+          <div className="cm-meta">
+            <span className="cm-name">{agent?.config.name ?? item.agentId}</span>
+            <span className="cm-status s-waiting">{L.question.asks}</span>
+            <time>{clock(item.ts)}</time>
+          </div>
+          <QuestionForm agentId={item.agentId} req={item.req} variant="chat" />
+        </div>
+      </div>
+    );
   }
   return (
     <div className="cm-row">

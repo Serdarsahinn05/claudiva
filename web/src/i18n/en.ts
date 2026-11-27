@@ -458,6 +458,17 @@ export const en: Dict = {
     manual: 'permission is asked for every tool',
   },
 
+  question: {
+    asks: 'is asking',
+    aria: "Agent's question",
+    other: 'Other…',
+    otherPlaceholder: 'Type your own answer',
+    multiHint: 'you can pick more than one',
+    submit: 'Send',
+    skip: 'Skip without answering',
+    asked: 'Asked',
+    answered: 'Your answer',
+  },
   permissionDesc: {
     always: 'Turns on auto-approve for this agent.',
     deny: 'Rejects the request.',
@@ -1376,6 +1387,7 @@ export const en: Dict = {
     webSearch: (q: string) => `Searched the web: ${q}`,
     toolSearch: 'Loaded a tool',
     todo: 'Updated the to-do list',
+    ask: (q) => `Asked you${q ? `: ${q}` : ''}`,
     skill: (s: string) => `Used a skill: ${s}`,
   },
 
