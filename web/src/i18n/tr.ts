@@ -362,6 +362,7 @@ export const tr = {
     stopTitle: 'Çalışan ajanların turunu kes',
     working: (who: string, elapsed: string | null, n: number) =>
       `${who} çalışıyor${elapsed ? ` · ${elapsed}` : ''} · ${n} ajan`,
+    busyElsewhere: (who: string) => `${who} başka bir sohbetteki işle meşgul · yazarsan o işin arasına girer`,
     team: 'Ekip',
     ready: (who: string) => `${who} hazır`,
     teamReady: (n: number) => `Ekip hazır · ${n} ajan`,

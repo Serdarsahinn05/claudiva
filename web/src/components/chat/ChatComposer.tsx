@@ -40,6 +40,8 @@ interface Props {
   onToggleAutoApprove?: () => Promise<void>;
   replyTo?: ReplyTarget | null;
   onCancelReply?: () => void;
+  /** DM: ajan çalışıyor ama başka bir sohbetteki işte (bkz. chatFeed `busyHere`). */
+  busyElsewhere?: boolean;
 }
 
 type Kind = 'task' | 'ask';
@@ -57,6 +59,7 @@ export function ChatComposer({
   onToggleAutoApprove,
   replyTo = null,
   onCancelReply,
+  busyElsewhere = false,
 }: Props) {
   const [text, setText] = useState('');
   const [kind, setKind] = useState<Kind>('task');
@@ -321,7 +324,9 @@ export function ChatComposer({
       <div className="chat-status">
         <span className="chat-status-live">
           <span className={`led ${anyWorking ? 'led-working' : 'led-idle'}`} />
-          {anyWorking
+          {anyWorking && busyElsewhere
+            ? L.composer.busyElsewhere(label)
+            : anyWorking
             ? L.composer.working(mode === 'dm' ? label : L.composer.team, elapsed, working.length)
             : mode === 'dm'
               ? L.composer.ready(label)

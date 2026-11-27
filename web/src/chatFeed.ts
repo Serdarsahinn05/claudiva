@@ -231,6 +231,21 @@ function convResolver(transcripts: Record<string, TranscriptEvent[]>, tasks: Tas
 }
 
 /**
+ * Ajanın ŞU ANKİ işi (son kullanıcı/görev mesajının dilimi) bu sohbete mi ait?
+ * "Yazıyor…" göstergesi bununla süzülür: aynı ajan başka bir sohbetteki işte
+ * çalışırken burada düşünüyor görünmesin (kullanıcı hatası, 2026-11-27).
+ */
+export function busyHere(
+  agentId: string,
+  input: Pick<FeedInput, 'transcripts' | 'tasks'>,
+  scope: FeedScope
+): boolean {
+  const conv = convResolver(input.transcripts, input.tasks);
+  if (!conv.agent(agentId).segs.length) return true;
+  return inScope(conv.at(agentId, Number.MAX_SAFE_INTEGER), scope);
+}
+
+/**
  * Sohbet kapsamı. Verilmezse süzme yok (Pano'nun "son mesajlar"ı).
  * `groups`: şu an var olan grup anahtarları; artık olmayan bir gruba
  * (takım silindi/adı değişti) yazılmış mesaj kaybolmasın, her grupta görünür.

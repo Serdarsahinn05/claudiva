@@ -350,6 +350,7 @@ export const en: Dict = {
     stopTitle: "Interrupt the working agents' turns",
     working: (who, elapsed, n) =>
       `${who} working${elapsed ? ` · ${elapsed}` : ''} · ${n} ${n === 1 ? 'agent' : 'agents'}`,
+    busyElsewhere: (who) => `${who} is busy with work from another chat · writing now joins that work`,
     team: 'Team',
     ready: (who) => `${who} is ready`,
     teamReady: (n) => `Team ready · ${n} ${n === 1 ? 'agent' : 'agents'}`,

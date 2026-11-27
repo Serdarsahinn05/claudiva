@@ -20,7 +20,7 @@ import type {
 } from '../../types';
 import { api } from '../../api';
 import { ALL_TEAMS, agentsInTeam, leadOf, teamsOf } from '../../teams';
-import { buildFeed, isIncoming, previewOf, type ChatItem, type FeedScope } from '../../chatFeed';
+import { buildFeed, busyHere, isIncoming, previewOf, type ChatItem, type FeedScope } from '../../chatFeed';
 import { hasQuestion } from '../../permissions';
 import { ROLE_LABEL, STATUS_LABEL } from '../../format';
 import { sendToAgent } from '../../agentSend';
@@ -134,11 +134,13 @@ export function ChatShell(props: Props) {
 
   // Her konuşma yalnız KENDİ mesajlarını gösterir (convTag.ts): aynı lider
   // birkaç grupta ve özel sohbette olsa da mesaj gönderildiği yerde kalır.
-  const groupFeeds = useMemo(() => {
-    const keys = new Set(groups.map((g) => g.key));
-    return new Map(groups.map((g) => [g.key, feedOf(g.members, { kind: 'group', key: g.key, groups: keys })]));
+  const groupKeys = useMemo(() => new Set(groups.map((g) => g.key)), [groups]);
+  const groupFeeds = useMemo(
+    () => new Map(groups.map((g) => [g.key, feedOf(g.members, { kind: 'group', key: g.key, groups: groupKeys })])),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groups, transcripts, tasks, permissions]);
+    [groups, groupKeys, transcripts, tasks, permissions]
+  );
+  const store = { transcripts, tasks };
   const dmFeeds = useMemo(
     () => new Map(agents.map((a) => [a.config.id, feedOf([a], { kind: 'dm', id: a.config.id })])),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,6 +150,8 @@ export function ChatShell(props: Props) {
   // Takım tek ise başlıktaki seçim ALL_TEAMS ya da o tek ad olabilir; ikisi de "Tüm ekip".
   const activeGroup = groups.find((g) => g.key === team) ?? groups[0];
   const convKey = conv.kind === 'team' ? `team:${activeGroup.key}` : `dm:${conv.id}`;
+  const scope: FeedScope =
+    conv.kind === 'team' ? { kind: 'group', key: activeGroup.key, groups: groupKeys } : { kind: 'dm', id: conv.id };
   const members = conv.kind === 'team' ? activeGroup.members : [byId.get(conv.id)].filter(Boolean) as AgentSnapshot[];
   const feed = (conv.kind === 'team' ? groupFeeds.get(activeGroup.key) : dmFeeds.get(conv.id)) ?? [];
   const lead = conv.kind === 'team' ? leadOf(members) : members[0] ?? null;
@@ -324,7 +328,8 @@ export function ChatShell(props: Props) {
           const f = groupFeeds.get(g.key) ?? [];
           const active = conv.kind === 'team' && g.key === activeGroup.key;
           const n = active ? 0 : unread(`team:${g.key}`, f);
-          const busy = g.members.some((a) => a.status === 'working');
+          const gScope: FeedScope = { kind: 'group', key: g.key, groups: groupKeys };
+          const busy = g.members.some((a) => a.status === 'working' && busyHere(a.config.id, store, gScope));
           return (
             <button
               key={g.key}
@@ -370,7 +375,7 @@ export function ChatShell(props: Props) {
                   {f.length > 0 && <time>{clock(f[f.length - 1].ts)}</time>}
                 </span>
                 <span className="chat-conv-prev">
-                  {a.pendingPermissions.length > 0
+                  {a.pendingPermissions.length > 0 && busyHere(a.config.id, store, { kind: 'dm', id: a.config.id })
                     ? hasQuestion(a.pendingPermissions) ? L.question.asks : L.chat.awaitingApproval
                     : previewOf(f.at(-1), nameOf)}
                 </span>
@@ -460,6 +465,7 @@ export function ChatShell(props: Props) {
             .filter(
               (a) =>
                 a.status === 'working' &&
+                busyHere(a.config.id, store, scope) &&
                 !feed.some((i) => i.type === 'turn' && i.live && i.agentId === a.config.id)
             )
             .map((a) => (
@@ -484,6 +490,9 @@ export function ChatShell(props: Props) {
           key={convKey}
           mode={conv.kind === 'team' ? 'group' : 'dm'}
           groupKey={activeGroup.key}
+          busyElsewhere={
+            conv.kind === 'dm' && !!members[0] && members[0].status === 'working' && !busyHere(conv.id, store, scope)
+          }
           members={members}
           lead={lead}
           tasks={tasks}
