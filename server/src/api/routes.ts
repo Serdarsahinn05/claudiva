@@ -4,7 +4,10 @@ import type { InspectPart } from '../agents/backend.js';
 import { isValidModel, MODEL_CHOICES } from '../agents/models.js';
 import type { TaskQueue } from '../tasks/queue.js';
 import type { PromptStore } from '../prompts/store.js';
-import { MEMORY_DIR, PROJECT_DIR } from '../paths.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { CLAUDE_USER_DIR, MEMORY_DIR, PROJECT_DIR } from '../paths.js';
+import { runStatusLine, statusLineCommand } from '../statusline.js';
 import { systemInfo } from './system.js';
 import type { ChangeLog } from '../changes.js';
 import { changedFiles, diffFile, headSha, isRepo, revertFile, safeResolve } from '../git.js';
@@ -146,6 +149,44 @@ export function createRoutes(
       .map((p) => p.trim())
       .filter((p): p is InspectPart => (all as string[]).includes(p));
     return await s.inspect(asked.length ? asked : all);
+  }));
+
+  /**
+   * Kullanıcının Claude Code durum çubuğu bu ajan için (bkz. statusline.ts).
+   * Girdi Claude Code'un alanlarına yakın; UYDURMA değer yok: oturum kapalıysa
+   * bağlam penceresi gönderilmez, transkript yolu yalnız dosya varsa verilir.
+   */
+  r.get('/agents/:id/statusline', handle(async (req) => {
+    const s = manager.get(req.params.id);
+    if (!s) throw new ApiError('agent_not_found', 'Ajan bulunamadı.');
+    const command = statusLineCommand();
+    if (!command) return { configured: false, text: null };
+    const ctx = (await s.inspect(['context']).catch(() => ({}))) as { context?: { totalTokens: number; maxTokens: number } | null };
+    const c = ctx.context;
+    // Claude Code dökümü: ~/.claude/projects/<cwd'nin harf/rakam dışı → '-'>/<oturum>.jsonl
+    const transcript = s.sessionId
+      ? path.join(CLAUDE_USER_DIR, 'projects', PROJECT_DIR.replace(/[^a-zA-Z0-9]/g, '-'), `${s.sessionId}.jsonl`)
+      : null;
+    const input = {
+      hook_event_name: 'Status',
+      session_id: s.sessionId,
+      ...(transcript && fs.existsSync(transcript) ? { transcript_path: transcript } : {}),
+      cwd: PROJECT_DIR,
+      model: { id: s.currentModel, display_name: s.currentModel },
+      workspace: { current_dir: PROJECT_DIR, project_dir: PROJECT_DIR },
+      cost: { total_cost_usd: s.usage.costUSD },
+      ...(c && c.maxTokens > 0
+        ? {
+            context_window: {
+              context_window_size: c.maxTokens,
+              used_percentage: (c.totalTokens / c.maxTokens) * 100,
+              current_usage: { input_tokens: c.totalTokens },
+            },
+          }
+        : {}),
+      agent: { id: s.config.id, name: s.config.name },
+    };
+    return { configured: true, text: await runStatusLine(command, input, PROJECT_DIR) };
   }));
 
   r.post('/agents/:id/interrupt', handle(async (req) => {

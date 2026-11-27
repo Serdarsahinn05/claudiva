@@ -1779,6 +1779,14 @@ label.check.small { font-size: 12px; color: var(--muted); }
 .skin-transcript { display: flex; flex-direction: column; gap: 8px; }
 .skin-dim { color: var(--muted); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; }
 
+/* Kullanıcının Claude Code statusline'ı (StatusLine.tsx). Renkler çıktının
+   kendi ANSI renkleri; zemin terminalin zemini, betikler koyu terminal içindir. */
+.statusline {
+  margin: 0; padding: 6px 16px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.5;
+  color: var(--muted); background: var(--void); white-space: pre;
+  border-top: var(--border-w) solid var(--border);
+}
 .perm-wrap {
   display: flex; flex-direction: column; gap: 10px;
   padding: 10px 16px; background: var(--void);

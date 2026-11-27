@@ -26,7 +26,7 @@ publish` kullanıcıda; Release notunu İngilizce yaz):
    için Claude Code'un stdin JSON'uyla (model, cwd, session_id, maliyet,
    bağlam) çalıştırılır, çıktı terminal alt çubuğunda gösterilir (ANSI renk
    → sınıf ya da temizle). Kurma ekranı YOK (Claude Code'un `/statusline`'ı
-   kurar, biz okuruz). **[ ] yapılmadı**
+   kurar, biz okuruz). **[x] YAPILDI** (terminal altı `StatusLine.tsx`, ayrıntı `server/CLAUDE.md`)
 
 Kullanıcıya açıklanan bilinen sınır (yapılmayacak): aynı ajan iki sohbette
 TEK oturum/bağlam kullanır; çalışırken gelen mesaj süren tura katılır.

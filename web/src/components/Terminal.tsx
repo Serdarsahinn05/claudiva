@@ -17,6 +17,7 @@ import { SkinnedTranscript } from './SkinnedTranscript';
 import { setToolDetail, useToolDetail } from '../toolDetail';
 import { SkinnedPermission } from './SkinnedPermission';
 import { QuestionForm } from './QuestionForm';
+import { StatusLine } from './StatusLine';
 import { isQuestion } from '../permissions';
 import { SkinnedComposer } from './SkinnedComposer';
 import { L, locale } from '../i18n';
@@ -321,6 +322,8 @@ export function Terminal({
           }
         }}
       />
+
+      <StatusLine agent={agent} />
 
       <div className="terminal-hint">
         <span className={`led led-${agent.status}`} />

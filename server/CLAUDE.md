@@ -404,6 +404,15 @@ Kökteki `CLAUDE.md` her oturumda, bu dosya yalnız `server/` altında çalış�
   senkron fırlatır** (ölçüldü), `loop()` catch'i görmez; bu yüzden
   `ClaudeBackend.start()` önce bakar, `S.claudeNotFound` + `exit` yayar.
   Sistem ikilisi SDK'nın `claudeCodeVersion`ından eskiyse yalnız konsola uyarı.
+- **Statusline (`statusline.ts`, `GET /agents/:id/statusline`, 2026-11-27).**
+  YALNIZ kullanıcı kapsamı `~/.claude/settings.json` `statusLine.command`
+  (proje ayarı okunmaz: herhangi bir depoyu açmak kod çalıştırmasın). Kabukla,
+  3 sn zaman aşımı, 64 KB çıktı sınırı. Girdi Claude Code alanları: model,
+  cwd/workspace, cost, session_id; `context_window` YALNIZ oturum açıkken
+  `inspect(['context'])`ten (kapalıyken uydurma pencere yok); `transcript_path`
+  `~/.claude/projects/<cwd harf/rakam dışı → '->/<oturum>.jsonl` VARSA.
+  `rate_limits` gönderilmiyor (henüz kaynak bağlanmadı). Ölçüldü: kullanıcının
+  betiği 3 satır üretti, bağlam %13 gerçek, ~0,9 sn.
 - **Seçenekli soru (`AskUserQuestion`, 2026-11-27).** İzin kanalından
   (`canUseTool`) gelir ama izin DEĞİL: `session.ts` `QUESTION_TOOL` oto-onayı
   ATLAR (yoksa cevapsız onaylanıp ajan sormadan sürerdi). Cevap
