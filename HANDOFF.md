@@ -1,5 +1,47 @@
 # Devir — Claudiva
 
+# ▶ SÜREN İŞ (2026-11-27): 0.6.4 hazırlığı — KALDIĞIN YERDEN DEVAM ET
+
+Yayında: **0.6.3** (GitHub Release + npm `latest`, ikisi de doğrulandı).
+0.6.4'e girecek, commit'li ama PUSH EDİLMEMİŞ:
+- `d82617f` seçenekli sorular (`AskUserQuestion`) üç görünümde (ayrıntı
+  `server/CLAUDE.md` + `web/CLAUDE.md`, canlı ölçüldü)
+- `7191c7e` "düşünüyor" göstergesi yalnız işin ait olduğu sohbette
+
+Kullanıcının onayladığı, SIRADAKİ iki iş (bitince ikisi + yukarıdakiler
+tek sürüm: 0.6.4; push + GitHub Release + kurulum dosyası bizde, `npm
+publish` kullanıcıda; Release notunu İngilizce yaz):
+
+1. **Tarayıcı paneli canlı akış** (`server/src/browser.ts`,
+   `web/src/components/Browser.tsx`). Ölçüm: PNG ekran görüntüsü 108 ms /
+   353 KB, JPEG q70 34 ms / 154 KB; asıl yavaşlık her tıklamada ~550 ms sabit
+   bekleme (`settle`: 400+150), görüntünün ayrı HTTP isteğiyle çekilmesi ve
+   sayfanın canlı akmaması. Plan: CDP `Page.startScreencast` (JPEG,
+   `everyNthFrame`) kareleri WS ile panele itilir; yalnız Browser paneli
+   açıkken (abone varken) akar; `settle` kısalır; tek kare yolu JPEG'e
+   geçer. İki aktör kuralı (`server/CLAUDE.md` "Tarayıcı") korunur.
+   **[ ] yapılmadı**
+2. **Statusline**: kullanıcının `~/.claude/settings.json` `statusLine`
+   komutu (onda: `node "C:/Users/serdar/.claude/statusline.js"`) her ajan
+   için Claude Code'un stdin JSON'uyla (model, cwd, session_id, maliyet,
+   bağlam) çalıştırılır, çıktı terminal alt çubuğunda gösterilir (ANSI renk
+   → sınıf ya da temizle). Kurma ekranı YOK (Claude Code'un `/statusline`'ı
+   kurar, biz okuruz). **[ ] yapılmadı**
+
+Kullanıcıya açıklanan bilinen sınır (yapılmayacak): aynı ajan iki sohbette
+TEK oturum/bağlam kullanır; çalışırken gelen mesaj süren tura katılır.
+Gerçek ayrım = sohbet başına oturum (büyük mimari + maliyet), ertelendi.
+
+# ▶ 0.6.1–0.6.3 YAYINDA (2026-11-27)
+
+- 0.6.1: masaüstü kurulumu 137 → 9 MB (SDK'nın Claude Code ikilisi
+  taşınmıyor, sistemdeki `claude` kullanılıyor).
+- 0.6.2: sohbet başına mesaj ayrımı (`convTag.ts`), sohbette Başlat/Durdur,
+  model adı doğrulaması (`agents/models.ts`).
+- 0.6.3: güncelleme sonrası eski `index.html`in önbellekten açılması
+  (`npm pack` tarih sabitlemesi → aynı ETag) düzeltildi; 0.6.2 masaüstü
+  "sunucuya bağlanılıyor"da kalıyordu.
+
 # ▶ 0.6.0 YAYINDA (2026-11-26): masaüstü uygulaması + logo
 
 `main`e birleştirildi ve push edildi, `v0.6.0` etiketi (notlar etiket
