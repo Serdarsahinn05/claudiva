@@ -20,7 +20,7 @@ publish` kullanıcıda; Release notunu İngilizce yaz):
    `everyNthFrame`) kareleri WS ile panele itilir; yalnız Browser paneli
    açıkken (abone varken) akar; `settle` kısalır; tek kare yolu JPEG'e
    geçer. İki aktör kuralı (`server/CLAUDE.md` "Tarayıcı") korunur.
-   **[ ] yapılmadı**
+   **[x] YAPILDI** (`e6f7a4d`; ölçümler `server/CLAUDE.md` "Tarayıcı")
 2. **Statusline**: kullanıcının `~/.claude/settings.json` `statusLine`
    komutu (onda: `node "C:/Users/serdar/.claude/statusline.js"`) her ajan
    için Claude Code'un stdin JSON'uyla (model, cwd, session_id, maliyet,
